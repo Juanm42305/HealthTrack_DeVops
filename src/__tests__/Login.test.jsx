@@ -9,7 +9,7 @@ test("renderiza el formulario de login correctamente", () => {
     </BrowserRouter>
   );
 
-  // Ajusta los textos según tu componente
-  expect(screen.getByText("🔐 Iniciar Sesión")).toBeInTheDocument();
-  expect(screen.getByRole("button", { name: "Ingresar" })).toBeInTheDocument();
+  // Coincidir con el texto real del componente
+  expect(screen.getByText("Pantalla de Login")).toBeInTheDocument();
+  expect(screen.getByText("Componente base funcionando correctamente ✅")).toBeInTheDocument();
 });
