@@ -1,16 +1,15 @@
-import React from "react";
+import { render, screen } from "@testing-library/react";
+import { BrowserRouter } from "react-router-dom";
+import Login from "../components/Login";
 
-function Login() {
-  return (
-    <div style={{ textAlign: "center", marginTop: "50px" }}>
-      <h1>🔐 Iniciar Sesión</h1>
-      <form>
-        <input type="text" placeholder="Usuario" required /><br /><br />
-        <input type="password" placeholder="Contraseña" required /><br /><br />
-        <button type="submit">Ingresar</button>
-      </form>
-    </div>
+test("renderiza el formulario de login correctamente", () => {
+  render(
+    <BrowserRouter>
+      <Login />
+    </BrowserRouter>
   );
-}
 
-export default Login;
+  // Ajusta los textos según tu componente
+  expect(screen.getByText("🔐 Iniciar Sesión")).toBeInTheDocument();
+  expect(screen.getByRole("button", { name: "Ingresar" })).toBeInTheDocument();
+});
