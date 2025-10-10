@@ -1,0 +1,46 @@
+# Nombre del flujo de trabajo que aparecerá en la pestaña "Actions"
+name: Deploy to GitHub Pages
+
+# Define cuándo se debe ejecutar esta acción
+on:
+  # Se ejecuta cuando se hace un push a la rama 'main'
+  push:
+    branches:
+      - main
+  # Permite ejecutar este flujo de trabajo manualmente desde la pestaña Actions
+  workflow_dispatch:
+
+# Permisos necesarios para que la acción pueda desplegar en tu nombre
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Define los trabajos (jobs) que se van a ejecutar
+jobs:
+  # Hay un solo trabajo llamado 'deploy'
+  deploy:
+    # El tipo de máquina virtual en la que se ejecutará el trabajo
+    runs-on: ubuntu-latest
+    # Los pasos que se seguirán en este trabajo
+    steps:
+      # 1. Clona tu repositorio en la máquina virtual
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # 2. Configura GitHub Pages
+      - name: Setup Pages
+        uses: actions/configure-pages@v4
+
+      # 3. Sube el contenido de tu proyecto como un 'artefacto' que GitHub Pages puede usar
+      # Por defecto, buscará en la raíz de tu proyecto un archivo index.html
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          # Sube el contenido desde la carpeta raíz del repositorio
+          path: '.' 
+
+      # 4. Despliega el artefacto en GitHub Pages
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
