@@ -1,46 +1,39 @@
-# Nombre del flujo de trabajo que aparecerá en la pestaña "Actions"
-name: Deploy to GitHub Pages
+name: 🚀 Build & Deploy React App
 
-# Define cuándo se debe ejecutar esta acción
 on:
-  # Se ejecuta cuando se hace un push a la rama 'main'
   push:
-    branches:
-      - main
-  # Permite ejecutar este flujo de trabajo manualmente desde la pestaña Actions
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
   workflow_dispatch:
 
-# Permisos necesarios para que la acción pueda desplegar en tu nombre
 permissions:
-  contents: read
+  contents: write
   pages: write
   id-token: write
 
-# Define los trabajos (jobs) que se van a ejecutar
 jobs:
-  # Hay un solo trabajo llamado 'deploy'
-  deploy:
-    # El tipo de máquina virtual en la que se ejecutará el trabajo
+  build:
     runs-on: ubuntu-latest
-    # Los pasos que se seguirán en este trabajo
+
     steps:
-      # 1. Clona tu repositorio en la máquina virtual
-      - name: Checkout repository
+      - name: 🧩 Checkout code
         uses: actions/checkout@v4
 
-      # 2. Configura GitHub Pages
-      - name: Setup Pages
-        uses: actions/configure-pages@v4
-
-      # 3. Sube el contenido de tu proyecto como un 'artefacto' que GitHub Pages puede usar
-      # Por defecto, buscará en la raíz de tu proyecto un archivo index.html
-      - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
+      - name: 🧰 Setup Node.js
+        uses: actions/setup-node@v4
         with:
-          # Sube el contenido desde la carpeta raíz del repositorio
-          path: '.' 
+          node-version: 20
+          cache: npm
 
-      # 4. Despliega el artefacto en GitHub Pages
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
+      - name: 📦 Install dependencies
+        run: npm ci
+
+      - name: 🏗 Build project
+        run: npm run build
+
+      - name: 🚀 Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./dist
