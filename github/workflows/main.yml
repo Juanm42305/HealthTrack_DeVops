@@ -1,4 +1,4 @@
-name: Node.js CI
+name: CI - Node.js
 
 on:
   push:
@@ -7,7 +7,7 @@ on:
     branches: [ main ]
 
 jobs:
-  build:
+  build-and-test:
     runs-on: ubuntu-latest
 
     strategy:
@@ -18,15 +18,18 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
+      - name: Setup Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
 
       - name: Install dependencies
-        run: npm ci
+        run: npm install
+
+      - name: Ensure Vitest is installed
+        run: npm install --save-dev vitest
 
       - name: Run tests with Vitest
-        run: npm test
+        run: npx vitest run --coverage
 
 
