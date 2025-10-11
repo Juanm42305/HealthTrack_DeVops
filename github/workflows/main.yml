@@ -22,12 +22,13 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
+          cache: 'npm'
 
       - name: Install dependencies
-        run: npm install
+        run: npm ci
 
-      - name: Ensure Vitest is installed
-        run: npm install --save-dev vitest
+      - name: Build project
+        run: npm run build
 
       - name: Run tests with Vitest
         run: npx vitest run --coverage
