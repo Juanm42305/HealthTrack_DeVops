@@ -15,10 +15,10 @@ jobs:
         node-version: [20.x]
 
     steps:
-      - name: Checkout code
+      - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Use Node.js ${{ matrix.node-version }}
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
@@ -26,9 +26,7 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Install Vitest (if not already installed)
-        run: npm install --save-dev vitest
-
-      - name: Run tests
+      - name: Run tests with Vitest
         run: npm test
+
 
