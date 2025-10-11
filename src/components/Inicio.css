@@ -1,0 +1,172 @@
+.inicio-container {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #1e3a8a, #0ea5e9);
+  color: white;
+  font-family: 'Poppins', sans-serif;
+  overflow-x: hidden;
+  justify-content: space-between;
+}
+
+/* Encabezado superior */
+.inicio-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: rgba(15, 23, 42, 0.85);
+  backdrop-filter: blur(12px);
+  padding: 1rem 2rem;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.logo {
+  font-size: 1.7rem;
+  font-weight: bold;
+  color: #38bdf8;
+}
+
+.nav-links a {
+  margin: 0 1rem;
+  text-decoration: none;
+  color: #cbd5e1;
+  transition: 0.3s;
+}
+
+.nav-links a:hover {
+  color: #38bdf8;
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #f1f5f9;
+}
+
+/* Banner de bienvenida */
+.inicio-banner {
+  text-align: center;
+  padding: 5rem 2rem;
+  background: linear-gradient(135deg, #2563eb, #7c3aed);
+  border-bottom-left-radius: 50% 10%;
+  border-bottom-right-radius: 50% 10%;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+}
+
+.inicio-banner h1 {
+  font-size: 2.8rem;
+  font-weight: 700;
+  margin-bottom: 0.8rem;
+}
+
+.inicio-banner p {
+  font-size: 1.1rem;
+  color: #e0e7ff;
+}
+
+/* Sección principal de tarjetas centradas */
+.inicio-main {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 2rem;
+  flex-wrap: wrap;
+  padding: 4rem 2rem;
+  flex: 1;
+  background: rgba(15, 23, 42, 0.85);
+}
+
+/* Tarjetas */
+.card {
+  background: rgba(30, 41, 59, 0.9);
+  border-radius: 1rem;
+  padding: 2rem;
+  width: 300px;
+  text-align: center;
+  transition: transform 0.3s ease, background 0.3s;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5);
+}
+
+.card:hover {
+  transform: translateY(-8px);
+  background: rgba(51, 65, 85, 0.9);
+}
+
+.card h3 {
+  color: #fff;
+  margin-bottom: 0.5rem;
+  font-size: 1.4rem;
+}
+
+.card p {
+  color: #cbd5e1;
+  font-size: 0.95rem;
+  margin-bottom: 1.2rem;
+}
+
+.card button {
+  margin-top: 1rem;
+  background: #38bdf8;
+  color: white;
+  border: none;
+  padding: 0.7rem 1.5rem;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.card button:hover {
+  background: #0ea5e9;
+}
+
+/* Footer */
+.inicio-footer {
+  background: rgba(15, 23, 42, 0.9);
+  padding: 1rem;
+  text-align: center;
+  color: #94a3b8;
+  font-size: 0.9rem;
+  box-shadow: 0 -4px 10px rgba(0, 0, 0, 0.4);
+}
+
+/* Botón de cerrar sesión */
+.logout-btn {
+  background: transparent;
+  border: 1px solid #ef4444;
+  color: #ef4444;
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  margin-top: 0.5rem;
+  transition: all 0.3s;
+}
+
+.logout-btn:hover {
+  background: #ef4444;
+  color: white;
+}
+
+/* Adaptación móvil */
+@media (max-width: 768px) {
+  .inicio-banner h1 {
+    font-size: 2rem;
+  }
+
+  .inicio-banner p {
+    font-size: 1rem;
+  }
+
+  .inicio-main {
+    flex-direction: column;
+    align-items: center;
+    padding: 2rem 1rem;
+  }
+
+  .card {
+    width: 90%;
+  }
+}
