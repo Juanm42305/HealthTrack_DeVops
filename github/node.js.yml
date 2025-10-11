@@ -2,7 +2,7 @@ name: Node.js CI
 
 on:
   push:
-    branches: [ dev, feature/* ]
+    branches: [ main, dev, feature/* ]
   pull_request:
     branches: [ main, dev ]
 
@@ -22,6 +22,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
+          cache: 'npm' # Agregué el caché para una instalación más rápida
 
       - name: 📦 Instalar dependencias
         run: npm ci
