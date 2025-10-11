@@ -10,7 +10,7 @@ function Register() {
   const handleRegister = (e) => {
     e.preventDefault();
 
-    const users = JSON.parse(localStorage.getItem("users")) || [];
+    const users = JSON.parse(localStorage.getItem("users")) || [];D
     const exists = users.find((u) => u.username === username);
 
     if (exists) {
