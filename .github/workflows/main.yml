@@ -2,9 +2,9 @@ name: Node.js CI
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ main ]
   pull_request:
-    branches: [ "main" ]
+    branches: [ main ]
 
 jobs:
   test:
@@ -22,22 +22,18 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
+          cache: 'npm'
 
       - name: Install dependencies
-        run: npm install
+        run: npm ci
 
-      # 🔧 Instalar Vitest si no está incluido en package.json
-      - name: Ensure Vitest is installed
-        run: npm install -D vitest
+      - name: Verify Vitest installation
+        run: |
+          if ! npx vitest --version; then
+            echo "⚠️ Vitest not found, installing..."
+            npm install -D vitest
+          fi
 
       - name: Run tests with Vitest
-        run: npm test
-
-      - name: Post Setup Node.js
-        if: always()
-        run: echo "✅ Node.js environment cleaned up"
-
-      - name: Complete job
-        if: always()
-        run: echo "🎉 Workflow complete!"
+        run: npx vitest run --coverage
 
