@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Historial Clínico</title>
+</head>
+<body>
+    <h1>Historial Clínico de {{ paciente[3] }}</h1> <!-- Nombre del paciente -->
+
+    <!-- 🔙 Botón de regreso -->
+    <a href="{{ url_for('pacientes') }}">⬅️ Volver a Pacientes</a>
+
+    <hr>
+
+    <!-- 🧾 Formulario para agregar nuevo registro -->
+    <h2>Agregar Registro al Historial</h2>
+    <form method="POST" action="{{ url_for('historial', paciente_id=paciente[0]) }}">
+        <label>Fecha:</label>
+        <input type="date" name="fecha" required><br><br>
+
+        <label>Diagnóstico:</label>
+        <input type="text" name="diagnostico" required><br><br>
+
+        <label>Tratamiento:</label>
+        <input type="text" name="tratamiento" required><br><br>
+
+        <label>Tipo de Sangre (opcional):</label>
+        <select name="tipo_sangre">
+            <option value="">Seleccionar</option>
+            <option>O+</option>
+            <option>O-</option>
+            <option>A+</option>
+            <option>A-</option>
+            <option>B+</option>
+            <option>B-</option>
+            <option>AB+</option>
+            <option>AB-</option>
+        </select><br><br>
+
+        <label>Alergias:</label>
+        <input type="text" name="alergias" placeholder="Ej: Penicilina, polvo..."><br><br>
+
+        <label>Parientes Cercanos:</label>
+        <input type="text" name="parientes" placeholder="Ej: Madre, Padre, Hermano..."><br><br>
+
+        <label>Descripción adicional:</label><br>
+        <textarea name="descripcion" rows="4" cols="40" placeholder="Observaciones, evolución del paciente..."></textarea><br><br>
+
+        <button type="submit">💾 Guardar en Historial</button>
+    </form>
+
+    <hr>
+
+    <!-- 📋 Tabla de registros existentes -->
+    <h2>Historial Guardado</h2>
+    {% if historial %}
+        <table border="1" cellpadding="8">
+            <tr>
+                <th>Fecha</th>
+                <th>Diagnóstico</th>
+                <th>Tratamiento</th>
+                <th>Tipo Sangre</th>
+                <th>Alergias</th>
+                <th>Parientes</th>
+                <th>Descripción</th>
+                <th>Acción</th>
+            </tr>
+            {% for h in historial %}
+            <tr>
+                <td>{{ h[2] }}</td>
+                <td>{{ h[3] }}</td>
+                <td>{{ h[4] }}</td>
+                <td>{{ h[5] }}</td>
+                <td>{{ h[6] }}</td>
+                <td>{{ h[7] }}</td>
+                <td>{{ h[8] }}</td>
+                <td><a href="{{ url_for('editar_historial', id=h[0]) }}">Editar</a></td>
+            </tr>
+            {% endfor %}
+        </table>
+    {% else %}
+        <p>📭 No hay registros aún en el historial clínico.</p>
+    {% endif %}
+</body>
+</html>
