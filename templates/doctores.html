@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -104,3 +105,111 @@
     </script>
 </body>
 </html>
+=======
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Gestión de Doctores</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <h1>Registro de Doctores</h1>
+
+    <form method="POST">
+        <label>Nombre:</label>
+        <input type="text" name="nombre" required><br>
+
+        <label>Especialidad:</label>
+        <input type="text" id="buscador" placeholder="Buscar especialidad...">
+        <select name="especialidad" id="lista-especialidades" required>
+            <option value="">Seleccionar especialidad</option>
+            <option>Cardiología</option>
+            <option>Pediatría</option>
+            <option>Ginecología</option>
+            <option>Dermatología</option>
+            <option>Neurología</option>
+            <option>Oftalmología</option>
+            <option>Ortopedia</option>
+            <option>Otorrinolaringología</option>
+            <option>Medicina Interna</option>
+            <option>Cirugía General</option>
+            <option>Urología</option>
+            <option>Oncología</option>
+            <option>Endocrinología</option>
+            <option>Traumatología</option>
+            <option>Psiquiatría</option>
+            <option>Radiología</option>
+            <option>Anestesiología</option>
+            <option>Neumología</option>
+            <option>Hematología</option>
+            <option>Nefrología</option>
+        </select><br>
+
+        <label>Teléfono:</label>
+        <input type="text" id="telefono" name="telefono" required><br>
+
+        <label>Correo:</label>
+        <input type="email" name="correo" required><br>
+
+        <button type="submit">Guardar Doctor</button>
+        <a href="{{ url_for('index') }}">⬅️ Regresar</a>
+    </form>
+
+    <hr>
+
+    <h2>Lista de Doctores Registrados</h2>
+    {% if doctores %}
+        <table border="1" cellpadding="8">
+            <tr>
+                <th>ID</th>
+                <th>Nombre</th>
+                <th>Especialidad</th>
+                <th>Teléfono</th>
+                <th>Correo</th>
+            </tr>
+            {% for d in doctores %}
+            <tr>
+                <td>{{ d[0] }}</td>
+                <td>{{ d[1] }}</td>
+                <td>{{ d[2] }}</td>
+                <td>{{ d[3] }}</td>
+                <td>{{ d[4] }}</td>
+            </tr>
+            {% endfor %}
+        </table>
+    {% else %}
+        <p>No hay doctores registrados todavía.</p>
+    {% endif %}
+
+    <!-- SCRIPT combinado -->
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // --- FILTRO DE ESPECIALIDADES ---
+        const buscador = document.getElementById('buscador');
+        const lista = document.getElementById('lista-especialidades');
+        if (buscador && lista) {
+            buscador.addEventListener('keyup', function() {
+                const filtro = buscador.value.toLowerCase();
+                for (let option of lista.options) {
+                    const texto = option.text.toLowerCase();
+                    option.style.display = texto.includes(filtro) ? '' : 'none';
+                }
+            });
+        }
+
+        // --- VALIDACIÓN DE TELÉFONO ---
+        const telInput = document.getElementById('telefono');
+        if (telInput) {
+            telInput.addEventListener('input', function() {
+                if (this.value.match(/[^0-9]/)) {
+                    alert('⚠️ Solo se permiten números en el teléfono');
+                    this.value = this.value.replace(/[^0-9]/g, '');
+                }
+            });
+        }
+    });
+    </script>
+</body>
+</html>
+>>>>>>> 55120c86a6abcf22155cb87a16ca4017087a0341
