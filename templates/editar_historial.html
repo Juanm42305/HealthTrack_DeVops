@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Editar Historial Clínico</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <h2>Editar Historial Clínico</h2>
+
+    <form method="POST">
+        <label>Fecha:</label>
+        <input type="date" name="fecha" value="{{ historial[2] }}" required><br>
+
+        <label>Diagnóstico:</label>
+        <input type="text" name="diagnostico" value="{{ historial[3] }}" required><br>
+
+        <label>Tratamiento:</label>
+        <input type="text" name="tratamiento" value="{{ historial[4] }}" required><br>
+
+        <label>Tipo de Sangre:</label>
+        <input type="text" name="tipo_sangre" value="{{ historial[5] }}"><br>
+
+        <label>Alergias:</label>
+        <input type="text" name="alergias" value="{{ historial[6] }}"><br>
+
+        <label>Parientes:</label>
+        <input type="text" name="parientes" value="{{ historial[7] }}"><br>
+
+        <label>Descripción:</label>
+        <textarea name="descripcion">{{ historial[8] }}</textarea><br>
+
+        <button type="submit">Guardar Cambios</button>
+    </form>
+
+    <a href="{{ url_for('historial', paciente_id=historial[1]) }}">Volver al historial</a>
+</body>
+</html>
