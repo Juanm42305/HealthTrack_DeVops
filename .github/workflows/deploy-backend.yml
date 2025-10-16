@@ -1,0 +1,17 @@
+name: Deploy Backend to Render
+
+on:
+  # Se activa solo cuando haces push a la rama main...
+  push:
+    branches:
+      - main
+    # ...Y solo si los cambios ocurrieron dentro de la carpeta 'backend'
+    paths:
+      - 'backend/**'
+
+jobs:
+  deploy-backend:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger Render Deploy Hook
+        run: curl -X POST ${{ secrets.RENDER_DEPLOY_HOOK_URL }}
