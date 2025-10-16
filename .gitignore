@@ -1,5 +1,14 @@
-node_modules/
-dist/
-.env
-.vite/
+# Dependencias de ambos proyectos
+frontend/node_modules
+backend/node_modules
+
+# Archivos de build (compilación)
+frontend/dist
+# Archivos de Vercel y entorno
 .vercel
+.env
+.env.local
+
+# Bases de datos y archivos de Python
+*.db
+__pycache__/
