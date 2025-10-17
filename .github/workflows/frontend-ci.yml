@@ -1,0 +1,47 @@
+name: Frontend CI Check
+
+on:
+  push:
+    branches: [ "main" ]
+    # La acción solo se ejecutará si hay cambios en la carpeta frontend
+    paths:
+      - 'frontend/**'
+  pull_request:
+    branches: [ "main" ]
+    paths:
+      - 'frontend/**'
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    
+    # MUY IMPORTANTE: Le decimos que todos los comandos se ejecuten dentro de la carpeta 'frontend'
+    defaults:
+      run:
+        working-directory: ./frontend
+
+    steps:
+      # 1. Descarga el código
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # 2. Configura Node.js
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+          # Especificamos la ruta al package-lock.json del frontend para la caché
+          cache-dependency-path: frontend/package-lock.json
+
+      # 3. Instala las dependencias (¡El paso que faltaba!)
+      - name: Install dependencies
+        run: npm ci
+
+      # 4. Construye el proyecto para verificar que no hay errores
+      - name: Build project
+        run: npm run build
+
+      # 5. Ejecuta las pruebas
+      - name: Run tests
+        run: npm run test
