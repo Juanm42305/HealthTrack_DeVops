@@ -4,10 +4,11 @@ import React from 'react';
 import { Routes, Route, Link, useNavigate } from 'react-router-dom';
 import Login from './components/Login';
 import Register from './components/Register';
-import DashboardDispatcher from './components/DashboardDispatcher'; // ¡El nuevo despachador!
+import DashboardDispatcher from './components/DashboardDispatcher';
 import Profile from './components/Profile';
 import ProtectedRoute from './components/ProtectedRoute';
 import { useAuth } from './context/AuthContext';
+import GestionMedicos from './components/GestionMedicos'; // <-- ¡NUEVO! Se importa el componente
 
 function App() {
   const { isAuthenticated, logout } = useAuth();
@@ -38,7 +39,7 @@ function App() {
           path="/dashboard"
           element={
             <ProtectedRoute>
-              <DashboardDispatcher /> {/* ¡Usamos el despachador aquí! */}
+              <DashboardDispatcher />
             </ProtectedRoute>
           }
         />
@@ -47,6 +48,16 @@ function App() {
           element={
             <ProtectedRoute>
               <Profile />
+            </ProtectedRoute>
+          }
+        />
+        
+        {/* --- ¡NUEVA RUTA AÑADIDA AQUÍ! --- */}
+        <Route
+          path="/admin/gestion-medicos"
+          element={
+            <ProtectedRoute>
+              <GestionMedicos />
             </ProtectedRoute>
           }
         />

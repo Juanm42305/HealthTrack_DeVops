@@ -143,6 +143,57 @@ app.post('/api/admin/add-doctor', async (req, res) => {
   }
 });
 
+// --- RUTA PARA OBTENER TODOS LOS MÉDICOS ---
+app.get('/api/admin/doctors', async (req, res) => {
+  try {
+    // Esta consulta une la tabla 'users' con 'doctor_profiles' para obtener toda la info
+    const query = `
+      SELECT u.id, u.username, dp.* FROM users u
+      JOIN doctor_profiles dp ON u.id = dp.user_id
+      WHERE u.role = 'medico'
+    `;
+    const doctors = await pool.query(query);
+    res.json(doctors.rows);
+  } catch (err) {
+    console.error('Error al obtener médicos:', err.message);
+    res.status(500).json({ error: "Error en el servidor al obtener médicos" });
+  }
+});
+
+// --- RUTA PARA ACTUALIZAR EL PERFIL DE UN MÉDICO ---
+app.put('/api/admin/doctors/:id', async (req, res) => {
+  const { id } = req.params; // El ID del usuario/médico a actualizar
+  const { 
+    nombres, primer_apellido, segundo_apellido, edad, 
+    fecha_nacimiento, numero_cedula, especialidad, consultorio, sede 
+  } = req.body; // Los nuevos datos que vienen del formulario
+
+  try {
+    const query = `
+      UPDATE doctor_profiles
+      SET nombres = $1, primer_apellido = $2, segundo_apellido = $3, edad = $4, 
+          fecha_nacimiento = $5, numero_cedula = $6, especialidad = $7, consultorio = $8, sede = $9
+      WHERE user_id = $10
+      RETURNING *
+    `;
+    const values = [
+      nombres, primer_apellido, segundo_apellido, edad, 
+      fecha_nacimiento, numero_cedula, especialidad, consultorio, sede, id
+    ];
+    
+    const updatedProfile = await pool.query(query, values);
+
+    if (updatedProfile.rows.length === 0) {
+      return res.status(404).json({ error: "No se encontró el perfil del médico." });
+    }
+
+    res.json(updatedProfile.rows[0]);
+  } catch (err) {
+    console.error('Error al actualizar médico:', err.message);
+    res.status(500).json({ error: "Error en el servidor al actualizar médico" });
+  }
+});
+
 app.listen(PORT, () => {
   console.log(`Servidor corriendo en el puerto ${PORT}`);
 });
