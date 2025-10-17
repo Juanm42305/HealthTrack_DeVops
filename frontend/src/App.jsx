@@ -5,7 +5,7 @@ import Login from './components/Login';
 import Register from './components/Register';
 import Dashboard from './components/Dashboard';
 import Profile from './components/Profile';
-import ProtectedRoute from './components/ProtectedRoute'; // Importamos el guardia
+import ProtectedRoute from './context/ProtectedRoute'; // <-- ¡ESTA ES LA RUTA CORRECTA! // Importamos el guardia
 import { useAuth } from './context/AuthContext'; // Importamos el hook
 
 function App() {
