@@ -194,6 +194,69 @@ app.put('/api/admin/doctors/:id', async (req, res) => {
   }
 });
 
+// --- RUTA PARA QUE EL ADMIN CREE HORARIOS DISPONIBLES ---
+app.post('/api/admin/schedule', async (req, res) => {
+  const { doctor_id, appointment_time, sede } = req.body;
+
+  if (!doctor_id || !appointment_time || !sede) {
+    return res.status(400).json({ error: 'Faltan datos para crear el horario.' });
+  }
+
+  try {
+    const query = "INSERT INTO appointments (doctor_id, appointment_time, sede, status) VALUES ($1, $2, $3, 'disponible') RETURNING *";
+    const newSlot = await pool.query(query, [doctor_id, appointment_time, sede]);
+    res.status(201).json(newSlot.rows[0]);
+  } catch (err) {
+    console.error('Error al crear horario:', err.message);
+    res.status(500).json({ error: 'Error en el servidor.' });
+  }
+});
+
+// --- RUTA PARA QUE EL USUARIO VEA LAS CITAS DISPONIBLES ---
+app.get('/api/appointments/available', async (req, res) => {
+  try {
+    // Consulta que une la cita con el perfil del médico para mostrar su nombre y especialidad
+    const query = `
+      SELECT a.id, a.appointment_time, a.sede, u.username as doctor_name, dp.nombres as doctor_nombres, dp.primer_apellido as doctor_apellido, dp.especialidad
+      FROM appointments a
+      JOIN users u ON a.doctor_id = u.id
+      JOIN doctor_profiles dp ON a.doctor_id = dp.user_id
+      WHERE a.status = 'disponible' AND a.appointment_time > NOW()
+      ORDER BY a.appointment_time ASC
+    `;
+    const availableAppointments = await pool.query(query);
+    res.json(availableAppointments.rows);
+  } catch (err) {
+    console.error('Error al obtener citas disponibles:', err.message);
+    res.status(500).json({ error: 'Error en el servidor.' });
+  }
+});
+
+// --- RUTA PARA QUE UN USUARIO AGENTE UNA CITA ---
+app.put('/api/appointments/book/:id', async (req, res) => {
+  const { id } = req.params; // El ID de la cita a agendar
+  const { patient_id } = req.body; // El ID del paciente que está agendando
+
+  if (!patient_id) {
+    return res.status(400).json({ error: 'ID del paciente es requerido.' });
+  }
+
+  try {
+    // Actualizamos la cita para asignarle el paciente y cambiar su estado
+    const query = "UPDATE appointments SET patient_id = $1, status = 'agendada' WHERE id = $2 AND status = 'disponible' RETURNING *";
+    const updatedAppointment = await pool.query(query, [patient_id, id]);
+
+    if (updatedAppointment.rows.length === 0) {
+      return res.status(404).json({ error: 'La cita no está disponible o no existe.' });
+    }
+
+    res.json(updatedAppointment.rows[0]);
+  } catch (err) {
+    console.error('Error al agendar cita:', err.message);
+    res.status(500).json({ error: 'Error en el servidor.' });
+  }
+});
+
 app.listen(PORT, () => {
   console.log(`Servidor corriendo en el puerto ${PORT}`);
 });

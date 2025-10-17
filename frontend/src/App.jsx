@@ -8,7 +8,8 @@ import DashboardDispatcher from './components/DashboardDispatcher';
 import Profile from './components/Profile';
 import ProtectedRoute from './components/ProtectedRoute';
 import { useAuth } from './context/AuthContext';
-import GestionMedicos from './components/GestionMedicos'; // <-- ¡NUEVO! Se importa el componente
+import GestionMedicos from './components/GestionMedicos';
+import GestionCitas from './components/GestionCitas'; // <-- ¡NUEVO! Se importa el componente de citas
 
 function App() {
   const { isAuthenticated, logout } = useAuth();
@@ -52,12 +53,22 @@ function App() {
           }
         />
         
-        {/* --- ¡NUEVA RUTA AÑADIDA AQUÍ! --- */}
+        {/* Rutas del Administrador */}
         <Route
           path="/admin/gestion-medicos"
           element={
             <ProtectedRoute>
               <GestionMedicos />
+            </ProtectedRoute>
+          }
+        />
+        
+        {/* --- ¡NUEVA RUTA AÑADIDA AQUÍ! --- */}
+        <Route
+          path="/admin/gestion-citas"
+          element={
+            <ProtectedRoute>
+              <GestionCitas />
             </ProtectedRoute>
           }
         />
