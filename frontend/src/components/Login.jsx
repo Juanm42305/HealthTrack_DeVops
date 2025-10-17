@@ -1,7 +1,8 @@
-// Contenido para frontend/src/components/Login.jsx
+// Contenido completo para frontend/src/components/Login.jsx
+
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { useAuth } from "../context/AuthContext"; // Importamos nuestro hook de Auth
+import { useAuth } from "../context/AuthContext";
 import "./Login.css";
 
 function Login() {
@@ -21,19 +22,21 @@ function Login() {
         body: JSON.stringify({ username, password }),
       });
 
+      const data = await response.json(); // Leemos la respuesta del backend
+
       if (response.ok) {
-        // Si el backend dice que el login es correcto:
-        login(); // 1. Le avisamos al cerebro que el usuario está autenticado
-        navigate('/dashboard'); // 2. Lo redirigimos al dashboard
+        // ¡CAMBIO CLAVE! Pasamos el objeto 'user' completo a la función login.
+        login(data.user); 
+        navigate('/dashboard'); 
       } else {
-        const errorData = await response.json();
-        alert(`Error: ${errorData.error || 'Usuario o contraseña incorrectos'}`);
+        alert(`Error: ${data.error || 'Usuario o contraseña incorrectos'}`);
       }
     } catch (error) {
       alert("No se pudo conectar con el servidor.");
     }
   };
 
+  // ... El resto del JSX de tu formulario sigue igual ...
   return (
     <div className="login-page">
       <div className="login-container">
