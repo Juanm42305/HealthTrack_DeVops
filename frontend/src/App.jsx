@@ -1,28 +1,56 @@
+// Contenido para frontend/src/App.jsx
 import React from 'react';
-// 1. Importa los componentes de React Router y tus vistas
-import { Routes, Route, Link } from 'react-router-dom';
-import Login from './components/Login';       // Asumo que ya tienes estos
-import Register from './components/Register'; // Asumo que ya tienes estos
-import Dashboard from './components/Dashboard'; // La nueva vista
-import Profile from './components/Profile';     // La nueva vista
+import { Routes, Route, Link, useNavigate } from 'react-router-dom';
+import Login from './components/Login';
+import Register from './components/Register';
+import Dashboard from './components/Dashboard';
+import Profile from './components/Profile';
+import ProtectedRoute from './components/ProtectedRoute'; // Importamos el guardia
+import { useAuth } from './context/AuthContext'; // Importamos el hook
 
 function App() {
+  const { isAuthenticated, logout } = useAuth(); // Obtenemos el estado y la función de logout
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    logout();
+    navigate('/'); // Redirigimos al login después de cerrar sesión
+  };
+
   return (
     <div>
-      {/* 2. (Opcional) Un menú de navegación simple para probar */}
-      <nav>
-        <Link to="/">Login</Link> | <Link to="/register">Registrarse</Link> | <Link to="/dashboard">Dashboard</Link> | <Link to="/profile">Perfil</Link>
-      </nav>
+      {/* --- MENÚ DE NAVEGACIÓN INTELIGENTE --- */}
+      {isAuthenticated && (
+        <nav style={{ padding: '1rem', background: '#333', color: 'white' }}>
+          <Link to="/dashboard" style={{ color: 'white', marginRight: '1rem' }}>Dashboard</Link>
+          <Link to="/profile" style={{ color: 'white', marginRight: '1rem' }}>Perfil</Link>
+          <button onClick={handleLogout} style={{ float: 'right' }}>Cerrar Sesión</button>
+        </nav>
+      )}
 
-      <hr />
-
-      {/* 3. Aquí se define el área donde se renderizarán las rutas */}
+      {/* --- RUTAS DE LA APLICACIÓN --- */}
       <Routes>
+        {/* Rutas Públicas */}
         <Route path="/" element={<Login />} />
         <Route path="/register" element={<Register />} />
-        <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/profile" element={<Profile />} />
-        {/* Puedes añadir todas las rutas que quieras aquí */}
+
+        {/* Rutas Privadas (Protegidas por el guardia) */}
+        <Route
+          path="/dashboard"
+          element={
+            <ProtectedRoute>
+              <Dashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/profile"
+          element={
+            <ProtectedRoute>
+              <Profile />
+            </ProtectedRoute>
+          }
+        />
       </Routes>
     </div>
   );
