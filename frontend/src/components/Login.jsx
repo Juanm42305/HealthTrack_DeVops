@@ -1,34 +1,78 @@
-import React from 'react';
-// 1. Importa el hook useNavigate
-import { useNavigate } from 'react-router-dom';
+import React, { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+// Asumo que tienes un CSS para el login, si no, puedes crearlo
+// import "./Login.css"; 
 
 function Login() {
-  // 2. Llama al hook para obtener la función de navegación
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
   const navigate = useNavigate();
 
-  const handleLogin = (event) => {
-    event.preventDefault(); // Evita que el formulario recargue la página
+  // 1. Convertimos la función a 'async'
+  const handleLogin = async (event) => {
+    event.preventDefault();
 
-    // --- Aquí iría tu lógica para verificar el usuario y la contraseña ---
-    // Por ahora, vamos a simular un login exitoso.
+    const apiUrl = import.meta.env.VITE_API_URL;
 
-    const loginFueExitoso = true; // Simulación
+    try {
+      // 2. Hacemos la llamada al endpoint de login del backend
+      const response = await fetch(`${apiUrl}/api/login`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ username, password }),
+      });
 
-    if (loginFueExitoso) {
-      // 3. Si el login es exitoso, redirige al dashboard
-      console.log("Login exitoso, redirigiendo al dashboard...");
-      navigate('/dashboard');
-    } else {
-      alert("Usuario o contraseña incorrectos");
+      if (response.ok) {
+        // Si el login es exitoso
+        console.log("Login exitoso, redirigiendo al dashboard...");
+        navigate('/dashboard'); // Redirigimos al dashboard
+      } else {
+        // Si el backend dice que las credenciales son incorrectas
+        const errorData = await response.json();
+        alert(`Error: ${errorData.error || 'Usuario o contraseña incorrectos'}`);
+      }
+    } catch (error) {
+      console.error("Error de red:", error);
+      alert("No se pudo conectar con el servidor.");
     }
   };
 
   return (
-    <form onSubmit={handleLogin}>
-      <h2>Iniciar Sesión</h2>
-      {/* Tus inputs de email y contraseña aquí */}
-      <button type="submit">Entrar</button>
-    </form>
+    // He mejorado un poco tu formulario para que sea funcional
+    <div className="login-container"> {/* Usa clases para estilizar */}
+      <div className="login-card">
+        <h1>💙 HealthTrack</h1>
+        <h2>Iniciar Sesión</h2>
+        <form onSubmit={handleLogin}>
+          <div className="input-group">
+            <label>Usuario</label>
+            <input
+              type="text"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              placeholder="Ingresa tu usuario"
+              required
+            />
+          </div>
+          <div className="input-group">
+            <label>Contraseña</label>
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="Ingresa tu contraseña"
+              required
+            />
+          </div>
+          <button type="submit" className="login-btn">Entrar</button>
+        </form>
+        <p className="register-link">
+          ¿No tienes cuenta? <Link to="/register">Regístrate</Link>
+        </p>
+      </div>
+    </div>
   );
 }
 
