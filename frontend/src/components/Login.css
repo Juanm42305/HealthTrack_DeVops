@@ -1,34 +1,136 @@
-/* Contenido para Login.css */
-.login-container {
+/* Reinicio global */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* Fondo degradado a pantalla completa */
+body,
+html,
+#root {
+  height: 100%;
+  width: 100%;
+  background: linear-gradient(135deg, #4f46e5, #06b6d4);
+  font-family: "Poppins", sans-serif;
   display: flex;
   justify-content: center;
   align-items: center;
+}
+
+/* Contenedor principal */
+.login-page {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
   height: 100vh;
-  background-color: #f0f2f5;
+  background: transparent;
+  color: #fff;
 }
 
-.login-card {
-  background: white;
-  padding: 2rem;
-  border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+/* Caja del formulario */
+.login-container {
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(20px);
+  padding: 3rem 2.5rem;
+  border-radius: 20px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
   text-align: center;
-  width: 100%;
+  width: 90%;
   max-width: 400px;
+  animation: fadeIn 0.8s ease-in-out;
 }
 
-.login-btn {
-  width: 100%;
-  padding: 0.75rem;
-  border: none;
-  background-color: #007bff;
+/* Logo y título */
+.login-logo {
+  font-size: 2rem;
+  font-weight: bold;
+  color: #38bdf8;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.4rem;
+  margin-bottom: 0.3rem;
+}
+
+.login-title {
+  font-size: 1.6rem;
   color: white;
-  border-radius: 5px;
-  font-size: 1rem;
-  cursor: pointer;
-  margin-top: 1rem;
+  margin-bottom: 1.5rem;
 }
 
-.login-btn:hover {
-  background-color: #0056b3;
+/* Inputs */
+.login-container input {
+  width: 100%;
+  padding: 0.8rem;
+  margin: 0.7rem 0;
+  border: none;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.25);
+  color: white;
+  font-size: 1rem;
+}
+
+.login-container input::placeholder {
+  color: #e0e0e0;
+}
+
+/* Botón */
+.login-container button {
+  width: 100%;
+  padding: 0.9rem;
+  margin-top: 1rem;
+  background: #38bdf8;
+  border: none;
+  border-radius: 10px;
+  color: white;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.login-container button:hover {
+  background: #0ea5e9;
+}
+
+/* Enlace inferior */
+.login-footer {
+  margin-top: 1.5rem;
+  font-size: 0.9rem;
+  color: white;
+}
+
+.login-footer a {
+  color: #fff;
+  font-weight: bold;
+  text-decoration: underline;
+}
+
+.login-footer a:hover {
+  color: #38bdf8;
+}
+
+/* Animación */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Adaptación móvil */
+@media (max-width: 480px) {
+  .login-container {
+    padding: 2rem 1.5rem;
+  }
+
+  .login-title {
+    font-size: 1.4rem;
+  }
 }

@@ -1,0 +1,132 @@
+/* Contenido para frontend/src/components/AdminDashboard.css */
+
+/* Contenedor principal con Flexbox para sidebar y contenido */
+.admin-dashboard {
+  display: flex;
+  height: 100vh;
+  width: 100vw;
+  background-color: #f4f7f6; /* Un fondo claro y limpio para el contenido */
+  font-family: "Poppins", sans-serif;
+}
+
+/* --- Barra Lateral (Sidebar) --- */
+.sidebar {
+  width: 260px;
+  background: linear-gradient(160deg, #3a32b3, #0a879e); /* Mantenemos el degradado */
+  color: white;
+  display: flex;
+  flex-direction: column;
+  padding: 1.5rem 0;
+}
+
+.sidebar-header {
+  padding: 0 1.5rem;
+  margin-bottom: 2rem;
+  text-align: center;
+}
+
+.sidebar-header h3 {
+  font-size: 1.8rem;
+}
+
+.sidebar-header span {
+  font-size: 0.9rem;
+  color: #c7d2fe;
+}
+
+.sidebar-nav ul {
+  list-style: none;
+  padding: 0;
+}
+
+.sidebar-nav li a {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem 1.5rem;
+  color: #e0e7ff;
+  text-decoration: none;
+  font-weight: 500;
+  transition: background 0.3s, color 0.3s;
+  border-left: 4px solid transparent;
+}
+
+.sidebar-nav li a:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+  border-left: 4px solid #38bdf8;
+}
+
+/* --- Contenido Principal --- */
+.main-content {
+  flex-grow: 1; /* Ocupa el resto del espacio */
+  padding: 2rem;
+  overflow-y: auto; /* Permite scroll si el contenido es muy largo */
+}
+
+.main-header {
+  margin-bottom: 2rem;
+}
+
+.main-header h1 {
+  font-size: 2.2rem;
+  color: #333;
+}
+
+.main-header p {
+  color: #777;
+}
+
+/* --- Rejilla de Widgets (Tarjetas) --- */
+.widget-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.5rem;
+}
+
+.widget {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(10px);
+  padding: 1.5rem;
+  border-radius: 15px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+  text-align: center;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  transition: transform 0.3s;
+}
+
+.widget:hover {
+  transform: translateY(-5px);
+}
+
+.widget-icon {
+  font-size: 2.5rem;
+  color: #4f46e5;
+  margin-bottom: 1rem;
+}
+
+.widget h3 {
+  font-size: 1.3rem;
+  color: #1e293b;
+  margin-bottom: 0.5rem;
+}
+
+.widget p {
+  color: #64748b;
+  margin-bottom: 1.5rem;
+}
+
+.widget button {
+  background: #38bdf8;
+  color: white;
+  border: none;
+  padding: 0.7rem 1.5rem;
+  border-radius: 8px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.widget button:hover {
+  background: #0ea5e9;
+}

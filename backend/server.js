@@ -98,6 +98,51 @@ app.post('/api/login', async (req, res) => {
   }
 });
 
+// =================================================================
+// ============== ¡¡¡NUEVA RUTA AÑADIDA AQUÍ!!! ==============
+// =================================================================
+
+// --- RUTA PARA QUE EL ADMIN AÑADA UN MÉDICO ---
+// (En un futuro, esta ruta debe estar protegida para que solo la pueda llamar un admin)
+app.post('/api/admin/add-doctor', async (req, res) => {
+  const { username, password } = req.body;
+
+  if (!username || !password) {
+    return res.status(400).json({ error: 'Usuario y contraseña son requeridos' });
+  }
+
+  const client = await pool.connect();
+
+  try {
+    await client.query('BEGIN');
+
+    const saltRounds = 10;
+    const hashedPassword = await bcrypt.hash(password, saltRounds);
+
+    // 1. Inserta el nuevo usuario con rol 'medico'
+    const newUserQuery = "INSERT INTO users (username, password, role) VALUES ($1, $2, 'medico') RETURNING id, username, role";
+    const newUserResult = await client.query(newUserQuery, [username, hashedPassword]);
+    const newDoctor = newUserResult.rows[0];
+
+    // 2. Crea un perfil de médico vacío asociado a este nuevo usuario
+    const newProfileQuery = "INSERT INTO doctor_profiles (user_id) VALUES ($1)";
+    await client.query(newProfileQuery, [newDoctor.id]);
+
+    await client.query('COMMIT');
+    
+    res.status(201).json(newDoctor);
+  } catch (err) {
+    await client.query('ROLLBACK');
+    console.error('Error al añadir médico:', err.message);
+    if (err.code === '23505') {
+        return res.status(409).json({ error: "El nombre de usuario ya existe." });
+    }
+    res.status(500).json({ error: "Error en el servidor al añadir médico" });
+  } finally {
+    client.release();
+  }
+});
+
 app.listen(PORT, () => {
   console.log(`Servidor corriendo en el puerto ${PORT}`);
 });
