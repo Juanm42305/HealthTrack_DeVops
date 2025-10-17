@@ -1,53 +1,34 @@
-import React, { useState } from "react";
-import { Link } from "react-router-dom";
-import "./Login.css";
+import React from 'react';
+// 1. Importa el hook useNavigate
+import { useNavigate } from 'react-router-dom';
 
-function Login({ onLogin }) {
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
+function Login() {
+  // 2. Llama al hook para obtener la función de navegación
+  const navigate = useNavigate();
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    onLogin(username, password);
+  const handleLogin = (event) => {
+    event.preventDefault(); // Evita que el formulario recargue la página
+
+    // --- Aquí iría tu lógica para verificar el usuario y la contraseña ---
+    // Por ahora, vamos a simular un login exitoso.
+
+    const loginFueExitoso = true; // Simulación
+
+    if (loginFueExitoso) {
+      // 3. Si el login es exitoso, redirige al dashboard
+      console.log("Login exitoso, redirigiendo al dashboard...");
+      navigate('/dashboard');
+    } else {
+      alert("Usuario o contraseña incorrectos");
+    }
   };
 
   return (
-    <div className="login-container">
-      <div className="login-card">
-        <h1>💙 HealthTrack</h1>
-        <h2>Iniciar Sesión</h2>
-
-        <form onSubmit={handleSubmit}>
-          <div className="input-group">
-            <label>Usuario</label>
-            <input
-              type="text"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              placeholder="Tu nombre de usuario"
-              required
-            />
-          </div>
-
-          <div className="input-group">
-            <label>Contraseña</label>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="Tu contraseña"
-              required
-            />
-          </div>
-
-          <button type="submit" className="login-btn">Entrar</button>
-        </form>
-
-        <p className="register-link">
-          ¿No tienes cuenta? <Link to="/register">Regístrate aquí</Link>
-        </p>
-      </div>
-    </div>
+    <form onSubmit={handleLogin}>
+      <h2>Iniciar Sesión</h2>
+      {/* Tus inputs de email y contraseña aquí */}
+      <button type="submit">Entrar</button>
+    </form>
   );
 }
 
