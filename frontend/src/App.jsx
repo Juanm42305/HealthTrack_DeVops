@@ -9,7 +9,8 @@ import Profile from './components/Profile';
 import ProtectedRoute from './components/ProtectedRoute';
 import { useAuth } from './context/AuthContext';
 import GestionMedicos from './components/GestionMedicos';
-import GestionCitas from './components/GestionCitas'; // <-- ¡NUEVO! Se importa el componente de citas
+import GestionCitas from './components/GestionCitas';
+import AgendarCita from './components/AgendarCita'; // <-- ¡NUEVO! Se importa la página para agendar
 
 function App() {
   const { isAuthenticated, logout } = useAuth();
@@ -35,7 +36,7 @@ function App() {
         <Route path="/" element={<Login />} />
         <Route path="/register" element={<Register />} />
 
-        {/* Rutas Privadas */}
+        {/* Rutas Privadas Comunes */}
         <Route
           path="/dashboard"
           element={
@@ -53,6 +54,16 @@ function App() {
           }
         />
         
+        {/* --- ¡NUEVA RUTA DE USUARIO AÑADIDA AQUÍ! --- */}
+        <Route
+          path="/agendar-cita"
+          element={
+            <ProtectedRoute>
+              <AgendarCita />
+            </ProtectedRoute>
+          }
+        />
+
         {/* Rutas del Administrador */}
         <Route
           path="/admin/gestion-medicos"
@@ -62,8 +73,6 @@ function App() {
             </ProtectedRoute>
           }
         />
-        
-        {/* --- ¡NUEVA RUTA AÑADIDA AQUÍ! --- */}
         <Route
           path="/admin/gestion-citas"
           element={
