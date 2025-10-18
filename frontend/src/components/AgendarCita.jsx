@@ -1,4 +1,4 @@
-// Contenido para frontend/src/components/AgendarCita.jsx
+// Contenido actualizado para frontend/src/components/AgendarCita.jsx
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
@@ -7,66 +7,66 @@ import './AgendarCita.css';
 function AgendarCita() {
   const [citasDisponibles, setCitasDisponibles] = useState([]);
   const [loading, setLoading] = useState(true);
-  const { user } = useAuth(); // Necesitamos el ID del paciente que va a agendar
+  const [motivo, setMotivo] = useState(''); // Estado para el motivo de la cita
+  const { user } = useAuth();
   const navigate = useNavigate();
 
-  const fetchCitasDisponibles = async () => {
-    const apiUrl = import.meta.env.VITE_API_URL;
-    try {
-      const response = await fetch(`${apiUrl}/api/appointments/available`);
+  useEffect(() => {
+    const fetchCitasDisponibles = async () => {
+      const apiUrl = import.meta.env.VITE_API_URL;
+      // ¡CAMBIO CLAVE! Llamamos a la nueva ruta que solo trae citas generales
+      const response = await fetch(`${apiUrl}/api/appointments/available/general`);
       if (response.ok) {
         setCitasDisponibles(await response.json());
       }
-    } catch (error) {
-      console.error("Error al cargar citas:", error);
-    } finally {
       setLoading(false);
-    }
-  };
-
-  useEffect(() => {
+    };
     fetchCitasDisponibles();
   }, []);
 
   const handleAgendar = async (citaId) => {
-    if (!window.confirm("¿Estás seguro de que quieres agendar esta cita?")) {
+    if (!motivo) {
+      alert("Por favor, describe brevemente el motivo de tu cita.");
       return;
     }
     const apiUrl = import.meta.env.VITE_API_URL;
-    try {
-      const response = await fetch(`${apiUrl}/api/appointments/book/${citaId}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ patient_id: user.id }),
-      });
+    const response = await fetch(`${apiUrl}/api/appointments/book/${citaId}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      // ¡CAMBIO CLAVE! Enviamos también la descripción
+      body: JSON.stringify({ patient_id: user.id, description: motivo }),
+    });
 
-      if (response.ok) {
-        alert('¡Cita agendada con éxito!');
-        navigate('/dashboard'); // O a una página de "mis citas"
-      } else {
-        const errorData = await response.json();
-        alert(`Error al agendar: ${errorData.error}`);
-      }
-    } catch (error) {
-      alert('Error de red al agendar la cita.');
+    if (response.ok) {
+      alert('¡Cita agendada con éxito!');
+      navigate('/dashboard');
+    } else {
+      alert('Error al agendar la cita.');
     }
   };
-
+  
   return (
     <div className="agendar-container">
-      <h1>Agendar Nueva Cita</h1>
-      <p>Selecciona uno de los horarios disponibles.</p>
-
-      {loading ? (
-        <p>Cargando horarios...</p>
-      ) : (
+      <h1>Agendar Cita General</h1>
+      <p>Selecciona un horario y describe el motivo de tu visita.</p>
+      
+      <div className="motivo-cita">
+        <label>Motivo de la Cita:</label>
+        <input 
+          type="text" 
+          value={motivo} 
+          onChange={(e) => setMotivo(e.target.value)}
+          placeholder="Ej: Dolor de cabeza, chequeo general..."
+        />
+      </div>
+      
+      {loading ? <p>Cargando horarios...</p> : (
         <div className="citas-list">
-          {citasDisponibles.length === 0 ? (
-            <p>No hay horarios disponibles por el momento. Intenta más tarde.</p>
-          ) : (
+          {citasDisponibles.length === 0 ? <p>No hay horarios disponibles.</p> : (
             citasDisponibles.map(cita => (
               <div key={cita.id} className="cita-card">
                 <div className="cita-info">
+                  {/* ... la información de la cita sigue igual ... */}
                   <p><strong>Fecha:</strong> {new Date(cita.appointment_time).toLocaleDateString()}</p>
                   <p><strong>Hora:</strong> {new Date(cita.appointment_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
                   <p><strong>Médico:</strong> {cita.doctor_nombres} {cita.doctor_apellido}</p>

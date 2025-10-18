@@ -1,37 +1,17 @@
-/* Contenido para frontend/src/components/AgendarCita.css */
-.agendar-container {
-  padding: 2rem;
-  max-width: 900px;
-  margin: 2rem auto;
+.motivo-cita {
+  background: #f9fafb;
+  padding: 1rem;
+  border-radius: 8px;
+  margin-bottom: 2rem;
 }
-.citas-list {
-  margin-top: 2rem;
-  display: grid;
-  gap: 1rem;
+.motivo-cita label {
+  font-weight: bold;
+  display: block;
+  margin-bottom: 0.5rem;
 }
-.cita-card {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  background: white;
-  padding: 1.5rem;
-  border-radius: 10px;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
-}
-.cita-info p {
-  margin: 0.3rem 0;
-  color: #555;
-}
-.btn-agendar {
-  background-color: #28a745;
-  color: white;
-  border: none;
-  padding: 0.7rem 1.5rem;
-  border-radius: 5px;
-  font-size: 1rem;
-  cursor: pointer;
-  transition: background-color 0.3s;
-}
-.btn-agendar:hover {
-  background-color: #218838;
+.motivo-cita input {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #ccc;
+  border-radius: 8px;
 }
