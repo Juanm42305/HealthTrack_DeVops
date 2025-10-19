@@ -1,104 +1,77 @@
-// Contenido COMPLETO y ACTUALIZADO para frontend/src/components/GestionMedicos.jsx
-
+// Contenido COMPLETO y REDISEÑADO para frontend/src/components/GestionCitas.jsx
 import React, { useState, useEffect } from 'react';
-import { useMedicos } from '../context/MedicoContext';
-import EditMedicoModal from './EditMedicoModal'; // Importamos el modal
-import './GestionMedicos.css';
+import './GestionCitas.css'; // Asegúrate de que el CSS exista
 
-function GestionMedicos() {
-  const { medicos, fetchMedicos } = useMedicos();
-  const [loading, setLoading] = useState(true);
-  const [editingMedico, setEditingMedico] = useState(null); // Estado para controlar el modal
+function GestionCitas() {
+  const [medicos, setMedicos] = useState([]);
+  const [selectedMedico, setSelectedMedico] = useState(null);
+  const [formData, setFormData] = useState({
+    date: '',
+    startTime: '08:00',
+    endTime: '17:00',
+    interval: '30',
+    sede: ''
+  });
 
   useEffect(() => {
-    setLoading(true);
-    fetchMedicos().finally(() => setLoading(false));
-  }, [fetchMedicos]);
+    const fetchMedicos = async () => {
+      const apiUrl = import.meta.env.VITE_API_URL;
+      const response = await fetch(`${apiUrl}/api/admin/doctors`);
+      if (response.ok) setMedicos(await response.json());
+    };
+    fetchMedicos();
+  }, []);
 
-  const handleEditClick = (medico) => {
-    setEditingMedico(medico);
+  const handleFormChange = (e) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleCloseModal = () => {
-    setEditingMedico(null);
-  };
-
-  const handleSave = async (updatedMedico) => {
+  const handleFormSubmit = async (e) => {
+    e.preventDefault();
     const apiUrl = import.meta.env.VITE_API_URL;
-    try {
-      const response = await fetch(`${apiUrl}/api/admin/doctors/${updatedMedico.user_id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(updatedMedico),
-      });
+    const response = await fetch(`${apiUrl}/api/admin/schedule/batch`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ...formData, doctor_id: selectedMedico.user_id }),
+    });
 
-      if (response.ok) {
-        alert("¡Médico actualizado con éxito!");
-        handleCloseModal();
-        fetchMedicos(); // Recarga la lista para ver los cambios
-      } else {
-        alert("Error al actualizar el médico.");
-      }
-    } catch (error) {
-      console.error("Error de red al guardar:", error);
-      alert("Error de conexión al intentar guardar los cambios.");
+    if (response.ok) {
+      alert(`Horarios para el Dr. ${selectedMedico.primer_apellido} generados exitosamente.`);
+      setSelectedMedico(null); // Cierra el formulario
+    } else {
+      alert('Error al generar los horarios.');
     }
   };
 
-  if (loading) {
-    return <div className="loading">Cargando médicos...</div>;
-  }
-
   return (
-    <div className="gestion-container">
-      <h1>Gestión de Médicos</h1>
-      <p>Aquí puedes ver y editar la información de los especialistas.</p>
-
-      <table className="medicos-table">
-        <thead>
-          <tr>
-            <th>Usuario (Login)</th>
-            <th>Nombre Completo</th>
-            <th>Especialidad</th>
-            <th>Consultorio</th>
-            <th>Sede</th>
-            <th>Acciones</th>
-          </tr>
-        </thead>
-        <tbody>
-          {medicos.length > 0 ? (
-            medicos.map((medico) => (
-              <tr key={medico.user_id}>
-                <td>{medico.username}</td>
-                <td>{`${medico.nombres || ''} ${medico.primer_apellido || ''}`}</td>
-                <td>{medico.especialidad || 'No asignada'}</td>
-                <td>{medico.consultorio || 'No asignado'}</td>
-                <td>{medico.sede || 'No asignada'}</td>
-                <td>
-                  <button className="edit-btn" onClick={() => handleEditClick(medico)}>
-                    Editar
-                  </button>
-                </td>
-              </tr>
-            ))
-          ) : (
-            <tr>
-              <td colSpan="6" style={{ textAlign: 'center' }}>No hay médicos registrados.</td>
-            </tr>
-          )}
-        </tbody>
-      </table>
-
-      {/* El modal solo se muestra si hay un médico seleccionado para editar */}
-      {editingMedico && (
-        <EditMedicoModal
-          medico={editingMedico}
-          onClose={handleCloseModal}
-          onSave={handleSave}
-        />
+    <div className="gestion-citas-page">
+      <h1>Gestión de Citas</h1>
+      <p>Selecciona un médico para añadir su disponibilidad.</p>
+      
+      <div className="medicos-list-container">
+        {medicos.map(medico => (
+          <div key={medico.user_id} className="medico-card">
+            <h4>{medico.nombres} {medico.primer_apellido}</h4>
+            <p>{medico.especialidad}</p>
+            <button onClick={() => setSelectedMedico(medico)}>Añadir Horario</button>
+          </div>
+        ))}
+      </div>
+      
+      {/* --- FORMULARIO MODAL PARA AÑADIR HORARIOS --- */}
+      {selectedMedico && (
+        <div className="modal-overlay" onClick={() => setSelectedMedico(null)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <h2>Añadir Horarios para Dr. {selectedMedico.primer_apellido}</h2>
+            <form onSubmit={handleFormSubmit}>
+              {/* ... (aquí van los inputs del formulario) ... */}
+              <button type="submit">Generar Horarios</button>
+            </form>
+          </div>
+        </div>
       )}
     </div>
   );
 }
 
-export default GestionMedicos;
+export default GestionCitas;

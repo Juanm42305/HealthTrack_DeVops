@@ -1,10 +1,10 @@
-// Contenido completo y actualizado para frontend/src/App.jsx
+// Contenido COMPLETO y LIMPIO para frontend/src/App.jsx
 
 import React from 'react';
-import { Routes, Route, Link, useNavigate } from 'react-router-dom';
+import { Routes, Route } from 'react-router-dom';
 
 // Componentes de Vistas
-import WelcomePage from './components/WelcomePage'; // <-- ¡NUEVO! Importamos la página de bienvenida
+import WelcomePage from './components/WelcomePage';
 import Login from './components/Login';
 import Register from './components/Register';
 import DashboardDispatcher from './components/DashboardDispatcher';
@@ -12,97 +12,40 @@ import Profile from './components/Profile';
 import GestionMedicos from './components/GestionMedicos';
 import GestionCitas from './components/GestionCitas';
 import AgendarCita from './components/AgendarCita';
-import MisCitas from './components/MisCitas'; 
+import MisCitas from './components/MisCitas';
 
 // Componentes de Lógica y Seguridad
 import ProtectedRoute from './components/ProtectedRoute';
-import { useAuth } from './context/AuthContext';
 
 function App() {
-  const { isAuthenticated, logout } = useAuth();
-  const navigate = useNavigate();
-
-  const handleLogout = () => {
-    logout();
-    navigate('/'); // Después del logout, volvemos a la WelcomePage
-  };
-
+  // ¡LA BARRA DE NAVEGACIÓN GENÉRICA SE HA IDO!
+  // Ahora, cada dashboard es responsable de su propio layout.
   return (
-    <div>
-      {/* --- Menú de Navegación Inteligente (Solo para usuarios logueados, excepto en WelcomePage) --- */}
-      {isAuthenticated && (
-        <nav style={{ padding: '1rem', background: '#333', color: 'white', display: 'flex', alignItems: 'center' }}>
-          <Link to="/dashboard" style={{ color: 'white', marginRight: '1rem' }}>Dashboard</Link>
-          <Link to="/profile" style={{ color: 'white', marginRight: '1rem' }}>Perfil</Link>
-          <Link to="/mis-citas" style={{ color: 'white', marginRight: '1rem' }}>Mis Citas</Link>
-          <button onClick={handleLogout} style={{ marginLeft: 'auto' }}>Cerrar Sesión</button>
-        </nav>
-      )}
+    <Routes>
+      {/* Rutas Públicas */}
+      <Route path="/" element={<WelcomePage />} />
+      <Route path="/login" element={<Login />} />
+      <Route path="/register" element={<Register />} />
 
-      {/* --- Definición de todas las rutas de la aplicación --- */}
-      <Routes>
-        {/* Ruta de Bienvenida (Pública y Principal) */}
-        <Route path="/" element={<WelcomePage />} /> {/* <-- ¡CAMBIO AQUÍ! */}
+      {/* Rutas Privadas (el dispatcher decide qué dashboard mostrar) */}
+      <Route
+        path="/dashboard"
+        element={
+          <ProtectedRoute>
+            <DashboardDispatcher />
+          </ProtectedRoute>
+        }
+      />
+      
+      {/* Rutas de Usuario/Paciente */}
+      <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+      <Route path="/agendar-cita" element={<ProtectedRoute><AgendarCita /></ProtectedRoute>} />
+      <Route path="/mis-citas" element={<ProtectedRoute><MisCitas /></ProtectedRoute>} />
 
-        {/* Rutas Públicas de Autenticación */}
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
-
-        {/* Rutas Privadas Comunes (Protegidas) */}
-        <Route
-          path="/dashboard"
-          element={
-            <ProtectedRoute>
-              <DashboardDispatcher />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/profile"
-          element={
-            <ProtectedRoute>
-              <Profile />
-            </ProtectedRoute>
-          }
-        />
-        
-        {/* Rutas de Usuario/Paciente (Protegidas) */}
-        <Route
-          path="/agendar-cita"
-          element={
-            <ProtectedRoute>
-              <AgendarCita />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/mis-citas"
-          element={
-            <ProtectedRoute>
-              <MisCitas />
-            </ProtectedRoute>
-          }
-        />
-
-        {/* Rutas del Administrador (Protegidas) */}
-        <Route
-          path="/admin/gestion-medicos"
-          element={
-            <ProtectedRoute>
-              <GestionMedicos />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/admin/gestion-citas"
-          element={
-            <ProtectedRoute>
-              <GestionCitas />
-            </ProtectedRoute>
-          }
-        />
-      </Routes>
-    </div>
+      {/* Rutas del Administrador */}
+      <Route path="/admin/gestion-medicos" element={<ProtectedRoute><GestionMedicos /></ProtectedRoute>} />
+      <Route path="/admin/gestion-citas" element={<ProtectedRoute><GestionCitas /></ProtectedRoute>} />
+    </Routes>
   );
 }
 
