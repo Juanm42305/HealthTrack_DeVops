@@ -13,10 +13,17 @@ body {
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background-color: #f4f7f6; /* Un color de fondo base limpio */
+  /* El background-color lo manejará WelcomePage para su imagen */
 }
 
 code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
+}
+
+/* Ocultar la barra de navegación que mostramos condicionalmente en App.jsx */
+/* Si ya tienes una navegación global, asegúrate de que no se superponga */
+nav {
+  z-index: 1000; /* Asegura que la navegación esté por encima de otros elementos */
+  position: relative; /* Ajuste para el z-index */
 }

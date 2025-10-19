@@ -1,0 +1,130 @@
+/* Contenido para frontend/src/components/WelcomePage.css */
+
+.welcome-container {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh; /* Ocupa toda la altura de la pantalla */
+  background: 
+    linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)), /* Sombra para contraste */
+    url('https://images.unsplash.com/photo-1586773860448-8fa13806e001?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1770&q=80') 
+    center center / cover no-repeat; /* Imagen de hospital de Unsplash */
+  color: white; /* Texto blanco para contraste con la imagen oscura */
+  font-family: 'Arial', sans-serif;
+}
+
+.welcome-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.5rem 3rem; /* Más padding para un look premium */
+  background-color: rgba(0, 0, 0, 0.2); /* Fondo semi-transparente para el header */
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+}
+
+.healthtrack-logo-link {
+  text-decoration: none;
+}
+
+.healthtrack-logo-text {
+  font-size: 2rem; /* Tamaño más grande para el logo */
+  font-weight: bold;
+  color: #a8dadc; /* Un azul claro/turquesa para el logo */
+  text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.5);
+}
+
+.welcome-nav .nav-button {
+  text-decoration: none;
+  color: white;
+  padding: 0.75rem 1.5rem;
+  border-radius: 5px;
+  margin-left: 1rem;
+  transition: background-color 0.3s ease;
+  font-weight: 600;
+}
+
+.welcome-nav .nav-button:hover {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+.welcome-nav .nav-button.primary {
+  background-color: #4CAF50; /* Verde vibrante para el botón principal */
+  color: white;
+  border: none;
+}
+
+.welcome-nav .nav-button.primary:hover {
+  background-color: #45a049;
+}
+
+.welcome-main-content {
+  flex-grow: 1; /* Ocupa el espacio restante */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  padding: 2rem;
+}
+
+.welcome-text-section {
+  max-width: 800px; /* Ancho máximo para el texto */
+  background-color: rgba(0, 0, 0, 0.6); /* Fondo semi-transparente para el texto */
+  padding: 3rem;
+  border-radius: 10px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+}
+
+.welcome-text-section h1 {
+  font-size: 4rem; /* Título grande */
+  margin-bottom: 1rem;
+  color: #a8dadc; /* Color del logo */
+  line-height: 1.2;
+}
+
+.welcome-text-section p {
+  font-size: 1.5rem; /* Párrafo legible */
+  line-height: 1.6;
+  margin-bottom: 2.5rem;
+}
+
+.call-to-action-buttons .cta-button {
+  display: inline-block;
+  text-decoration: none;
+  padding: 1rem 2.5rem;
+  border-radius: 50px; /* Botones redondeados */
+  font-size: 1.2rem;
+  font-weight: bold;
+  margin: 0 1rem;
+  transition: transform 0.3s ease, background-color 0.3s ease;
+}
+
+.call-to-action-buttons .cta-button.primary {
+  background-color: #a8dadc; /* Mismo color que el logo */
+  color: #1d3557; /* Azul oscuro para el texto del botón */
+}
+
+.call-to-action-buttons .cta-button.primary:hover {
+  transform: translateY(-3px); /* Efecto hover */
+  background-color: #8bbdc2;
+}
+
+.call-to-action-buttons .cta-button.secondary {
+  background-color: transparent;
+  color: #a8dadc;
+  border: 2px solid #a8dadc;
+}
+
+.call-to-action-buttons .cta-button.secondary:hover {
+  transform: translateY(-3px);
+  background-color: rgba(168, 218, 220, 0.1);
+}
+
+/* Opcional: Estilos para el footer */
+/*
+.welcome-footer {
+  padding: 1rem;
+  text-align: center;
+  background-color: rgba(0, 0, 0, 0.3);
+  font-size: 0.9rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+*/
