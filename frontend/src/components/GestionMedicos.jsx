@@ -1,35 +1,35 @@
-// Contenido completo para frontend/src/components/GestionMedicos.jsx
+// Contenido completo y actualizado para frontend/src/components/GestionMedicos.jsx
 
 import React, { useState, useEffect } from 'react';
-import { useMedicos } from '../context/MedicoContext'; // Usamos el cerebro centralizado de médicos
-import EditMedicoModal from './EditMedicoModal';      // Importamos el componente del modal
-import './GestionMedicos.css';                         // Importamos los estilos
+import { useMedicos } from '../context/MedicoContext';
+import EditMedicoModal from './EditMedicoModal';
+import './GestionMedicos.css';
 
 function GestionMedicos() {
-  // Obtenemos la lista de médicos y la función para refrescarla desde el cerebro
   const { medicos, fetchMedicos } = useMedicos();
   const [loading, setLoading] = useState(true);
-  
-  // Estado para saber qué médico estamos editando. Si es null, el modal está cerrado.
   const [editingMedico, setEditingMedico] = useState(null);
 
-  // useEffect se ejecuta una vez cuando el componente se carga para pedir la lista inicial
   useEffect(() => {
-    setLoading(true);
-    fetchMedicos().finally(() => setLoading(false));
-  }, [fetchMedicos]); // La dependencia asegura que se ejecute si la función cambia
+    // Hemos movido la lógica de fetch al context, pero la llamada inicial se hace aquí.
+    // Creamos una función dentro para poder usar async/await.
+    const loadMedicos = async () => {
+      setLoading(true);
+      await fetchMedicos();
+      setLoading(false);
+    };
+    
+    loadMedicos();
+  }, [fetchMedicos]);
 
-  // Función para abrir el modal con los datos del médico seleccionado
   const handleEditClick = (medico) => {
     setEditingMedico(medico);
   };
 
-  // Función para cerrar el modal
   const handleCloseModal = () => {
     setEditingMedico(null);
   };
 
-  // Función que se pasa al modal para guardar los cambios en el backend
   const handleSave = async (updatedMedico) => {
     const apiUrl = import.meta.env.VITE_API_URL;
     try {
@@ -41,8 +41,8 @@ function GestionMedicos() {
 
       if (response.ok) {
         alert("¡Médico actualizado con éxito!");
-        handleCloseModal(); // Cierra el modal
-        fetchMedicos(); // Vuelve a cargar la lista de médicos para ver los cambios al instante
+        handleCloseModal();
+        fetchMedicos();
       } else {
         alert("Error al actualizar el médico.");
       }
@@ -51,6 +51,24 @@ function GestionMedicos() {
       alert("Error de conexión al intentar guardar los cambios.");
     }
   };
+
+  // Reemplazamos la lógica de fetchMedicos de antes por esta nueva que usa el context.
+  // Y añadimos el console.log para el diagnóstico.
+  useEffect(() => {
+    const loadData = async () => {
+        setLoading(true);
+        const apiUrl = import.meta.env.VITE_API_URL;
+
+        // --- ¡AQUÍ ESTÁ LA LÍNEA DE DIAGNÓSTICO! ---
+        console.log("Intentando conectar a esta URL para obtener médicos:", `${apiUrl}/api/admin/doctors`);
+        // -------------------------------------------
+
+        await fetchMedicos();
+        setLoading(false);
+    };
+    loadData();
+}, [fetchMedicos]);
+
 
   if (loading) {
     return <div className="loading">Cargando médicos...</div>;
@@ -96,7 +114,6 @@ function GestionMedicos() {
         </tbody>
       </table>
 
-      {/* El modal solo se muestra si hay un médico seleccionado para editar */}
       {editingMedico && (
         <EditMedicoModal
           medico={editingMedico}
