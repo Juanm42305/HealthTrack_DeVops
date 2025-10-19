@@ -1,46 +1,35 @@
 // Contenido completo para frontend/src/components/GestionMedicos.jsx
 
 import React, { useState, useEffect } from 'react';
-import EditMedicoModal from './EditMedicoModal'; // ¡Importamos el nuevo modal!
-import './GestionMedicos.css';
+import { useMedicos } from '../context/MedicoContext'; // Usamos el cerebro centralizado de médicos
+import EditMedicoModal from './EditMedicoModal';      // Importamos el componente del modal
+import './GestionMedicos.css';                         // Importamos los estilos
 
 function GestionMedicos() {
-  const [medicos, setMedicos] = useState([]);
+  // Obtenemos la lista de médicos y la función para refrescarla desde el cerebro
+  const { medicos, fetchMedicos } = useMedicos();
   const [loading, setLoading] = useState(true);
   
-  // ¡NUEVO! Estado para saber qué médico estamos editando. Si es null, el modal está cerrado.
+  // Estado para saber qué médico estamos editando. Si es null, el modal está cerrado.
   const [editingMedico, setEditingMedico] = useState(null);
 
-  const fetchMedicos = async () => {
-    const apiUrl = import.meta.env.VITE_API_URL;
-    try {
-      const response = await fetch(`${apiUrl}/api/admin/doctors`);
-      if (response.ok) {
-        const data = await response.json();
-        setMedicos(data);
-      }
-    } catch (error) {
-      console.error("Error de red:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
+  // useEffect se ejecuta una vez cuando el componente se carga para pedir la lista inicial
   useEffect(() => {
-    fetchMedicos();
-  }, []);
+    setLoading(true);
+    fetchMedicos().finally(() => setLoading(false));
+  }, [fetchMedicos]); // La dependencia asegura que se ejecute si la función cambia
 
-  // ¡NUEVO! Función para abrir el modal con los datos del médico seleccionado
+  // Función para abrir el modal con los datos del médico seleccionado
   const handleEditClick = (medico) => {
     setEditingMedico(medico);
   };
 
-  // ¡NUEVO! Función para cerrar el modal
+  // Función para cerrar el modal
   const handleCloseModal = () => {
     setEditingMedico(null);
   };
 
-  // ¡NUEVO y MUY IMPORTANTE! Función para guardar los cambios en el backend
+  // Función que se pasa al modal para guardar los cambios en el backend
   const handleSave = async (updatedMedico) => {
     const apiUrl = import.meta.env.VITE_API_URL;
     try {
@@ -53,12 +42,13 @@ function GestionMedicos() {
       if (response.ok) {
         alert("¡Médico actualizado con éxito!");
         handleCloseModal(); // Cierra el modal
-        fetchMedicos(); // Vuelve a cargar la lista de médicos para ver los cambios
+        fetchMedicos(); // Vuelve a cargar la lista de médicos para ver los cambios al instante
       } else {
         alert("Error al actualizar el médico.");
       }
     } catch (error) {
       console.error("Error de red al guardar:", error);
+      alert("Error de conexión al intentar guardar los cambios.");
     }
   };
 
@@ -72,7 +62,6 @@ function GestionMedicos() {
       <p>Aquí puedes ver y editar la información de los especialistas.</p>
 
       <table className="medicos-table">
-        {/* ... el thead sigue igual ... */}
         <thead>
           <tr>
             <th>Usuario (Login)</th>
@@ -84,25 +73,30 @@ function GestionMedicos() {
           </tr>
         </thead>
         <tbody>
-          {medicos.map((medico) => (
-            <tr key={medico.user_id}>
-              <td>{medico.username}</td>
-              <td>{`${medico.nombres || ''} ${medico.primer_apellido || ''}`}</td>
-              <td>{medico.especialidad || 'No asignada'}</td>
-              <td>{medico.consultorio || 'No asignado'}</td>
-              <td>{medico.sede || 'No asignada'}</td>
-              <td>
-                {/* ¡CAMBIO CLAVE! El botón ahora abre el modal */}
-                <button className="edit-btn" onClick={() => handleEditClick(medico)}>
-                  Editar
-                </button>
-              </td>
+          {medicos.length > 0 ? (
+            medicos.map((medico) => (
+              <tr key={medico.user_id}>
+                <td>{medico.username}</td>
+                <td>{`${medico.nombres || ''} ${medico.primer_apellido || ''}`}</td>
+                <td>{medico.especialidad || 'No asignada'}</td>
+                <td>{medico.consultorio || 'No asignado'}</td>
+                <td>{medico.sede || 'No asignada'}</td>
+                <td>
+                  <button className="edit-btn" onClick={() => handleEditClick(medico)}>
+                    Editar
+                  </button>
+                </td>
+              </tr>
+            ))
+          ) : (
+            <tr>
+              <td colSpan="6" style={{ textAlign: 'center' }}>No hay médicos registrados.</td>
             </tr>
-          ))}
+          )}
         </tbody>
       </table>
 
-      {/* ¡NUEVO! El modal solo se muestra si hay un médico seleccionado para editar */}
+      {/* El modal solo se muestra si hay un médico seleccionado para editar */}
       {editingMedico && (
         <EditMedicoModal
           medico={editingMedico}

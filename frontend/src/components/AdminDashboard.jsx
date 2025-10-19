@@ -1,13 +1,15 @@
-// Contenido completo para frontend/src/components/AdminDashboard.jsx
+// Contenido completo y actualizado para frontend/src/components/AdminDashboard.jsx
 
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { FaUserMd, FaCalendarAlt, FaFileInvoiceDollar, FaFlask } from 'react-icons/fa'; // Iconos
+import { useMedicos } from '../context/MedicoContext'; // <-- ¡NUEVO! Importamos el cerebro de médicos
 import './AdminDashboard.css';
 
 function AdminDashboard() {
-  
-  // Esta es la nueva función que se conecta con el backend
+  // Obtenemos la función para refrescar la lista de médicos desde el cerebro
+  const { fetchMedicos } = useMedicos();
+
   const handleAddDoctor = async () => {
     // Pedimos los datos al administrador usando prompts simples
     const username = prompt("Ingresa el nombre de usuario para el nuevo médico:");
@@ -18,7 +20,6 @@ function AdminDashboard() {
       return;
     }
 
-    // Obtenemos la URL del backend desde las variables de entorno de Vercel
     const apiUrl = import.meta.env.VITE_API_URL;
 
     try {
@@ -33,7 +34,8 @@ function AdminDashboard() {
 
       if (response.ok) {
         alert(`✅ Médico "${username}" creado exitosamente.`);
-        // Opcional: podrías recargar la lista de médicos si la tuvieras visible
+        // ¡CAMBIO CLAVE! Le decimos al cerebro que se actualice con la nueva lista de médicos
+        fetchMedicos(); 
       } else {
         const errorData = await response.json();
         alert(`Error al crear el médico: ${errorData.error}`);
@@ -44,8 +46,8 @@ function AdminDashboard() {
     }
   };
 
-  // El resto de tu código JSX sigue exactamente igual.
   return (
+    // El resto de tu código JSX sigue exactamente igual.
     <div className="admin-dashboard">
       
       {/* 1. Barra Lateral de Navegación */}
