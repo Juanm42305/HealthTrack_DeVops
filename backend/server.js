@@ -1,4 +1,4 @@
-// Contenido completo y definitivo para backend/server.js
+// Contenido completo y actualizado para backend/server.js
 
 const express = require('express');
 const cors = require('cors');
@@ -87,10 +87,31 @@ app.get('/api/admin/doctors', async (req, res) => {
   }
 });
 
-// ... (Aquí van las otras rutas de admin como add-doctor y update-doctor que ya teníamos) ...
+app.put('/api/admin/doctors/:id', async (req, res) => {
+  const { id } = req.params;
+  const { nombres, primer_apellido, segundo_apellido, edad, fecha_nacimiento, numero_cedula, especialidad, consultorio, sede } = req.body;
 
+  try {
+    const query = `
+      UPDATE doctor_profiles
+      SET nombres = $1, primer_apellido = $2, segundo_apellido = $3, edad = $4, 
+          fecha_nacimiento = $5, numero_cedula = $6, especialidad = $7, consultorio = $8, sede = $9
+      WHERE user_id = $10
+      RETURNING *
+    `;
+    const values = [nombres, primer_apellido, segundo_apellido, edad, fecha_nacimiento, numero_cedula, especialidad, consultorio, sede, id];
+    const updatedProfile = await pool.query(query, values);
 
-// --- RUTAS DE GESTIÓN DE CITAS ---
+    if (updatedProfile.rows.length === 0) {
+      return res.status(404).json({ error: "No se encontró el perfil del médico." });
+    }
+    res.json(updatedProfile.rows[0]);
+  } catch (err) {
+    console.error('Error al actualizar médico:', err.message);
+    res.status(500).json({ error: "Error en el servidor al actualizar médico" });
+  }
+});
+
 app.post('/api/admin/schedule', async (req, res) => {
   const { doctor_id, appointment_time, sede } = req.body;
   try {
@@ -103,7 +124,56 @@ app.post('/api/admin/schedule', async (req, res) => {
   }
 });
 
-// ... (Aquí van las otras rutas de citas que ya teníamos) ...
+
+// =================================================================
+// ============== ¡¡¡NUEVAS RUTAS PARA PERFIL DE PACIENTE!!! ==============
+// =================================================================
+
+// --- RUTA PARA OBTENER EL PERFIL DE UN PACIENTE POR SU ID DE USUARIO ---
+app.get('/api/profile/patient/:userId', async (req, res) => {
+  const { userId } = req.params;
+  try {
+    const query = `
+      SELECT u.username, pp.* FROM users u
+      JOIN patient_profiles pp ON u.id = pp.user_id
+      WHERE u.id = $1
+    `;
+    const profile = await pool.query(query, [userId]);
+
+    if (profile.rows.length === 0) {
+      return res.status(404).json({ error: "Perfil de paciente no encontrado." });
+    }
+    res.json(profile.rows[0]);
+  } catch (err) {
+    console.error('Error al obtener perfil:', err.message);
+    res.status(500).json({ error: "Error en el servidor." });
+  }
+});
+
+// --- RUTA PARA ACTUALIZAR EL PERFIL DE UN PACIENTE ---
+app.put('/api/profile/patient/:userId', async (req, res) => {
+  const { userId } = req.params;
+  const { nombres, primer_apellido, segundo_apellido, edad, fecha_nacimiento, numero_cedula } = req.body;
+
+  try {
+    const query = `
+      UPDATE patient_profiles
+      SET nombres = $1, primer_apellido = $2, segundo_apellido = $3, edad = $4, fecha_nacimiento = $5, numero_cedula = $6
+      WHERE user_id = $7
+      RETURNING *
+    `;
+    const values = [nombres, primer_apellido, segundo_apellido, edad, fecha_nacimiento, numero_cedula, userId];
+    const updatedProfile = await pool.query(query, values);
+
+    if (updatedProfile.rows.length === 0) {
+      return res.status(404).json({ error: "Perfil no encontrado para actualizar." });
+    }
+    res.json(updatedProfile.rows[0]);
+  } catch (err) {
+    console.error('Error al actualizar perfil:', err.message);
+    res.status(500).json({ error: "Error en el servidor." });
+  }
+});
 
 
 // --- INICIAR SERVIDOR ---
