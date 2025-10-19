@@ -16,6 +16,7 @@ const pool = new Pool({
   }
 });
 
+const cloudinary = require('cloudinary').v2; // Para conectar con Cloudinary
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
   api_key: process.env.CLOUDINARY_API_KEY,
