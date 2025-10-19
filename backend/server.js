@@ -187,6 +187,36 @@ app.post('/api/admin/schedule', async (req, res) => {
   }
 });
 
+// =================================================================
+// ============== ¡¡¡NUEVA RUTA AÑADIDA AQUÍ!!! ==============
+// =================================================================
+app.post('/api/admin/schedule/batch', async (req, res) => {
+  const { doctor_id, date, startTime, endTime, interval, sede } = req.body;
+  if (!doctor_id || !date || !startTime || !endTime || !interval || !sede) {
+    return res.status(400).json({ error: 'Todos los campos son requeridos.' });
+  }
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+    const start = new Date(`${date}T${startTime}`);
+    const end = new Date(`${date}T${endTime}`);
+    const intervalMinutes = parseInt(interval, 10);
+    for (let time = start; time < end; time.setMinutes(time.getMinutes() + intervalMinutes)) {
+      const appointment_time = time.toISOString();
+      const query = "INSERT INTO appointments (doctor_id, appointment_time, sede, status, appointment_type) VALUES ($1, $2, $3, 'disponible', 'general')";
+      await client.query(query, [parseInt(doctor_id, 10), appointment_time, sede]);
+    }
+    await client.query('COMMIT');
+    res.status(201).json({ message: 'Horarios generados exitosamente.' });
+  } catch (err) {
+    await client.query('ROLLBACK');
+    console.error('Error al crear horarios en lote:', err.message);
+    res.status(500).json({ error: 'Error en el servidor al generar los horarios.' });
+  } finally {
+    client.release();
+  }
+});
+
 app.get('/api/appointments/available-days', async (req, res) => {
   try {
     const query = `
