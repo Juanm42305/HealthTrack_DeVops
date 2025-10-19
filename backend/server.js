@@ -99,80 +99,16 @@ app.post('/api/login', async (req, res) => {
 // --- RUTAS DE ADMINISTRADOR ---
 
 app.post('/api/admin/add-doctor', async (req, res) => {
-  const { username, password } = req.body;
-  if (!username || !password) {
-    return res.status(400).json({ error: 'Usuario y contraseña son requeridos' });
-  }
-
-  const client = await pool.connect();
-  try {
-    await client.query('BEGIN');
-    const saltRounds = 10;
-    const hashedPassword = await bcrypt.hash(password, saltRounds);
-
-    const newUserQuery = "INSERT INTO users (username, password, role) VALUES ($1, $2, 'medico') RETURNING id, username, role";
-    const newUserResult = await client.query(newUserQuery, [username, hashedPassword]);
-    const newDoctor = newUserResult.rows[0];
-
-    const newProfileQuery = "INSERT INTO doctor_profiles (user_id) VALUES ($1)";
-    await client.query(newProfileQuery, [newDoctor.id]);
-
-    await client.query('COMMIT');
-    res.status(201).json(newDoctor);
-  } catch (err) {
-    await client.query('ROLLBACK');
-    console.error('Error al añadir médico:', err.message);
-    if (err.code === '23505') {
-        return res.status(409).json({ error: "El nombre de usuario ya existe." });
-    }
-    res.status(500).json({ error: "Error en el servidor al añadir médico" });
-  } finally {
-    client.release();
-  }
+  // ... (este código ya lo tienes y sigue igual)
 });
 
 app.get('/api/admin/doctors', async (req, res) => {
-  try {
-    const query = `
-      SELECT u.id, u.username, dp.* FROM users u
-      JOIN doctor_profiles dp ON u.id = dp.user_id
-      WHERE u.role = 'medico'
-    `;
-    const doctors = await pool.query(query);
-    res.json(doctors.rows);
-  } catch (err) {
-    console.error('Error al obtener médicos:', err.message);
-    res.status(500).json({ error: "Error en el servidor al obtener médicos" });
-  }
+  // ... (este código ya lo tienes y sigue igual)
 });
 
 app.put('/api/admin/doctors/:id', async (req, res) => {
-  const { id } = req.params;
-  const { nombres, primer_apellido, segundo_apellido, edad, fecha_nacimiento, numero_cedula, especialidad, consultorio, sede } = req.body;
-
-  try {
-    const query = `
-      UPDATE doctor_profiles
-      SET nombres = $1, primer_apellido = $2, segundo_apellido = $3, edad = $4, 
-          fecha_nacimiento = $5, numero_cedula = $6, especialidad = $7, consultorio = $8, sede = $9
-      WHERE user_id = $10
-      RETURNING *
-    `;
-    const values = [nombres, primer_apellido, segundo_apellido, edad, fecha_nacimiento, numero_cedula, especialidad, consultorio, sede, id];
-    const updatedProfile = await pool.query(query, values);
-
-    if (updatedProfile.rows.length === 0) {
-      return res.status(404).json({ error: "No se encontró el perfil del médico." });
-    }
-    res.json(updatedProfile.rows[0]);
-  } catch (err) {
-    console.error('Error al actualizar médico:', err.message);
-    res.status(500).json({ error: "Error en el servidor al actualizar médico" });
-  }
+  // ... (este código ya lo tienes y sigue igual)
 });
-
-
-// --- RUTAS DE GESTIÓN DE CITAS ---
 
 app.post('/api/admin/schedule', async (req, res) => {
   const { doctor_id, appointment_time, sede } = req.body;
@@ -186,20 +122,41 @@ app.post('/api/admin/schedule', async (req, res) => {
   }
 });
 
-app.get('/api/appointments/available/general', async (req, res) => {
+
+// --- RUTAS DE GESTIÓN DE CITAS (PARA PACIENTES Y MÉDICOS) ---
+
+app.get('/api/appointments/available-days', async (req, res) => {
+  try {
+    const query = `
+      SELECT DISTINCT DATE(appointment_time) as available_date
+      FROM appointments
+      WHERE status = 'disponible' AND appointment_time > NOW()
+      ORDER BY available_date ASC;
+    `;
+    const result = await pool.query(query);
+    const dates = result.rows.map(row => row.available_date.toISOString().split('T')[0]);
+    res.json(dates);
+  } catch (err) {
+    console.error('Error al obtener días disponibles:', err.message);
+    res.status(500).json({ error: 'Error en el servidor.' });
+  }
+});
+
+app.get('/api/appointments/available-times/:date', async (req, res) => {
+  const { date } = req.params;
   try {
     const query = `
       SELECT a.id, a.appointment_time, a.sede, u.username as doctor_name, dp.nombres as doctor_nombres, dp.primer_apellido as doctor_apellido, dp.especialidad
       FROM appointments a
       JOIN users u ON a.doctor_id = u.id
       JOIN doctor_profiles dp ON a.doctor_id = dp.user_id
-      WHERE a.status = 'disponible' AND a.appointment_type = 'general' AND a.appointment_time > NOW()
+      WHERE a.status = 'disponible' AND DATE(a.appointment_time) = $1
       ORDER BY a.appointment_time ASC
     `;
-    const availableAppointments = await pool.query(query);
-    res.json(availableAppointments.rows);
+    const result = await pool.query(query, [date]);
+    res.json(result.rows);
   } catch (err) {
-    console.error('Error al obtener citas generales:', err.message);
+    console.error('Error al obtener horarios para la fecha:', err.message);
     res.status(500).json({ error: 'Error en el servidor.' });
   }
 });
@@ -207,7 +164,6 @@ app.get('/api/appointments/available/general', async (req, res) => {
 app.put('/api/appointments/book/:id', async (req, res) => {
   const { id } = req.params;
   const { patient_id, description } = req.body;
-
   try {
     const query = "UPDATE appointments SET patient_id = $1, status = 'agendada', description = $2 WHERE id = $3 AND status = 'disponible' RETURNING *";
     const updatedAppointment = await pool.query(query, [patient_id, description, id]);
@@ -233,6 +189,45 @@ app.post('/api/doctor/schedule-procedure', async (req, res) => {
     res.status(201).json(newProcedure.rows[0]);
   } catch (err) {
     console.error('Error al agendar procedimiento:', err.message);
+    res.status(500).json({ error: 'Error en el servidor.' });
+  }
+});
+
+app.get('/api/my-appointments/:patientId', async (req, res) => {
+  const { patientId } = req.params;
+  try {
+    const query = `
+      SELECT a.id, a.appointment_time, a.sede, a.status, a.description, dp.nombres as doctor_nombres, dp.primer_apellido as doctor_apellido, dp.especialidad
+      FROM appointments a
+      JOIN doctor_profiles dp ON a.doctor_id = dp.user_id
+      WHERE a.patient_id = $1
+      ORDER BY a.appointment_time DESC
+    `;
+    const result = await pool.query(query, [patientId]);
+    res.json(result.rows);
+  } catch (err) {
+    console.error('Error al obtener mis citas:', err.message);
+    res.status(500).json({ error: 'Error en el servidor.' });
+  }
+});
+
+app.put('/api/appointments/cancel/:id', async (req, res) => {
+  const { id } = req.params;
+  const { patient_id } = req.body;
+  try {
+    const query = `
+      UPDATE appointments SET status = 'disponible', patient_id = NULL 
+      WHERE id = $1 AND patient_id = $2
+      RETURNING *
+    `;
+    const result = await pool.query(query, [id, patient_id]);
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'No se encontró la cita o no tienes permiso para cancelarla.' });
+    }
+    res.json({ message: 'Cita cancelada exitosamente.' });
+  } catch (err) {
+    console.error('Error al cancelar cita:', err.message);
     res.status(500).json({ error: 'Error en el servidor.' });
   }
 });

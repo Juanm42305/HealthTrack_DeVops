@@ -1,16 +1,21 @@
-// Contenido completo para frontend/src/App.jsx
+// Contenido completo y actualizado para frontend/src/App.jsx
 
 import React from 'react';
 import { Routes, Route, Link, useNavigate } from 'react-router-dom';
+
+// Componentes de Vistas
 import Login from './components/Login';
 import Register from './components/Register';
 import DashboardDispatcher from './components/DashboardDispatcher';
 import Profile from './components/Profile';
-import ProtectedRoute from './components/ProtectedRoute';
-import { useAuth } from './context/AuthContext';
 import GestionMedicos from './components/GestionMedicos';
 import GestionCitas from './components/GestionCitas';
-import AgendarCita from './components/AgendarCita'; // <-- ¡NUEVO! Se importa la página para agendar
+import AgendarCita from './components/AgendarCita';
+import MisCitas from './components/MisCitas'; // <-- ¡NUEVO! Se importa la página de "Mis Citas"
+
+// Componentes de Lógica y Seguridad
+import ProtectedRoute from './components/ProtectedRoute';
+import { useAuth } from './context/AuthContext';
 
 function App() {
   const { isAuthenticated, logout } = useAuth();
@@ -23,20 +28,23 @@ function App() {
 
   return (
     <div>
+      {/* --- Menú de Navegación Inteligente (Solo para usuarios logueados) --- */}
       {isAuthenticated && (
-        <nav style={{ padding: '1rem', background: '#333', color: 'white' }}>
+        <nav style={{ padding: '1rem', background: '#333', color: 'white', display: 'flex', alignItems: 'center' }}>
           <Link to="/dashboard" style={{ color: 'white', marginRight: '1rem' }}>Dashboard</Link>
           <Link to="/profile" style={{ color: 'white', marginRight: '1rem' }}>Perfil</Link>
-          <button onClick={handleLogout} style={{ float: 'right' }}>Cerrar Sesión</button>
+          <Link to="/mis-citas" style={{ color: 'white', marginRight: '1rem' }}>Mis Citas</Link> {/* <-- ¡NUEVO ENLACE! */}
+          <button onClick={handleLogout} style={{ marginLeft: 'auto' }}>Cerrar Sesión</button>
         </nav>
       )}
 
+      {/* --- Definición de todas las rutas de la aplicación --- */}
       <Routes>
         {/* Rutas Públicas */}
         <Route path="/" element={<Login />} />
         <Route path="/register" element={<Register />} />
 
-        {/* Rutas Privadas Comunes */}
+        {/* Rutas Privadas Comunes (Protegidas) */}
         <Route
           path="/dashboard"
           element={
@@ -54,7 +62,7 @@ function App() {
           }
         />
         
-        {/* --- ¡NUEVA RUTA DE USUARIO AÑADIDA AQUÍ! --- */}
+        {/* Rutas de Usuario/Paciente (Protegidas) */}
         <Route
           path="/agendar-cita"
           element={
@@ -63,8 +71,16 @@ function App() {
             </ProtectedRoute>
           }
         />
+        <Route
+          path="/mis-citas"
+          element={
+            <ProtectedRoute>
+              <MisCitas />
+            </ProtectedRoute>
+          }
+        />
 
-        {/* Rutas del Administrador */}
+        {/* Rutas del Administrador (Protegidas) */}
         <Route
           path="/admin/gestion-medicos"
           element={
