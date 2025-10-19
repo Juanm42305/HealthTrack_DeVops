@@ -1,7 +1,6 @@
 // Contenido COMPLETO para frontend/src/components/EditMedicoModal.jsx
-
 import React, { useState, useEffect } from 'react';
-import './EditMedicoModal.css';
+import './EditMedicoModal.css'; // Asegúrate de que el archivo CSS también exista
 
 function EditMedicoModal({ medico, onClose, onSave }) {
   const [formData, setFormData] = useState({ ...medico });
