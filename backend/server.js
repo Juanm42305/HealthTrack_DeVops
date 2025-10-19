@@ -8,6 +8,7 @@ const bcrypt = require('bcrypt');
 const app = express();
 const PORT = process.env.PORT || 3001;
 
+// Configuración de la conexión a la base de datos desde las variables de entorno de Render
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
   ssl: {
@@ -71,23 +72,54 @@ app.post('/api/login', async (req, res) => {
 });
 
 
-// --- RUTA DE ADMINISTRADOR PARA OBTENER MÉDICOS ---
-app.get('/api/admin/doctors', async (req, res) => {
+// --- RUTAS DE PERFIL DE PACIENTE ---
+app.get('/api/profile/patient/:userId', async (req, res) => {
+  const { userId } = req.params;
   try {
     const query = `
-      SELECT u.id, u.username, dp.* FROM users u
-      JOIN doctor_profiles dp ON u.id = dp.user_id
-      WHERE u.role = 'medico'
+      SELECT u.username, pp.* FROM users u
+      JOIN patient_profiles pp ON u.id = pp.user_id
+      WHERE u.id = $1
     `;
-    const doctors = await pool.query(query);
-    res.json(doctors.rows);
+    const profile = await pool.query(query, [userId]);
+
+    if (profile.rows.length === 0) {
+      return res.status(404).json({ error: "Perfil de paciente no encontrado." });
+    }
+    res.json(profile.rows[0]);
   } catch (err) {
-    console.error('Error al obtener médicos:', err.message);
-    res.status(500).json({ error: "Error en el servidor al obtener médicos" });
+    console.error('Error al obtener perfil:', err.message);
+    res.status(500).json({ error: "Error en el servidor." });
   }
 });
 
-// --- (Aquí irían el resto de rutas que ya tenías, como las de citas, perfiles, etc.) ---
+app.put('/api/profile/patient/:userId', async (req, res) => {
+  const { userId } = req.params;
+  const { nombres, primer_apellido, segundo_apellido, edad, fecha_nacimiento, numero_cedula } = req.body;
+
+  try {
+    const query = `
+      UPDATE patient_profiles
+      SET nombres = $1, primer_apellido = $2, segundo_apellido = $3, edad = $4, fecha_nacimiento = $5, numero_cedula = $6
+      WHERE user_id = $7
+      RETURNING *
+    `;
+    const values = [nombres, primer_apellido, segundo_apellido, edad, fecha_nacimiento, numero_cedula, userId];
+    const updatedProfile = await pool.query(query, values);
+
+    if (updatedProfile.rows.length === 0) {
+      return res.status(404).json({ error: "Perfil no encontrado para actualizar." });
+    }
+    res.json(updatedProfile.rows[0]);
+  } catch (err) {
+    console.error('Error al actualizar perfil:', err.message);
+    res.status(500).json({ error: "Error en el servidor." });
+  }
+});
+
+
+// --- RUTAS DE ADMINISTRADOR ---
+// ... (Aquí puedes pegar el resto de tus rutas de admin y citas si las tenías en otro archivo)
 
 
 // --- INICIAR SERVIDOR ---
