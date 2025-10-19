@@ -1,25 +1,25 @@
-// Contenido COMPLETO y LIMPIO para frontend/src/App.jsx
+// Contenido COMPLETO y REESTRUCTURADO para frontend/src/App.jsx
 
 import React from 'react';
 import { Routes, Route } from 'react-router-dom';
 
-// Componentes de Vistas
+// Vistas
 import WelcomePage from './components/WelcomePage';
 import Login from './components/Login';
 import Register from './components/Register';
 import DashboardDispatcher from './components/DashboardDispatcher';
+import UserDashboard from './components/UserDashboard';
 import Profile from './components/Profile';
+import MisCitas from './components/MisCitas';
+import AgendarCita from './components/AgendarCita';
 import GestionMedicos from './components/GestionMedicos';
 import GestionCitas from './components/GestionCitas';
-import AgendarCita from './components/AgendarCita';
-import MisCitas from './components/MisCitas';
+import UserLayout from './components/UserLayout'; // <-- ¡IMPORTAMOS LA NUEVA PLANTILLA!
 
-// Componentes de Lógica y Seguridad
+// Lógica
 import ProtectedRoute from './components/ProtectedRoute';
 
 function App() {
-  // ¡LA BARRA DE NAVEGACIÓN GENÉRICA SE HA IDO!
-  // Ahora, cada dashboard es responsable de su propio layout.
   return (
     <Routes>
       {/* Rutas Públicas */}
@@ -27,22 +27,22 @@ function App() {
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
 
-      {/* Rutas Privadas (el dispatcher decide qué dashboard mostrar) */}
+      {/* Ruta del Dispatcher (decide si mostrar Admin o la plantilla de Usuario) */}
       <Route
         path="/dashboard"
-        element={
-          <ProtectedRoute>
-            <DashboardDispatcher />
-          </ProtectedRoute>
-        }
+        element={<ProtectedRoute><DashboardDispatcher /></ProtectedRoute>}
       />
       
-      {/* Rutas de Usuario/Paciente */}
-      <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
-      <Route path="/agendar-cita" element={<ProtectedRoute><AgendarCita /></ProtectedRoute>} />
-      <Route path="/mis-citas" element={<ProtectedRoute><MisCitas /></ProtectedRoute>} />
+      {/* --- ¡NUEVA LÓGICA DE RUTAS DE USUARIO! --- */}
+      {/* Todas las rutas del usuario ahora viven DENTRO de la plantilla UserLayout */}
+      <Route element={<ProtectedRoute><UserLayout /></ProtectedRoute>}>
+        <Route path="/user/dashboard" element={<UserDashboard />} />
+        <Route path="/profile" element={<Profile />} />
+        <Route path="/mis-citas" element={<MisCitas />} />
+        <Route path="/agendar-cita" element={<AgendarCita />} />
+      </Route>
 
-      {/* Rutas del Administrador */}
+      {/* Rutas del Administrador (siguen igual) */}
       <Route path="/admin/gestion-medicos" element={<ProtectedRoute><GestionMedicos /></ProtectedRoute>} />
       <Route path="/admin/gestion-citas" element={<ProtectedRoute><GestionCitas /></ProtectedRoute>} />
     </Routes>

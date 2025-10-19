@@ -1,49 +1,58 @@
-/* Contenido COMPLETO y DEFINITIVO para frontend/src/components/Profile.css */
+/* Contenido COMPLETO y ACTUALIZADO para frontend/src/components/Profile.css */
 
-.profile-page {
+.profile-layout {
   display: flex;
   height: 100vh;
-  background-color: #f8f9fa;
+  width: 100%;
+  background-color: #f4f7fa;
   font-family: "Poppins", sans-serif;
 }
 
+/* --- Barra Lateral --- */
 .profile-sidebar {
   width: 280px;
-  background: #2c3e50;
-  color: white;
-  padding: 2rem 1rem;
+  background: #2c3e50; /* Azul oscuro corporativo, igual que el admin */
+  color: #ecf0f1;
   display: flex;
   flex-direction: column;
-  align-items: center;
+  box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
   flex-shrink: 0;
+}
+
+.sidebar-header {
+  padding: 1.5rem;
+  text-align: center;
+  font-size: 1.8rem;
+  font-weight: bold;
+  color: #3498db;
+  border-bottom: 1px solid #34495e;
 }
 
 .user-avatar {
   position: relative;
   cursor: pointer;
-  margin-bottom: 1rem;
+  margin: 2rem auto 1rem;
 }
 
-.avatar-placeholder {
+.avatar-placeholder, .avatar-image {
   width: 100px;
   height: 100px;
   border-radius: 50%;
-  background-color: #3498db;
-  color: white;
+  border: 4px solid #fff;
   display: flex;
   justify-content: center;
   align-items: center;
   font-size: 3rem;
   font-weight: bold;
-  border: 4px solid #fff;
+}
+
+.avatar-placeholder {
+  background-color: #3498db;
+  color: white;
 }
 
 .avatar-image {
-  width: 100px;
-  height: 100px;
-  border-radius: 50%;
   object-fit: cover;
-  border: 4px solid #fff;
 }
 
 .avatar-overlay {
@@ -67,40 +76,75 @@
   opacity: 1;
 }
 
-.user-name {
-  font-size: 1.5rem;
-  margin-bottom: 0.2rem;
+.user-name, .user-email {
+  text-align: center;
   word-break: break-all;
+  padding: 0 1rem;
+}
+
+.user-name {
+  font-size: 1.4rem;
+  margin-bottom: 0.2rem;
 }
 
 .user-email {
   color: #bdc3c7;
   margin-bottom: 2rem;
-  word-break: break-all;
 }
 
 .profile-nav {
+  flex-grow: 1;
   width: 100%;
 }
 
-.profile-nav a {
-  display: block;
-  padding: 0.8rem 1.5rem;
-  color: #ecf0f1;
+.profile-nav .nav-link {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  padding: 0.9rem 1.5rem;
+  color: #bdc3c7;
   text-decoration: none;
-  border-radius: 8px;
-  margin-bottom: 0.5rem;
-  transition: background-color 0.3s;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  border-left: 3px solid transparent;
 }
 
-.profile-nav a:hover, .profile-nav a.active {
-  background-color: #34495e;
+.profile-nav .nav-link:hover, .profile-nav .nav-link.active {
+  background: #34495e;
+  color: white;
+  border-left-color: #3498db;
+}
+
+.sidebar-footer {
+  padding: 1rem;
+  border-top: 1px solid #34495e;
+}
+
+.logout-button {
+  width: 100%;
+  background: none;
+  border: 1px solid #e74c3c;
+  color: #e74c3c;
+  padding: 0.75rem;
+  border-radius: 5px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  transition: all 0.3s ease;
+}
+
+.logout-button:hover {
+  background: #e74c3c;
   color: white;
 }
 
+
+/* --- Contenido Principal --- */
 .profile-content {
   flex-grow: 1;
-  padding: 2rem 3rem;
+  padding: 2.5rem;
   overflow-y: auto;
 }
 
@@ -115,3 +159,11 @@
 .form-group input:disabled { background-color: #f1f1f1; cursor: not-allowed; }
 .save-button { margin-top: 2rem; padding: 0.8rem 2rem; background-color: #3498db; color: white; border: none; border-radius: 8px; font-size: 1rem; cursor: pointer; transition: background-color 0.3s; float: right; }
 .save-button:hover { background-color: #2980b9; }
+
+.loading-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  font-size: 1.5rem;
+}

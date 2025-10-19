@@ -1,11 +1,14 @@
-// Contenido COMPLETO y DEFINITIVO para frontend/src/components/Profile.jsx
+// Contenido COMPLETO y REDISEÑADO para frontend/src/components/Profile.jsx
 
 import React, { useState, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import './Profile.css';
+import { FaUser, FaNotesMedical, FaVials, FaSignOutAlt } from 'react-icons/fa';
+import './Profile.css'; // Asegúrate de que el CSS esté vinculado
 
 function Profile() {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
   const [profileData, setProfileData] = useState({});
   const [loading, setLoading] = useState(true);
   const [selectedFile, setSelectedFile] = useState(null);
@@ -43,13 +46,17 @@ function Profile() {
       setSelectedFile(e.target.files[0]);
     }
   };
+  
+  const handleLogout = () => {
+    logout();
+    navigate('/');
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     const apiUrl = import.meta.env.VITE_API_URL;
     let finalProfileData = { ...profileData };
 
-    // 1. Si hay una nueva foto, la subimos primero
     if (selectedFile) {
       const imageFormData = new FormData();
       imageFormData.append('avatar', selectedFile);
@@ -60,16 +67,14 @@ function Profile() {
         });
         if (!uploadResponse.ok) throw new Error('Error al subir la imagen.');
         const updatedProfileWithAvatar = await uploadResponse.json();
-        // Actualizamos los datos del perfil con la nueva URL de la foto
         finalProfileData = { ...finalProfileData, ...updatedProfileWithAvatar };
         setProfileData(finalProfileData);
-        setSelectedFile(null); // Limpiamos el archivo seleccionado
+        setSelectedFile(null);
       } catch (error) {
         return alert("Error al subir la foto de perfil.");
       }
     }
 
-    // 2. Guardamos el resto de los datos del formulario
     try {
       const textDataResponse = await fetch(`${apiUrl}/api/profile/patient/${user.id}`, {
         method: 'PUT',
@@ -87,12 +92,16 @@ function Profile() {
   };
 
   if (loading) {
-    return <div>Cargando perfil...</div>;
+    return <div className="loading-container">Cargando perfil...</div>;
   }
 
   return (
-    <div className="profile-page">
+    <div className="profile-layout">
+      {/* --- Barra Lateral del Perfil --- */}
       <aside className="profile-sidebar">
+        <div className="sidebar-header">
+          <h3>💙 HealthTrack</h3>
+        </div>
         <div className="user-avatar" onClick={() => fileInputRef.current.click()}>
           {profileData.avatar_url ? (
             <img src={profileData.avatar_url} alt="Foto de perfil" className="avatar-image" />
@@ -104,15 +113,23 @@ function Profile() {
         <input type="file" ref={fileInputRef} style={{ display: 'none' }} onChange={handleFileChange} accept="image/*" />
         <h3 className="user-name">{profileData.nombres || user?.username}</h3>
         <p className="user-email">{user?.username}</p>
+        
         <nav className="profile-nav">
-          <a href="#" className="active">Mi Perfil</a>
-          <a href="#">Historial Médico</a>
-          <a href="#">Resultados de Laboratorio</a>
+          <a href="#" className="nav-link active"><FaUser /> <span>Mi Perfil</span></a>
+          <a href="#" className="nav-link"><FaNotesMedical /> <span>Historial Médico</span></a>
+          <a href="#" className="nav-link"><FaVials /> <span>Resultados</span></a>
         </nav>
+
+        <div className="sidebar-footer">
+          <button onClick={handleLogout} className="logout-button"><FaSignOutAlt /> <span>Cerrar Sesión</span></button>
+        </div>
       </aside>
+
+      {/* --- Contenido Principal del Formulario --- */}
       <main className="profile-content">
         <h1>Información del Paciente</h1>
         <p>Mantén tus datos actualizados para recibir una mejor atención.</p>
+
         <form className="profile-form" onSubmit={handleSubmit}>
           <div className="form-grid">
             <div className="form-group"><label>Nombres</label><input type="text" name="nombres" value={profileData.nombres || ''} onChange={handleChange} /></div>
