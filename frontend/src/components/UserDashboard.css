@@ -1,43 +1,115 @@
-/* Contenido para frontend/src/components/UserDashboard.css */
-.user-dashboard {
-  padding: 2rem;
-  background-color: #f4f7f6;
-  min-height: calc(100vh - 60px); /* Resta la altura del nav principal */
+/* Contenido COMPLETO y NUEVO para frontend/src/components/UserDashboard.css */
+
+.user-dashboard-layout {
+  padding: 2.5rem;
+  background-color: #f4f7fa;
+  min-height: calc(100vh - 60px); /* Resta la altura del nav principal si lo tienes */
+  font-family: "Poppins", sans-serif;
 }
 
-/* Usamos los mismos estilos que ya definimos para el admin */
+.main-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 2.5rem;
+  position: relative;
+}
+
+.header-text {
+  text-align: center;
+  flex-grow: 1; /* Centra el texto */
+}
+
+.main-header h1 {
+  font-size: 2.5rem;
+  color: #2c3e50;
+}
+
+.main-header p {
+  color: #777;
+  font-size: 1.1rem;
+}
+
+/* --- Botón para volver --- */
+.back-button {
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  background: white;
+  border: 1px solid #ddd;
+  color: #555;
+  padding: 0.6rem 1.2rem;
+  border-radius: 50px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+  transition: all 0.3s ease;
+}
+
+.back-button:hover {
+  background-color: #f1f1f1;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* --- Rejilla de Widgets --- */
 .widget-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 1.5rem;
-  max-width: 900px;
-  margin: 2rem auto;
+  gap: 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
 }
 
-.widget {
+.widget.user-widget {
   background: white;
-  padding: 1.5rem;
+  padding: 2rem;
   border-radius: 15px;
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
   text-align: center;
-  transition: transform 0.3s;
+  transition: transform 0.3s, box-shadow 0.3s;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
 }
 
-.widget:hover {
-  transform: translateY(-5px);
+.widget.user-widget:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 12px 30px rgba(79, 70, 229, 0.15);
 }
 
 .widget-link {
-  text-decoration: none; /* Quita el subrayado de los enlaces */
+  text-decoration: none;
   color: inherit;
 }
 
 .widget-icon {
-  font-size: 2.5rem;
+  font-size: 3rem;
   color: #4f46e5;
   margin-bottom: 1rem;
 }
 
-.widget h3, .widget p {
-  margin: 0.5rem 0;
+.widget.user-widget h3 {
+  font-size: 1.4rem;
+  color: #1e293b;
+  margin-bottom: 0.75rem;
+}
+
+.widget.user-widget p {
+  color: #64748b;
+  flex-grow: 1; /* Empuja el botón hacia abajo */
+  margin-bottom: 1.5rem;
+}
+
+.widget-button-placeholder {
+  margin-top: auto; /* Se alinea al final */
+  background: #eef2ff;
+  color: #4f46e5;
+  border: 1px solid #c7d2fe;
+  padding: 0.7rem 1.5rem;
+  border-radius: 5px;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
 }
