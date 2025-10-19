@@ -1,96 +1,104 @@
-// Contenido para frontend/src/components/GestionCitas.jsx
+// Contenido COMPLETO y ACTUALIZADO para frontend/src/components/GestionMedicos.jsx
 
 import React, { useState, useEffect } from 'react';
-import './GestionCitas.css';
+import { useMedicos } from '../context/MedicoContext';
+import EditMedicoModal from './EditMedicoModal'; // Importamos el modal
+import './GestionMedicos.css';
 
-function GestionCitas() {
-  const [medicos, setMedicos] = useState([]);
-  const [formData, setFormData] = useState({
-    doctor_id: '',
-    fecha: '',
-    hora: '',
-    sede: ''
-  });
+function GestionMedicos() {
+  const { medicos, fetchMedicos } = useMedicos();
+  const [loading, setLoading] = useState(true);
+  const [editingMedico, setEditingMedico] = useState(null); // Estado para controlar el modal
 
-  // Carga la lista de médicos al iniciar el componente
   useEffect(() => {
-    const fetchMedicos = async () => {
-      const apiUrl = import.meta.env.VITE_API_URL;
-      // Usamos la ruta que ya teníamos para obtener la lista de médicos
-      const response = await fetch(`${apiUrl}/api/admin/doctors`); 
-      if (response.ok) {
-        setMedicos(await response.json());
-      }
-    };
-    fetchMedicos();
-  }, []);
+    setLoading(true);
+    fetchMedicos().finally(() => setLoading(false));
+  }, [fetchMedicos]);
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+  const handleEditClick = (medico) => {
+    setEditingMedico(medico);
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    const { doctor_id, fecha, hora, sede } = formData;
-    const appointment_time = `${fecha}T${hora}:00`; // Combinamos fecha y hora
+  const handleCloseModal = () => {
+    setEditingMedico(null);
+  };
 
+  const handleSave = async (updatedMedico) => {
     const apiUrl = import.meta.env.VITE_API_URL;
     try {
-      const response = await fetch(`${apiUrl}/api/admin/schedule`, {
-        method: 'POST',
+      const response = await fetch(`${apiUrl}/api/admin/doctors/${updatedMedico.user_id}`, {
+        method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ doctor_id, appointment_time, sede }),
+        body: JSON.stringify(updatedMedico),
       });
+
       if (response.ok) {
-        alert('¡Horario creado exitosamente!');
-        // Limpiar formulario
-        setFormData({ doctor_id: '', fecha: '', hora: '', sede: '' });
+        alert("¡Médico actualizado con éxito!");
+        handleCloseModal();
+        fetchMedicos(); // Recarga la lista para ver los cambios
       } else {
-        alert('Error al crear el horario.');
+        alert("Error al actualizar el médico.");
       }
     } catch (error) {
-      alert('Error de red.');
+      console.error("Error de red al guardar:", error);
+      alert("Error de conexión al intentar guardar los cambios.");
     }
   };
 
+  if (loading) {
+    return <div className="loading">Cargando médicos...</div>;
+  }
+
   return (
-    <div className="gestion-citas-container">
-      <h1>Programar Agenda de Citas</h1>
-      <p>Crea nuevos horarios disponibles para que los pacientes puedan agendar.</p>
+    <div className="gestion-container">
+      <h1>Gestión de Médicos</h1>
+      <p>Aquí puedes ver y editar la información de los especialistas.</p>
 
-      <form className="schedule-form" onSubmit={handleSubmit}>
-        <div className="form-group">
-          <label>Seleccionar Médico</label>
-          <select name="doctor_id" value={formData.doctor_id} onChange={handleChange} required>
-            <option value="">-- Elige un médico --</option>
-            {medicos.map(medico => (
-              <option key={medico.user_id} value={medico.user_id}>
-                {`${medico.nombres || ''} ${medico.primer_apellido || ''} (${medico.especialidad || 'General'})`}
-              </option>
-            ))}
-          </select>
-        </div>
+      <table className="medicos-table">
+        <thead>
+          <tr>
+            <th>Usuario (Login)</th>
+            <th>Nombre Completo</th>
+            <th>Especialidad</th>
+            <th>Consultorio</th>
+            <th>Sede</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          {medicos.length > 0 ? (
+            medicos.map((medico) => (
+              <tr key={medico.user_id}>
+                <td>{medico.username}</td>
+                <td>{`${medico.nombres || ''} ${medico.primer_apellido || ''}`}</td>
+                <td>{medico.especialidad || 'No asignada'}</td>
+                <td>{medico.consultorio || 'No asignado'}</td>
+                <td>{medico.sede || 'No asignada'}</td>
+                <td>
+                  <button className="edit-btn" onClick={() => handleEditClick(medico)}>
+                    Editar
+                  </button>
+                </td>
+              </tr>
+            ))
+          ) : (
+            <tr>
+              <td colSpan="6" style={{ textAlign: 'center' }}>No hay médicos registrados.</td>
+            </tr>
+          )}
+        </tbody>
+      </table>
 
-        <div className="form-group">
-          <label>Fecha</label>
-          <input type="date" name="fecha" value={formData.fecha} onChange={handleChange} required />
-        </div>
-
-        <div className="form-group">
-          <label>Hora</label>
-          <input type="time" name="hora" value={formData.hora} onChange={handleChange} required />
-        </div>
-
-        <div className="form-group">
-          <label>Sede</label>
-          <input type="text" name="sede" value={formData.sede} onChange={handleChange} placeholder="Ej: Hospital Central" required />
-        </div>
-
-        <button type="submit" className="btn-crear-horario">Crear Horario Disponible</button>
-      </form>
+      {/* El modal solo se muestra si hay un médico seleccionado para editar */}
+      {editingMedico && (
+        <EditMedicoModal
+          medico={editingMedico}
+          onClose={handleCloseModal}
+          onSave={handleSave}
+        />
+      )}
     </div>
   );
 }
 
-export default GestionCitas;
+export default GestionMedicos;
