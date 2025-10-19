@@ -16,6 +16,13 @@ const pool = new Pool({
   }
 });
 
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
+const upload = multer({ dest: 'uploads/' });
+
 app.use(cors());
 app.use(express.json());
 
@@ -110,7 +117,57 @@ app.put('/api/profile/patient/:userId', async (req, res) => {
   }
 });
 
+// --- RUTAS DE PERFIL DE PACIENTE (INCLUYE SUBIDA DE AVATAR) ---
+app.get('/api/profile/patient/:userId', async (req, res) => {
+  const { userId } = req.params;
+  try {
+    const query = `SELECT u.username, pp.* FROM users u JOIN patient_profiles pp ON u.id = pp.user_id WHERE u.id = $1`;
+    const profile = await pool.query(query, [userId]);
+    if (profile.rows.length === 0) return res.status(404).json({ error: "Perfil de paciente no encontrado." });
+    res.json(profile.rows[0]);
+  } catch (err) {
+    console.error('Error al obtener perfil:', err.message);
+    res.status(500).json({ error: "Error en el servidor." });
+  }
+});
 
+app.put('/api/profile/patient/:userId', async (req, res) => {
+  const { userId } = req.params;
+  const { nombres, primer_apellido, segundo_apellido, edad, fecha_nacimiento, numero_cedula } = req.body;
+  try {
+    const query = `UPDATE patient_profiles SET nombres = $1, primer_apellido = $2, segundo_apellido = $3, edad = $4, fecha_nacimiento = $5, numero_cedula = $6 WHERE user_id = $7 RETURNING *`;
+    const values = [nombres, primer_apellido, segundo_apellido, edad, fecha_nacimiento, numero_cedula, userId];
+    const updatedProfile = await pool.query(query, values);
+    if (updatedProfile.rows.length === 0) return res.status(404).json({ error: "Perfil no encontrado para actualizar." });
+    res.json(updatedProfile.rows[0]);
+  } catch (err) {
+    console.error('Error al actualizar perfil:', err.message);
+    res.status(500).json({ error: "Error en el servidor." });
+  }
+});
+
+// ¡NUEVA RUTA PARA SUBIR LA FOTO!
+app.post('/api/profile/patient/:userId/avatar', upload.single('avatar'), async (req, res) => {
+  const { userId } = req.params;
+  if (!req.file) {
+    return res.status(400).json({ error: 'No se subió ningún archivo.' });
+  }
+  try {
+    const result = await cloudinary.uploader.upload(req.file.path, {
+      folder: 'healthtrack_avatars',
+      public_id: `avatar_${userId}`,
+      overwrite: true,
+      transformation: [{ width: 200, height: 200, crop: 'fill', gravity: 'face' }]
+    });
+    const avatarUrl = result.secure_url;
+    const query = 'UPDATE patient_profiles SET avatar_url = $1 WHERE user_id = $2 RETURNING *';
+    const updatedProfile = await pool.query(query, [avatarUrl, userId]);
+    res.json(updatedProfile.rows[0]);
+  } catch (err) {
+    console.error('Error al subir avatar:', err.message);
+    res.status(500).json({ error: 'Error en el servidor al subir la imagen.' });
+  }
+});
 // --- RUTAS DE ADMINISTRADOR ---
 app.post('/api/admin/add-doctor', async (req, res) => {
   const { username, password } = req.body;
@@ -187,9 +244,6 @@ app.post('/api/admin/schedule', async (req, res) => {
   }
 });
 
-// =================================================================
-// ============== ¡¡¡NUEVA RUTA AÑADIDA AQUÍ!!! ==============
-// =================================================================
 app.post('/api/admin/schedule/batch', async (req, res) => {
   const { doctor_id, date, startTime, endTime, interval, sede } = req.body;
   if (!doctor_id || !date || !startTime || !endTime || !interval || !sede) {

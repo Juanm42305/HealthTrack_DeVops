@@ -1,4 +1,4 @@
-// Contenido COMPLETO y RECONSTRUIDO para frontend/src/components/Profile.jsx
+// Contenido COMPLETO y DEFINITIVO para frontend/src/components/Profile.jsx
 
 import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
@@ -8,24 +8,37 @@ function Profile() {
   const { user } = useAuth();
   const [profileData, setProfileData] = useState({});
   const [loading, setLoading] = useState(true);
-  const [selectedFile, setSelectedFile] = useState(null); // Para el archivo de la nueva foto
-  const fileInputRef = useRef(null); // Para hacer clic en el input de archivo de forma invisible
+  const [selectedFile, setSelectedFile] = useState(null);
+  const fileInputRef = useRef(null);
 
   useEffect(() => {
     if (user?.id) {
       const fetchProfile = async () => {
-        // ... (lógica para cargar el perfil que ya tenías)
+        const apiUrl = import.meta.env.VITE_API_URL;
+        try {
+          const response = await fetch(`${apiUrl}/api/profile/patient/${user.id}`);
+          if (response.ok) {
+            let data = await response.json();
+            if (data.fecha_nacimiento) {
+              data.fecha_nacimiento = new Date(data.fecha_nacimiento).toISOString().split('T')[0];
+            }
+            setProfileData(data);
+          }
+        } catch (error) {
+          console.error("Error al cargar el perfil:", error);
+        } finally {
+          setLoading(false);
+        }
       };
       fetchProfile();
     }
   }, [user]);
 
   const handleChange = (e) => {
-    // ... (lógica para manejar cambios del formulario que ya tenías)
+    setProfileData(prev => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
   const handleFileChange = (e) => {
-    // Guarda el archivo seleccionado por el usuario
     if (e.target.files[0]) {
       setSelectedFile(e.target.files[0]);
     }
@@ -34,35 +47,35 @@ function Profile() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     const apiUrl = import.meta.env.VITE_API_URL;
+    let finalProfileData = { ...profileData };
 
-    // --- ¡NUEVA LÓGICA DE SUBIDA DE FOTO! ---
+    // 1. Si hay una nueva foto, la subimos primero
     if (selectedFile) {
-      const formData = new FormData();
-      formData.append('avatar', selectedFile);
-
+      const imageFormData = new FormData();
+      imageFormData.append('avatar', selectedFile);
       try {
         const uploadResponse = await fetch(`${apiUrl}/api/profile/patient/${user.id}/avatar`, {
           method: 'POST',
-          body: formData,
+          body: imageFormData,
         });
-
         if (!uploadResponse.ok) throw new Error('Error al subir la imagen.');
-        
         const updatedProfileWithAvatar = await uploadResponse.json();
-        setProfileData(updatedProfileWithAvatar); // Actualiza el perfil con la nueva URL del avatar
+        // Actualizamos los datos del perfil con la nueva URL de la foto
+        finalProfileData = { ...finalProfileData, ...updatedProfileWithAvatar };
+        setProfileData(finalProfileData);
+        setSelectedFile(null); // Limpiamos el archivo seleccionado
       } catch (error) {
-        alert("Error al subir la foto de perfil.");
+        return alert("Error al subir la foto de perfil.");
       }
     }
 
-    // --- Lógica para guardar el resto de los datos (la que ya tenías) ---
+    // 2. Guardamos el resto de los datos del formulario
     try {
       const textDataResponse = await fetch(`${apiUrl}/api/profile/patient/${user.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(profileData),
+        body: JSON.stringify(finalProfileData),
       });
-
       if (textDataResponse.ok) {
         alert('✅ ¡Perfil actualizado con éxito!');
       } else {
@@ -72,6 +85,10 @@ function Profile() {
       alert('Error de conexión al guardar los datos.');
     }
   };
+
+  if (loading) {
+    return <div>Cargando perfil...</div>;
+  }
 
   return (
     <div className="profile-page">
@@ -84,18 +101,30 @@ function Profile() {
           )}
           <div className="avatar-overlay">Cambiar Foto</div>
         </div>
-        <input 
-          type="file" 
-          ref={fileInputRef} 
-          style={{ display: 'none' }} 
-          onChange={handleFileChange}
-          accept="image/*"
-        />
+        <input type="file" ref={fileInputRef} style={{ display: 'none' }} onChange={handleFileChange} accept="image/*" />
         <h3 className="user-name">{profileData.nombres || user?.username}</h3>
-        {/* ... (resto del sidebar que ya tenías) ... */}
+        <p className="user-email">{user?.username}</p>
+        <nav className="profile-nav">
+          <a href="#" className="active">Mi Perfil</a>
+          <a href="#">Historial Médico</a>
+          <a href="#">Resultados de Laboratorio</a>
+        </nav>
       </aside>
       <main className="profile-content">
-        {/* ... (resto de tu formulario que ya tenías) ... */}
+        <h1>Información del Paciente</h1>
+        <p>Mantén tus datos actualizados para recibir una mejor atención.</p>
+        <form className="profile-form" onSubmit={handleSubmit}>
+          <div className="form-grid">
+            <div className="form-group"><label>Nombres</label><input type="text" name="nombres" value={profileData.nombres || ''} onChange={handleChange} /></div>
+            <div className="form-group"><label>Primer Apellido</label><input type="text" name="primer_apellido" value={profileData.primer_apellido || ''} onChange={handleChange} /></div>
+            <div className="form-group"><label>Segundo Apellido</label><input type="text" name="segundo_apellido" value={profileData.segundo_apellido || ''} onChange={handleChange} /></div>
+            <div className="form-group"><label>Número de Cédula</label><input type="text" name="numero_cedula" value={profileData.numero_cedula || ''} onChange={handleChange} /></div>
+            <div className="form-group"><label>Edad</label><input type="number" name="edad" value={profileData.edad || ''} onChange={handleChange} /></div>
+            <div className="form-group"><label>Fecha de Nacimiento</label><input type="date" name="fecha_nacimiento" value={profileData.fecha_nacimiento || ''} onChange={handleChange} /></div>
+            <div className="form-group full-width"><label>Correo / Usuario</label><input type="email" name="username" value={profileData.username || ''} readOnly disabled /></div>
+          </div>
+          <button type="submit" className="save-button">Guardar Cambios</button>
+        </form>
       </main>
     </div>
   );
