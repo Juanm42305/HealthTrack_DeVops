@@ -80,7 +80,6 @@ function Profile() {
       {/* --- Barra Lateral del Perfil --- */}
       <aside className="profile-sidebar">
         <div className="user-avatar">
-          {/* Aquí podrías poner una imagen de perfil en el futuro */}
           <div className="avatar-placeholder">{user?.username.charAt(0).toUpperCase()}</div>
         </div>
         <h3 className="user-name">{profileData.nombres || user?.username}</h3>

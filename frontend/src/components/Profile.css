@@ -1,8 +1,8 @@
-/* Contenido para frontend/src/components/Profile.css */
+/* Contenido completo para frontend/src/components/Profile.css */
 
 .profile-page {
   display: flex;
-  height: calc(100vh - 60px); /* Ajusta la altura si tienes un nav principal */
+  height: 100vh;
   background-color: #f8f9fa;
   font-family: "Poppins", sans-serif;
 }
@@ -16,6 +16,7 @@
   display: flex;
   flex-direction: column;
   align-items: center;
+  flex-shrink: 0;
 }
 
 .user-avatar {
@@ -39,11 +40,13 @@
 .user-name {
   font-size: 1.5rem;
   margin-bottom: 0.2rem;
+  word-break: break-all;
 }
 
 .user-email {
   color: #bdc3c7;
   margin-bottom: 2rem;
+  word-break: break-all;
 }
 
 .profile-nav {
@@ -91,7 +94,7 @@
 
 .form-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr; /* Dos columnas */
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
   gap: 1.5rem;
 }
 
@@ -132,6 +135,7 @@
   font-size: 1rem;
   cursor: pointer;
   transition: background-color 0.3s;
+  float: right;
 }
 
 .save-button:hover {
