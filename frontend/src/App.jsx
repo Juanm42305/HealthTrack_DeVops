@@ -12,9 +12,9 @@ import UserDashboard from './components/UserDashboard';
 import Profile from './components/Profile';
 import MisCitas from './components/MisCitas';
 import AgendarCita from './components/AgendarCita';
+import AdminDashboard from './components/AdminDashboard'; // Importamos el layout del Admin
 import GestionMedicos from './components/GestionMedicos';
 import GestionCitas from './components/GestionCitas';
-import UserLayout from './components/UserLayout'; // <-- ¡IMPORTAMOS LA NUEVA PLANTILLA!
 
 // Lógica
 import ProtectedRoute from './components/ProtectedRoute';
@@ -27,24 +27,26 @@ function App() {
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
 
-      {/* Ruta del Dispatcher (decide si mostrar Admin o la plantilla de Usuario) */}
+      {/* Ruta del Dispatcher (decide qué dashboard mostrar) */}
       <Route
         path="/dashboard"
         element={<ProtectedRoute><DashboardDispatcher /></ProtectedRoute>}
       />
       
-      {/* --- ¡NUEVA LÓGICA DE RUTAS DE USUARIO! --- */}
-      {/* Todas las rutas del usuario ahora viven DENTRO de la plantilla UserLayout */}
-      <Route element={<ProtectedRoute><UserLayout /></ProtectedRoute>}>
-        <Route path="/user/dashboard" element={<UserDashboard />} />
-        <Route path="/profile" element={<Profile />} />
-        <Route path="/mis-citas" element={<MisCitas />} />
-        <Route path="/agendar-cita" element={<AgendarCita />} />
+      {/* --- ¡NUEVA LÓGICA DE RUTAS DE ADMIN! --- */}
+      {/* Todas las rutas del admin ahora viven DENTRO de la plantilla AdminDashboard */}
+      <Route path="/admin" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>}>
+        {/* La ruta "índice" del admin mostrará los widgets (necesitamos un componente para esto) */}
+        {/* <Route index element={<AdminHome />} />  // Lo haremos en el futuro */}
+        <Route path="gestion-medicos" element={<GestionMedicos />} />
+        <Route path="gestion-citas" element={<GestionCitas />} />
+        {/* Aquí irán las otras rutas del admin como "facturacion", etc. */}
       </Route>
 
-      {/* Rutas del Administrador (siguen igual) */}
-      <Route path="/admin/gestion-medicos" element={<ProtectedRoute><GestionMedicos /></ProtectedRoute>} />
-      <Route path="/admin/gestion-citas" element={<ProtectedRoute><GestionCitas /></ProtectedRoute>} />
+      {/* Rutas de Usuario/Paciente (siguen igual) */}
+      <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+      <Route path="/agendar-cita" element={<ProtectedRoute><AgendarCita /></ProtectedRoute>} />
+      <Route path="/mis-citas" element={<ProtectedRoute><MisCitas /></ProtectedRoute>} />
     </Routes>
   );
 }

@@ -1,18 +1,19 @@
 /* Contenido COMPLETO y REDISEÑADO para frontend/src/components/GestionCitas.css */
 
 .gestion-citas-page {
-  /* Este componente vive dentro del layout del admin, así que no necesita fondo */
-  padding: 1rem;
+  /* No necesita fondo ni altura, ya que vive dentro del layout del admin */
 }
 
 .gestion-citas-page h1 {
   font-size: 2.2rem;
-  color: #333;
+  color: #1e293b; /* Un color oscuro más suave */
+  margin-bottom: 0.5rem;
 }
 
 .gestion-citas-page p {
-  color: #777;
-  margin-bottom: 2rem;
+  color: #64748b; /* Un gris azulado */
+  margin-bottom: 2.5rem;
+  font-size: 1.1rem;
 }
 
 .medicos-list-container {
@@ -24,17 +25,19 @@
 .medico-card {
   background: white;
   border-radius: 12px;
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.07);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
   padding: 1.5rem;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  transition: transform 0.3s, box-shadow 0.3s;
+  border: 1px solid #e2e8f0;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  cursor: pointer;
 }
 
 .medico-card:hover {
   transform: translateY(-5px);
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 10px 25px rgba(79, 70, 229, 0.1);
 }
 
 .medico-info h4 {
@@ -50,7 +53,7 @@
 }
 
 .medico-card button {
-  background-color: #3498db;
+  background-color: #4f46e5;
   color: white;
   border: none;
   padding: 0.6rem 1.2rem;
@@ -61,10 +64,12 @@
 }
 
 .medico-card button:hover {
-  background-color: #2980b9;
+  background-color: #4338ca;
 }
 
-/* Estilos para el formulario modal (los mismos de EditMedicoModal para consistencia) */
+/* --- Estilos para el Formulario Modal --- */
+/* (Son los mismos que en EditMedicoModal para mantener consistencia) */
+
 .modal-overlay {
   position: fixed;
   top: 0;
@@ -91,6 +96,7 @@
 
 .modal-content h2 {
   margin-bottom: 1.5rem;
+  color: #333;
 }
 
 .form-row {
@@ -111,3 +117,8 @@
 .btn-cancel:hover { background-color: #e0e0e0; }
 .btn-save { background-color: #4f46e5; color: white; }
 .btn-save:hover { background-color: #4338ca; }
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}
