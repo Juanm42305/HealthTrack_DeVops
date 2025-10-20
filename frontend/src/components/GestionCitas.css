@@ -1,42 +1,113 @@
-/* Contenido para frontend/src/components/GestionCitas.css */
-.gestion-citas-container {
-  padding: 2rem;
+/* Contenido COMPLETO y REDISEÑADO para frontend/src/components/GestionCitas.css */
+
+.gestion-citas-page {
+  /* Este componente vive dentro del layout del admin, así que no necesita fondo */
+  padding: 1rem;
 }
-.schedule-form {
+
+.gestion-citas-page h1 {
+  font-size: 2.2rem;
+  color: #333;
+}
+
+.gestion-citas-page p {
+  color: #777;
+  margin-bottom: 2rem;
+}
+
+.medicos-list-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 1.5rem;
+}
+
+.medico-card {
   background: white;
-  padding: 2rem;
-  border-radius: 10px;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-  max-width: 600px;
-  margin: 2rem auto;
+  border-radius: 12px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.07);
+  padding: 1.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: transform 0.3s, box-shadow 0.3s;
 }
-.form-group {
-  margin-bottom: 1.5rem;
+
+.medico-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
 }
-.form-group label {
-  display: block;
-  margin-bottom: 0.5rem;
-  font-weight: 500;
-  color: #555;
+
+.medico-info h4 {
+  margin: 0;
+  color: #2c3e50;
+  font-size: 1.2rem;
 }
-.form-group input, .form-group select {
-  width: 100%;
-  padding: 0.75rem;
-  border: 1px solid #ccc;
-  border-radius: 8px;
-  font-size: 1rem;
+
+.medico-info p {
+  margin: 0.25rem 0 0;
+  color: #95a5a6;
+  font-size: 0.9rem;
 }
-.btn-crear-horario {
-  width: 100%;
-  padding: 0.9rem;
-  background: #4f46e5;
+
+.medico-card button {
+  background-color: #3498db;
   color: white;
   border: none;
+  padding: 0.6rem 1.2rem;
   border-radius: 8px;
-  font-size: 1rem;
   cursor: pointer;
+  font-weight: 500;
   transition: background-color 0.3s;
 }
-.btn-crear-horario:hover {
-  background-color: #4338ca;
+
+.medico-card button:hover {
+  background-color: #2980b9;
 }
+
+/* Estilos para el formulario modal (los mismos de EditMedicoModal para consistencia) */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(5px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background: white;
+  padding: 2rem;
+  border-radius: 15px;
+  width: 90%;
+  max-width: 500px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+.modal-content h2 {
+  margin-bottom: 1.5rem;
+}
+
+.form-row {
+  display: flex;
+  gap: 1rem;
+}
+
+.form-row .form-group {
+  flex: 1;
+}
+
+.form-group { margin-bottom: 1.5rem; }
+.form-group label { display: block; margin-bottom: 0.5rem; font-weight: 500; color: #555; }
+.form-group input, .form-group select { width: 100%; padding: 0.75rem; border: 1px solid #ccc; border-radius: 8px; font-size: 1rem; }
+.modal-actions { display: flex; justify-content: flex-end; gap: 1rem; margin-top: 2rem; }
+.btn-cancel, .btn-save { padding: 0.7rem 1.5rem; border: none; border-radius: 8px; font-size: 1rem; cursor: pointer; transition: background-color 0.3s; }
+.btn-cancel { background-color: #f1f1f1; color: #333; }
+.btn-cancel:hover { background-color: #e0e0e0; }
+.btn-save { background-color: #4f46e5; color: white; }
+.btn-save:hover { background-color: #4338ca; }

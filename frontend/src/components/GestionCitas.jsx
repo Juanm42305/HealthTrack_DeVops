@@ -1,10 +1,11 @@
 // Contenido COMPLETO y REDISEÑADO para frontend/src/components/GestionCitas.jsx
+
 import React, { useState, useEffect } from 'react';
-import './GestionCitas.css'; // Asegúrate de que el CSS exista
+import './GestionCitas.css'; // Asegúrate de que el CSS esté vinculado
 
 function GestionCitas() {
   const [medicos, setMedicos] = useState([]);
-  const [selectedMedico, setSelectedMedico] = useState(null);
+  const [selectedMedico, setSelectedMedico] = useState(null); // Para saber a qué médico le creamos la agenda
   const [formData, setFormData] = useState({
     date: '',
     startTime: '08:00',
@@ -12,12 +13,23 @@ function GestionCitas() {
     interval: '30',
     sede: ''
   });
+  const [loading, setLoading] = useState(true);
 
+  // Carga la lista de médicos al iniciar el componente
   useEffect(() => {
     const fetchMedicos = async () => {
+      setLoading(true);
       const apiUrl = import.meta.env.VITE_API_URL;
-      const response = await fetch(`${apiUrl}/api/admin/doctors`);
-      if (response.ok) setMedicos(await response.json());
+      try {
+        const response = await fetch(`${apiUrl}/api/admin/doctors`);
+        if (response.ok) {
+          setMedicos(await response.json());
+        }
+      } catch (error) {
+        console.error("Error al cargar médicos:", error);
+      } finally {
+        setLoading(false);
+      }
     };
     fetchMedicos();
   }, []);
@@ -34,19 +46,27 @@ function GestionCitas() {
     }
 
     const apiUrl = import.meta.env.VITE_API_URL;
-    const response = await fetch(`${apiUrl}/api/admin/schedule/batch`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ...formData, doctor_id: selectedMedico.user_id }),
-    });
+    try {
+      const response = await fetch(`${apiUrl}/api/admin/schedule/batch`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...formData, doctor_id: selectedMedico.user_id }),
+      });
 
-    if (response.ok) {
-      alert(`Agenda para el Dr. ${selectedMedico.primer_apellido} generada exitosamente.`);
-      setSelectedMedico(null);
-    } else {
-      alert('Error al generar los horarios.');
+      if (response.ok) {
+        alert(`Agenda para el Dr. ${selectedMedico.primer_apellido || selectedMedico.username} generada exitosamente.`);
+        setSelectedMedico(null); // Cierra el formulario al terminar
+      } else {
+        alert('Error al generar los horarios.');
+      }
+    } catch (error) {
+        alert('Error de red al generar la agenda.');
     }
   };
+
+  if (loading) {
+    return <div className="loading-container">Cargando médicos...</div>;
+  }
 
   return (
     <div className="gestion-citas-page">
@@ -58,17 +78,18 @@ function GestionCitas() {
           <div key={medico.user_id} className="medico-card">
             <div className="medico-info">
               <h4>{medico.nombres || 'Dr.'} {medico.primer_apellido || medico.username}</h4>
-              <p>{medico.especialidad || 'Sin especialidad'}</p>
+              <p>{medico.especialidad || 'Sin especialidad asignada'}</p>
             </div>
             <button onClick={() => setSelectedMedico(medico)}>Añadir Horario</button>
           </div>
         ))}
       </div>
       
+      {/* --- FORMULARIO MODAL PARA AÑADIR HORARIOS --- */}
       {selectedMedico && (
         <div className="modal-overlay" onClick={() => setSelectedMedico(null)}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-            <h2>Generar Agenda para Dr. {selectedMedico.primer_apellido}</h2>
+            <h2>Generar Agenda para Dr. {selectedMedico.primer_apellido || selectedMedico.username}</h2>
             <form onSubmit={handleFormSubmit}>
               <div className="form-group">
                 <label>Día de Trabajo</label>
