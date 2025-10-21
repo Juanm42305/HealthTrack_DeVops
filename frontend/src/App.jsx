@@ -15,6 +15,7 @@ import AgendarCita from './components/AgendarCita';
 import AdminDashboard from './components/AdminDashboard'; // Importamos el layout del Admin
 import GestionMedicos from './components/GestionMedicos';
 import GestionCitas from './components/GestionCitas';
+import UserLayout from './components/UserLayout'; // <-- ¡IMPORTAMOS LA PLANTILLA DE USUARIO!
 
 // Lógica
 import ProtectedRoute from './components/ProtectedRoute';
@@ -36,17 +37,20 @@ function App() {
       {/* --- ¡NUEVA LÓGICA DE RUTAS DE ADMIN! --- */}
       {/* Todas las rutas del admin ahora viven DENTRO de la plantilla AdminDashboard */}
       <Route path="/admin" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>}>
-        {/* La ruta "índice" del admin mostrará los widgets (necesitamos un componente para esto) */}
-        {/* <Route index element={<AdminHome />} />  // Lo haremos en el futuro */}
+        {/* <Route index element={<AdminHome />} />  // Esto mostrará los widgets */}
         <Route path="gestion-medicos" element={<GestionMedicos />} />
         <Route path="gestion-citas" element={<GestionCitas />} />
         {/* Aquí irán las otras rutas del admin como "facturacion", etc. */}
       </Route>
 
-      {/* Rutas de Usuario/Paciente (siguen igual) */}
-      <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
-      <Route path="/agendar-cita" element={<ProtectedRoute><AgendarCita /></ProtectedRoute>} />
-      <Route path="/mis-citas" element={<ProtectedRoute><MisCitas /></ProtectedRoute>} />
+      {/* --- ¡NUEVA LÓGICA DE RUTAS DE USUARIO! --- */}
+      {/* Todas las rutas del usuario ahora viven DENTRO de la plantilla UserLayout */}
+      <Route path="/user" element={<ProtectedRoute><UserLayout /></ProtectedRoute>}>
+        <Route path="dashboard" element={<UserDashboard />} />
+        <Route path="profile" element={<Profile />} />
+        <Route path="mis-citas" element={<MisCitas />} />
+        <Route path="agendar-cita" element={<AgendarCita />} />
+      </Route>
     </Routes>
   );
 }

@@ -1,21 +1,17 @@
-// Contenido COMPLETO y RECONSTRUIDO para frontend/src/components/AdminDashboard.jsx
+// Contenido COMPLETO y CONVERTIDO A LAYOUT para frontend/src/components/AdminDashboard.jsx
 
 import React from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, Outlet, useLocation } from 'react-router-dom'; // <-- ¡IMPORTAMOS OUTLET y useLocation!
 import { useAuth } from '../context/AuthContext';
 import { FaTachometerAlt, FaUserMd, FaCalendarAlt, FaFileInvoiceDollar, FaFlask, FaSignOutAlt } from 'react-icons/fa';
-import { useMedicos } from '../context/MedicoContext';
+import { useMedicos } from '../context/MedicoContext'; // Asumiendo que MedicoContext está disponible
 import './AdminDashboard.css';
 
-function AdminDashboard() {
-  const { user, logout } = useAuth();
+// --- ¡NUEVO! Componente para la página principal del dashboard ---
+// Esto es lo que se mostrará en la ruta "/dashboard" del admin
+function AdminHome() {
   const navigate = useNavigate();
   const { fetchMedicos } = useMedicos();
-
-  const handleLogout = () => {
-    logout();
-    navigate('/');
-  };
 
   const handleAddDoctor = async () => {
     const username = prompt("Ingresa el nombre de usuario para el nuevo médico (SOLO LETRAS):");
@@ -35,7 +31,7 @@ function AdminDashboard() {
 
       if (response.ok) {
         alert(`✅ Médico "${username}" creado exitosamente.`);
-        fetchMedicos();
+        if (fetchMedicos) fetchMedicos();
       } else {
         const errorData = await response.json();
         alert(`Error al crear el médico: ${errorData.error}`);
@@ -43,6 +39,53 @@ function AdminDashboard() {
     } catch (error) {
       alert("Error de red al intentar crear el médico.");
     }
+  };
+  
+  return (
+    <>
+      <header className="main-header">
+        <h1>Panel de Control</h1>
+        <p>Bienvenido, aquí puedes gestionar toda la plataforma.</p>
+      </header>
+      <div className="widget-grid">
+        <div className="widget" onClick={handleAddDoctor}>
+          <FaUserMd className="widget-icon" />
+          <h3>Añadir Nuevo Médico</h3>
+          <p>Crea las credenciales y el perfil para un nuevo especialista.</p>
+          <button>Añadir Médico</button>
+        </div>
+        <div className="widget" onClick={() => navigate('/admin/gestion-citas')}>
+          <FaCalendarAlt className="widget-icon" />
+          <h3>Programar Citas</h3>
+          <p>Habilita nuevas fechas y horarios en el calendario de citas.</p>
+          <button>Programar Agenda</button>
+        </div>
+        <div className="widget">
+          <FaFileInvoiceDollar className="widget-icon" />
+          <h3>Ver Facturación</h3>
+          <p>Consulta los reportes de pagos y facturas generadas.</p>
+          <button>Ver Reportes</button>
+        </div>
+      </div>
+    </>
+  );
+}
+
+
+// --- Componente Principal del Layout del Admin ---
+function AdminDashboard() {
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation(); // Hook para saber en qué ruta estamos
+
+  const handleLogout = () => {
+    logout();
+    navigate('/');
+  };
+
+  // Función para determinar si un enlace está activo
+  const isLinkActive = (path) => {
+    return location.pathname.startsWith(path);
   };
 
   return (
@@ -59,11 +102,11 @@ function AdminDashboard() {
         </div>
         
         <nav className="sidebar-nav">
-          <Link to="/dashboard" className="nav-link active"><FaTachometerAlt /> <span>Dashboard</span></Link>
-          <Link to="/admin/gestion-medicos" className="nav-link"><FaUserMd /> <span>Gestión de Médicos</span></Link>
-          <Link to="/admin/gestion-citas" className="nav-link"><FaCalendarAlt /> <span>Gestión de Citas</span></Link>
-          <Link to="/admin/facturacion" className="nav-link"><FaFileInvoiceDollar /> <span>Facturación</span></Link>
-          <Link to="/admin/laboratorio" className="nav-link"><FaFlask /> <span>Laboratorio</span></Link>
+          <Link to="/dashboard" className={`nav-link ${isLinkActive('/dashboard') ? 'active' : ''}`}><FaTachometerAlt /> <span>Dashboard</span></Link>
+          <Link to="/admin/gestion-medicos" className={`nav-link ${isLinkActive('/admin/gestion-medicos') ? 'active' : ''}`}><FaUserMd /> <span>Gestión de Médicos</span></Link>
+          <Link to="/admin/gestion-citas" className={`nav-link ${isLinkActive('/admin/gestion-citas') ? 'active' : ''}`}><FaCalendarAlt /> <span>Gestión de Citas</span></Link>
+          <Link to="/admin/facturacion" className={`nav-link ${isLinkActive('/admin/facturacion') ? 'active' : ''}`}><FaFileInvoiceDollar /> <span>Facturación</span></Link>
+          <Link to="/admin/laboratorio" className={`nav-link ${isLinkActive('/admin/laboratorio') ? 'active' : ''}`}><FaFlask /> <span>Laboratorio</span></Link>
         </nav>
 
         <div className="sidebar-footer">
@@ -72,31 +115,10 @@ function AdminDashboard() {
       </aside>
 
       <main className="admin-main-content">
-        <header className="main-header">
-          <h1>Panel de Control</h1>
-          <p>Bienvenido, aquí puedes gestionar toda la plataforma.</p>
-        </header>
-
-        <div className="widget-grid">
-          <div className="widget" onClick={handleAddDoctor}>
-            <FaUserMd className="widget-icon" />
-            <h3>Añadir Nuevo Médico</h3>
-            <p>Crea las credenciales y el perfil para un nuevo especialista.</p>
-            <button>Añadir Médico</button>
-          </div>
-          <div className="widget">
-            <FaCalendarAlt className="widget-icon" />
-            <h3>Programar Citas</h3>
-            <p>Habilita nuevas fechas y horarios en el calendario de citas.</p>
-            <button onClick={() => navigate('/admin/gestion-citas')}>Programar Agenda</button>
-          </div>
-          <div className="widget">
-            <FaFileInvoiceDollar className="widget-icon" />
-            <h3>Ver Facturación</h3>
-            <p>Consulta los reportes de pagos y facturas generadas.</p>
-            <button>Ver Reportes</button>
-          </div>
-        </div>
+        {/* --- ¡CAMBIO CLAVE! --- */}
+        {/* Si estamos en la ruta exacta "/dashboard", mostramos los widgets. */}
+        {/* Si no, Outlet se encarga de mostrar la página hija (ej: GestionMedicos) */}
+        {location.pathname === '/dashboard' ? <AdminHome /> : <Outlet />}
       </main>
     </div>
   );

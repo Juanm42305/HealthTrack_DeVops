@@ -25,13 +25,13 @@
 .medico-card {
   background: white;
   border-radius: 12px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.07);
   padding: 1.5rem;
   display: flex;
   justify-content: space-between;
   align-items: center;
   border: 1px solid #e2e8f0;
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  transition: transform 0.3s, box-shadow 0.3s;
   cursor: pointer;
 }
 
@@ -53,7 +53,7 @@
 }
 
 .medico-card button {
-  background-color: #4f46e5;
+  background-color: #3498db;
   color: white;
   border: none;
   padding: 0.6rem 1.2rem;
@@ -64,11 +64,11 @@
 }
 
 .medico-card button:hover {
-  background-color: #4338ca;
+  background-color: #2980b9;
 }
 
 /* --- Estilos para el Formulario Modal --- */
-/* (Son los mismos que en EditMedicoModal para mantener consistencia) */
+/* (Son los mismos que en EditMedicoModal para consistencia) */
 
 .modal-overlay {
   position: fixed;
@@ -96,7 +96,6 @@
 
 .modal-content h2 {
   margin-bottom: 1.5rem;
-  color: #333;
 }
 
 .form-row {
