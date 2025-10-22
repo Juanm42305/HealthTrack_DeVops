@@ -1,4 +1,4 @@
-// Contenido COMPLETO y LIMPIO for frontend/src/App.jsx
+// Contenido COMPLETO y REESTRUCTURADO para frontend/src/App.jsx
 
 import React from 'react';
 import { Routes, Route } from 'react-router-dom';
@@ -21,8 +21,6 @@ import UserLayout from './components/UserLayout'; // <-- ¡IMPORTAMOS LA PLANTIL
 import ProtectedRoute from './components/ProtectedRoute';
 
 function App() {
-  // ¡LA BARRA DE NAVEGACIÓN GENÉRICA SE HA IDO!
-  // Ahora, cada dashboard es responsable de su propio layout.
   return (
     <Routes>
       {/* Rutas Públicas */}
@@ -36,17 +34,14 @@ function App() {
         element={<ProtectedRoute><DashboardDispatcher /></ProtectedRoute>}
       />
       
-      {/* --- ¡NUEVA LÓGICA DE RUTAS DE ADMIN! --- */}
-      {/* Todas las rutas del admin ahora viven DENTRO de la plantilla AdminDashboard */}
+      {/* --- LÓGICA DE RUTAS DE ADMIN (Anidadas) --- */}
       <Route path="/admin" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>}>
-        {/* <Route index element={<AdminHome />} />  // Esto mostrará los widgets */}
+        {/* <Route index element={<AdminHome />} /> */}
         <Route path="gestion-medicos" element={<GestionMedicos />} />
         <Route path="gestion-citas" element={<GestionCitas />} />
-        {/* Aquí irán las otras rutas del admin como "facturacion", etc. */}
       </Route>
 
-      {/* --- ¡NUEVA LÓGICA DE RUTAS DE USUARIO! --- */}
-      {/* Todas las rutas del usuario ahora viven DENTRO de la plantilla UserLayout */}
+      {/* --- LÓGICA DE RUTAS DE USUARIO (Anidadas) --- */}
       <Route path="/user" element={<ProtectedRoute><UserLayout /></ProtectedRoute>}>
         <Route path="dashboard" element={<UserDashboard />} />
         <Route path="profile" element={<Profile />} />
