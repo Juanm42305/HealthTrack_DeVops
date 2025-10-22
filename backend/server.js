@@ -4,9 +4,10 @@ const express = require('express');
 const cors = require('cors');
 const { Pool } = require('pg');
 const bcrypt = require('bcrypt');
-// --- ¡NUEVAS HERRAMIENTAS AÑADIDAS AQUÍ! ---
 const multer = require('multer');
 const cloudinary = require('cloudinary').v2;
+
+const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -39,6 +40,80 @@ app.get('/api', (req, res) => {
   res.json({ message: "¡Backend de HealthTrack funcionando!" });
 });
 
+// --- RUTA PARA QUE EL ADMIN CREE UNA NUEVA FACTURA (EJ. CIRUGÍA) ---
+app.post('/api/billing/create-invoice', async (req, res) => {
+  const { user_id, amount, description, appointment_id } = req.body;
+  
+  // Convertimos COP a centavos para Stripe (ej. $95.000 -> 9500000)
+  const amountInCents = amount * 100;
+
+  try {
+    // 1. Crear el Pago en Stripe
+    const paymentIntent = await stripe.paymentIntents.create({
+      amount: amountInCents,
+      currency: 'cop',
+      description: description,
+    });
+
+    // 2. Guardar la factura en nuestra base de datos
+    const query = `
+      INSERT INTO invoices (user_id, amount, description, appointment_id, status, stripe_payment_intent_id)
+      VALUES ($1, $2, $3, $4, 'pending', $5) RETURNING *
+    `;
+    const newInvoice = await pool.query(query, [user_id, amountInCents, description, appointment_id, paymentIntent.id]);
+    
+    // 3. Devolvemos el "client_secret" al frontend para que el usuario pueda pagar
+    res.json({ clientSecret: paymentIntent.client_secret, invoiceId: newInvoice.rows[0].id });
+
+  } catch (err) {
+    console.error('Error al crear factura:', err.message);
+    res.status(500).json({ error: 'Error en el servidor.' });
+  }
+});
+
+// --- RUTA PARA QUE EL USUARIO VEA SUS FACTURAS ---
+app.get('/api/billing/my-invoices/:userId', async (req, res) => {
+  const { userId } = req.params;
+  try {
+    const query = "SELECT * FROM invoices WHERE user_id = $1 ORDER BY created_at DESC";
+    const result = await pool.query(query, [userId]);
+    res.json(result.rows);
+  } catch (err) {
+    console.error('Error al obtener facturas:', err.message);
+    res.status(500).json({ error: 'Error en el servidor.' });
+  }
+});
+
+// --- RUTA PARA SUSCRIPCIÓN (PRÓXIMAMENTE) ---
+// (La lógica de suscripción es más compleja, la implementaremos después)
+
+// --- RUTA PARA WEBHOOK DE STRIPE ---
+// (Esta es la ruta MÁS IMPORTANTE. Stripe la llama para confirmar que un pago fue exitoso)
+app.post('/api/billing/stripe-webhook', express.raw({type: 'application/json'}), async (req, res) => {
+  const sig = req.headers['stripe-signature'];
+  const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET;
+
+  let event;
+  try {
+    event = stripe.webhooks.constructEvent(req.body, sig, endpointSecret);
+  } catch (err) {
+    return res.status(400).send(`Webhook Error: ${err.message}`);
+  }
+
+  // Manejar el evento
+  if (event.type === 'payment_intent.succeeded') {
+    const paymentIntent = event.data.object;
+    // ¡PAGO EXITOSO! Actualizamos nuestra base de datos
+    try {
+      await pool.query("UPDATE invoices SET status = 'paid' WHERE stripe_payment_intent_id = $1", [paymentIntent.id]);
+      // Aquí también podrías generar y guardar la URL del PDF
+    } catch (err) {
+      console.error('Error al actualizar factura en webhook:', err.message);
+    }
+  }
+
+  res.json({received: true});
+});
 
 // --- RUTAS DE AUTENTICACIÓN Y USUARIOS ---
 app.post('/api/register', async (req, res) => {

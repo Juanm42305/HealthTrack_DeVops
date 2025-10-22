@@ -16,6 +16,7 @@ import AdminDashboard from './components/AdminDashboard'; // Importamos el layou
 import GestionMedicos from './components/GestionMedicos';
 import GestionCitas from './components/GestionCitas';
 import UserLayout from './components/UserLayout'; // <-- ¡IMPORTAMOS LA PLANTILLA DE USUARIO!
+import Facturacion from './components/Facturacion'; // <-- ¡NUEVO!
 
 // Lógica
 import ProtectedRoute from './components/ProtectedRoute';
@@ -40,7 +41,7 @@ function App() {
         {/* <Route index element={<AdminHome />} />  // Esto mostrará los widgets */}
         <Route path="gestion-medicos" element={<GestionMedicos />} />
         <Route path="gestion-citas" element={<GestionCitas />} />
-        {/* Aquí irán las otras rutas del admin como "facturacion", etc. */}
+        <Route path="facturacion" element={<Facturacion />} />
       </Route>
 
       {/* --- ¡NUEVA LÓGICA DE RUTAS DE USUARIO! --- */}
