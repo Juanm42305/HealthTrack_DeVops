@@ -1,4 +1,4 @@
-// Contenido COMPLETO y REESTRUCTURADO para frontend/src/App.jsx
+// Contenido COMPLETO y LIMPIO for frontend/src/App.jsx
 
 import React from 'react';
 import { Routes, Route } from 'react-router-dom';
@@ -16,12 +16,13 @@ import AdminDashboard from './components/AdminDashboard'; // Importamos el layou
 import GestionMedicos from './components/GestionMedicos';
 import GestionCitas from './components/GestionCitas';
 import UserLayout from './components/UserLayout'; // <-- ¡IMPORTAMOS LA PLANTILLA DE USUARIO!
-import Facturacion from './components/Facturacion'; // <-- ¡NUEVO!
 
 // Lógica
 import ProtectedRoute from './components/ProtectedRoute';
 
 function App() {
+  // ¡LA BARRA DE NAVEGACIÓN GENÉRICA SE HA IDO!
+  // Ahora, cada dashboard es responsable de su propio layout.
   return (
     <Routes>
       {/* Rutas Públicas */}
@@ -41,7 +42,7 @@ function App() {
         {/* <Route index element={<AdminHome />} />  // Esto mostrará los widgets */}
         <Route path="gestion-medicos" element={<GestionMedicos />} />
         <Route path="gestion-citas" element={<GestionCitas />} />
-        <Route path="facturacion" element={<Facturacion />} />
+        {/* Aquí irán las otras rutas del admin como "facturacion", etc. */}
       </Route>
 
       {/* --- ¡NUEVA LÓGICA DE RUTAS DE USUARIO! --- */}
