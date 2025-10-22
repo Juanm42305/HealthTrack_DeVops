@@ -4,26 +4,9 @@ const express = require('express');
 const cors = require('cors');
 const { Pool } = require('pg');
 const bcrypt = require('bcrypt');
-const multer = require('multer');
-const cloudinary = require('cloudinary').v2;
-
-const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
-const multer = require('multer'); // Para manejar la subida de archivos
 
 const app = express();
 const PORT = process.env.PORT || 3001;
-
-// --- ¡NUEVAS CONFIGURACIONES AÑADIDAS AQUÍ! ---
-// Configuración de Cloudinary (usa los secretos que guardaste en Render)
-cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET,
-});
-
-// Configuración de Multer para guardar el archivo temporalmente
-const upload = multer({ dest: 'uploads/' });
-
 
 // Configuración de la conexión a la base de datos desde las variables de entorno de Render
 const pool = new Pool({
@@ -41,82 +24,8 @@ app.get('/api', (req, res) => {
   res.json({ message: "¡Backend de HealthTrack funcionando!" });
 });
 
-// --- RUTA PARA QUE EL ADMIN CREE UNA NUEVA FACTURA (EJ. CIRUGÍA) ---
-app.post('/api/billing/create-invoice', async (req, res) => {
-  const { user_id, amount, description, appointment_id } = req.body;
-  
-  // Convertimos COP a centavos para Stripe (ej. $95.000 -> 9500000)
-  const amountInCents = amount * 100;
 
-  try {
-    // 1. Crear el Pago en Stripe
-    const paymentIntent = await stripe.paymentIntents.create({
-      amount: amountInCents,
-      currency: 'cop',
-      description: description,
-    });
-
-    // 2. Guardar la factura en nuestra base de datos
-    const query = `
-      INSERT INTO invoices (user_id, amount, description, appointment_id, status, stripe_payment_intent_id)
-      VALUES ($1, $2, $3, $4, 'pending', $5) RETURNING *
-    `;
-    const newInvoice = await pool.query(query, [user_id, amountInCents, description, appointment_id, paymentIntent.id]);
-    
-    // 3. Devolvemos el "client_secret" al frontend para que el usuario pueda pagar
-    res.json({ clientSecret: paymentIntent.client_secret, invoiceId: newInvoice.rows[0].id });
-
-  } catch (err) {
-    console.error('Error al crear factura:', err.message);
-    res.status(500).json({ error: 'Error en el servidor.' });
-  }
-});
-
-// --- RUTA PARA QUE EL USUARIO VEA SUS FACTURAS ---
-app.get('/api/billing/my-invoices/:userId', async (req, res) => {
-  const { userId } = req.params;
-  try {
-    const query = "SELECT * FROM invoices WHERE user_id = $1 ORDER BY created_at DESC";
-    const result = await pool.query(query, [userId]);
-    res.json(result.rows);
-  } catch (err) {
-    console.error('Error al obtener facturas:', err.message);
-    res.status(500).json({ error: 'Error en el servidor.' });
-  }
-});
-
-// --- RUTA PARA SUSCRIPCIÓN (PRÓXIMAMENTE) ---
-// (La lógica de suscripción es más compleja, la implementaremos después)
-
-// --- RUTA PARA WEBHOOK DE STRIPE ---
-// (Esta es la ruta MÁS IMPORTANTE. Stripe la llama para confirmar que un pago fue exitoso)
-app.post('/api/billing/stripe-webhook', express.raw({type: 'application/json'}), async (req, res) => {
-  const sig = req.headers['stripe-signature'];
-  const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET;
-
-  let event;
-  try {
-    event = stripe.webhooks.constructEvent(req.body, sig, endpointSecret);
-  } catch (err) {
-    return res.status(400).send(`Webhook Error: ${err.message}`);
-  }
-
-  // Manejar el evento
-  if (event.type === 'payment_intent.succeeded') {
-    const paymentIntent = event.data.object;
-    // ¡PAGO EXITOSO! Actualizamos nuestra base de datos
-    try {
-      await pool.query("UPDATE invoices SET status = 'paid' WHERE stripe_payment_intent_id = $1", [paymentIntent.id]);
-      // Aquí también podrías generar y guardar la URL del PDF
-    } catch (err) {
-      console.error('Error al actualizar factura en webhook:', err.message);
-    }
-  }
-
-  res.json({received: true});
-});
-
-// --- RUTAS DE AUTENTICACIÓN Y USUARIOS ---
+// --- RUTAS DE AUTENTicación Y USUARIOS ---
 app.post('/api/register', async (req, res) => {
   const { username, password } = req.body;
   if (!username || !password) return res.status(400).json({ error: 'Usuario y contraseña son requeridos' });
@@ -201,29 +110,6 @@ app.put('/api/profile/patient/:userId', async (req, res) => {
   }
 });
 
-// --- ¡NUEVA RUTA PARA SUBIR FOTO DE PERFIL! ---
-app.post('/api/profile/patient/:userId/avatar', upload.single('avatar'), async (req, res) => {
-  const { userId } = req.params;
-  if (!req.file) {
-    return res.status(400).json({ error: 'No se subió ningún archivo.' });
-  }
-  try {
-    const result = await cloudinary.uploader.upload(req.file.path, {
-      folder: 'healthtrack_avatars',
-      public_id: `avatar_${userId}`,
-      overwrite: true,
-      transformation: [{ width: 200, height: 200, crop: 'fill', gravity: 'face' }]
-    });
-    const avatarUrl = result.secure_url;
-    const query = 'UPDATE patient_profiles SET avatar_url = $1 WHERE user_id = $2 RETURNING *';
-    const updatedProfile = await pool.query(query, [avatarUrl, userId]);
-    res.json(updatedProfile.rows[0]);
-  } catch (err) {
-    console.error('Error al subir avatar:', err.message);
-    res.status(500).json({ error: 'Error en el servidor al subir la imagen.' });
-  }
-});
-
 
 // --- RUTAS DE ADMINISTRADOR ---
 app.post('/api/admin/add-doctor', async (req, res) => {
@@ -301,6 +187,9 @@ app.post('/api/admin/schedule', async (req, res) => {
   }
 });
 
+// =================================================================
+// ============== ¡¡¡NUEVA RUTA AÑADIDA AQUÍ!!! ==============
+// =================================================================
 app.post('/api/admin/schedule/batch', async (req, res) => {
   const { doctor_id, date, startTime, endTime, interval, sede } = req.body;
   if (!doctor_id || !date || !startTime || !endTime || !interval || !sede) {
@@ -317,50 +206,6 @@ app.post('/api/admin/schedule/batch', async (req, res) => {
       const query = "INSERT INTO appointments (doctor_id, appointment_time, sede, status, appointment_type) VALUES ($1, $2, $3, 'disponible', 'general')";
       await client.query(query, [parseInt(doctor_id, 10), appointment_time, sede]);
     }
-    await client.query('COMMIT');
-    res.status(201).json({ message: 'Horarios generados exitosamente.' });
-  } catch (err) {
-    await client.query('ROLLBACK');
-    console.error('Error al crear horarios en lote:', err.message);
-    res.status(500).json({ error: 'Error en el servidor al generar los horarios.' });
-  } finally {
-    client.release();
-  }
-});
-
-// --- RUTA PARA QUE EL ADMIN CREE HORARIOS EN LOTE (BATCH) ---
-app.post('/api/admin/schedule/batch', async (req, res) => {
-  const { doctor_id, date, startTime, endTime, interval, sede } = req.body;
-
-  if (!doctor_id || !date || !startTime || !endTime || !interval || !sede) {
-    return res.status(400).json({ error: 'Todos los campos son requeridos.' });
-  }
-
-  // --- ¡NUEVA VALIDACIÓN DE FECHA AQUÍ! ---
-  const selectedDate = new Date(date);
-  const today = new Date();
-  // Reseteamos la hora de "hoy" para comparar solo las fechas
-  today.setHours(0, 0, 0, 0); 
-
-  if (selectedDate < today) {
-    return res.status(400).json({ error: 'No se pueden crear horarios en una fecha pasada.' });
-  }
-  // --- FIN DE LA VALIDACIÓN ---
-
-  const client = await pool.connect();
-  try {
-    await client.query('BEGIN');
-    
-    const start = new Date(`${date}T${startTime}`);
-    const end = new Date(`${date}T${endTime}`);
-    const intervalMinutes = parseInt(interval, 10);
-
-    for (let time = start; time < end; time.setMinutes(time.getMinutes() + intervalMinutes)) {
-      const appointment_time = time.toISOString();
-      const query = "INSERT INTO appointments (doctor_id, appointment_time, sede, status, appointment_type) VALUES ($1, $2, $3, 'disponible', 'general')";
-      await client.query(query, [parseInt(doctor_id, 10), appointment_time, sede]);
-    }
-    
     await client.query('COMMIT');
     res.status(201).json({ message: 'Horarios generados exitosamente.' });
   } catch (err) {
