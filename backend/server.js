@@ -1,12 +1,27 @@
-// Contenido COMPLETO y DEFINITIVO para backend/server.js
+// Contenido COMPLETO y CORREGIDO para backend/server.js
 
 const express = require('express');
 const cors = require('cors');
 const { Pool } = require('pg');
 const bcrypt = require('bcrypt');
 
+// --- ¡LÍNEAS QUE FALTABAN! ---
+const multer = require('multer'); // Para manejar la subida de archivos
+const cloudinary = require('cloudinary').v2; // Para conectar con Cloudinary
+// ---------------------------------
+
 const app = express();
 const PORT = process.env.PORT || 3001;
+
+// --- ¡CONFIGURACIÓN QUE FALTABA! ---
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
+const upload = multer({ dest: 'uploads/' });
+// -------------------------------------
+
 
 // Configuración de la conexión a la base de datos desde las variables de entorno de Render
 const pool = new Pool({
@@ -110,6 +125,29 @@ app.put('/api/profile/patient/:userId', async (req, res) => {
   }
 });
 
+// --- ¡NUEVA RUTA PARA SUBIR FOTO DE PERFIL! ---
+app.post('/api/profile/patient/:userId/avatar', upload.single('avatar'), async (req, res) => {
+  const { userId } = req.params;
+  if (!req.file) {
+    return res.status(400).json({ error: 'No se subió ningún archivo.' });
+  }
+  try {
+    const result = await cloudinary.uploader.upload(req.file.path, {
+      folder: 'healthtrack_avatars',
+      public_id: `avatar_${userId}`,
+      overwrite: true,
+      transformation: [{ width: 200, height: 200, crop: 'fill', gravity: 'face' }]
+    });
+    const avatarUrl = result.secure_url;
+    const query = 'UPDATE patient_profiles SET avatar_url = $1 WHERE user_id = $2 RETURNING *';
+    const updatedProfile = await pool.query(query, [avatarUrl, userId]);
+    res.json(updatedProfile.rows[0]);
+  } catch (err) {
+    console.error('Error al subir avatar:', err.message);
+    res.status(500).json({ error: 'Error en el servidor al subir la imagen.' });
+  }
+});
+
 
 // --- RUTAS DE ADMINISTRADOR ---
 app.post('/api/admin/add-doctor', async (req, res) => {
@@ -187,9 +225,6 @@ app.post('/api/admin/schedule', async (req, res) => {
   }
 });
 
-// =================================================================
-// ============== ¡¡¡NUEVA RUTA AÑADIDA AQUÍ!!! ==============
-// =================================================================
 app.post('/api/admin/schedule/batch', async (req, res) => {
   const { doctor_id, date, startTime, endTime, interval, sede } = req.body;
   if (!doctor_id || !date || !startTime || !endTime || !interval || !sede) {

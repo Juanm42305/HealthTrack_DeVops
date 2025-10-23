@@ -1,21 +1,20 @@
-/* Contenido COMPLETO y ACTUALIZADO para frontend/src/components/Profile.css */
+/* Contenido COMPLETO y DEFINITIVO para frontend/src/components/Profile.css */
 
-.profile-layout {
+.profile-page {
   display: flex;
   height: 100vh;
-  width: 100%;
-  background-color: #f4f7fa;
+  background-color: #f8f9fa;
   font-family: "Poppins", sans-serif;
 }
 
-/* --- Barra Lateral --- */
 .profile-sidebar {
   width: 280px;
-  background: #2c3e50; /* Azul oscuro corporativo, igual que el admin */
-  color: #ecf0f1;
+  background: #2c3e50;
+  color: white;
+  padding: 2rem 1rem;
   display: flex;
   flex-direction: column;
-  box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+  align-items: center;
   flex-shrink: 0;
 }
 
@@ -26,6 +25,7 @@
   font-weight: bold;
   color: #3498db;
   border-bottom: 1px solid #34495e;
+  width: 100%; /* Asegura que la línea ocupe todo */
 }
 
 .user-avatar {
@@ -76,7 +76,7 @@
   opacity: 1;
 }
 
-.user-name, .user-email {
+.user-name, .user-email, .user-role {
   text-align: center;
   word-break: break-all;
   padding: 0 1rem;
@@ -89,7 +89,13 @@
 
 .user-email {
   color: #bdc3c7;
+}
+
+.user-role {
+  color: #3498db;
+  font-weight: bold;
   margin-bottom: 2rem;
+  text-transform: capitalize;
 }
 
 .profile-nav {
@@ -117,6 +123,7 @@
 
 .sidebar-footer {
   padding: 1rem;
+  width: 100%;
   border-top: 1px solid #34495e;
 }
 
