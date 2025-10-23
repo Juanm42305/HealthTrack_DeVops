@@ -1,40 +1,38 @@
-/* Contenido COMPLETO para el NUEVO archivo frontend/src/components/UserLayout.css */
+/* Contenido COMPLETO para frontend/src/components/UserLayout.css */
 
-.user-layout {
+.user-layout-container {
   display: flex;
   height: 100vh;
   width: 100%;
-  background-color: #f4f7fa;
-  font-family: "Poppins", sans-serif;
+  background-color: #f4f7fa; /* Fondo gris claro para el contenido */
 }
 
-/* Estilos de la barra lateral (similares al del admin para consistencia) */
 .user-sidebar {
-  width: 260px;
-  background: #2c3e50;
-  color: #ecf0f1;
+  width: 260px; /* Ancho de la barra */
+  background: #2c3e50; /* Azul oscuro corporativo */
+  color: #ecf0f1; /* Texto claro */
   display: flex;
   flex-direction: column;
+  flex-shrink: 0; /* Evita que se encoja */
   box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
-  flex-shrink: 0;
 }
 
 .sidebar-header {
   padding: 1.5rem;
   text-align: center;
-  font-size: 1.8rem;
+  font-size: 1.5rem;
   font-weight: bold;
-  color: #3498db;
+  color: #3498db; /* Azul logo */
   border-bottom: 1px solid #34495e;
 }
 
-.sidebar-user-profile {
+.user-profile-info {
   padding: 1.5rem;
   text-align: center;
   border-bottom: 1px solid #34495e;
 }
 
-.sidebar-user-profile .avatar-placeholder {
+.user-avatar-placeholder {
   width: 70px;
   height: 70px;
   border-radius: 50%;
@@ -44,36 +42,46 @@
   justify-content: center;
   align-items: center;
   font-size: 2rem;
+  font-weight: 600;
   margin: 0 auto 0.75rem;
 }
 
-.sidebar-user-profile h3 { margin: 0; font-size: 1.1rem; }
-.sidebar-user-profile p { margin: 0; color: #95a5a6; font-size: 0.8rem; }
+.user-name {
+  margin: 0;
+  font-size: 1.2rem;
+}
 
-.sidebar-nav {
-  flex-grow: 1;
+.user-role {
+  margin: 0;
+  color: #95a5a6; /* Texto grisáceo */
+  font-size: 0.9rem;
+  text-transform: capitalize;
+}
+
+.user-nav {
+  flex-grow: 1; /* Empuja el botón de logout hacia abajo */
   padding: 1rem 0;
 }
 
-.sidebar-nav .nav-link {
+.nav-link {
   display: flex;
   align-items: center;
   gap: 0.8rem;
   padding: 0.9rem 1.5rem;
-  color: #bdc3c7;
+  color: #bdc3c7; /* Color de enlace inactivo */
   text-decoration: none;
   font-weight: 500;
   transition: all 0.3s ease;
-  border-left: 3px solid transparent;
+  border-left: 4px solid transparent;
 }
 
-.sidebar-nav .nav-link:hover {
-  background: #34495e;
+.nav-link:hover {
+  background: #34495e; /* Fondo al pasar el cursor */
   color: white;
   border-left-color: #3498db;
 }
 
-.sidebar-nav .nav-link.active {
+.nav-link.active {
   color: white;
   background: #34495e;
   border-left-color: #3498db;
@@ -87,7 +95,7 @@
 .logout-button {
   width: 100%;
   background: none;
-  border: 1px solid #e74c3c;
+  border: 1px solid #e74c3c; /* Borde rojo */
   color: #e74c3c;
   padding: 0.75rem;
   border-radius: 5px;
@@ -97,15 +105,16 @@
   justify-content: center;
   gap: 0.5rem;
   transition: all 0.3s ease;
+  font-weight: 600;
 }
 
 .logout-button:hover {
-  background: #e74c3c;
+  background: #e74c3c; /* Fondo rojo al pasar */
   color: white;
 }
 
 .user-main-content {
-  flex-grow: 1;
-  padding: 2.5rem;
-  overflow-y: auto;
+  flex-grow: 1; /* Ocupa el resto del espacio */
+  padding: 0; /* Quitamos padding para que el header ocupe todo */
+  overflow-y: auto; /* Permite scroll solo en el contenido */
 }

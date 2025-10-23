@@ -1,29 +1,37 @@
-/* Contenido limpio para frontend/src/index.css */
+/* Añade esto al final de frontend/src/index.css */
 
-/* Reinicio global para un estilo consistente */
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
+.main-header {
+  display: flex;
+  align-items: center;
+  padding: 1.25rem 2.5rem; /* Ajusta el padding */
+  background-color: #ffffff;
+  border-bottom: 1px solid #e0e0e0;
+  width: 100%;
 }
 
-body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  /* El background-color lo manejará WelcomePage para su imagen */
+.back-button {
+  background: none;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  padding: 0.5rem 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
 }
 
-code {
-  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
-    monospace;
+.back-button:hover {
+  background-color: #f4f4f4;
+  border-color: #aaa;
 }
 
-/* Ocultar la barra de navegación que mostramos condicionalmente en App.jsx */
-/* Si ya tienes una navegación global, asegúrate de que no se superponga */
-nav {
-  z-index: 1000; /* Asegura que la navegación esté por encima de otros elementos */
-  position: relative; /* Ajuste para el z-index */
+/* Ajustes para el contenido de las páginas */
+.profile-content-area,
+.mis-citas-container,
+.agendar-container,
+.user-dashboard-layout .widget-grid {
+  padding: 2.5rem; /* Padding uniforme */
 }

@@ -1,22 +1,17 @@
-// Contenido COMPLETO y ACTUALIZADO para frontend/src/components/UserDashboard.jsx
+// Contenido COMPLETO y LIMPIO para frontend/src/components/UserDashboard.jsx
 
 import React from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom'; // Ya no se usa useNavigate aquí
 import { useAuth } from '../context/AuthContext';
-import { FaCalendarPlus, FaStethoscope, FaFileDownload, FaFileInvoice, FaArrowLeft } from 'react-icons/fa';
-import Swal from 'sweetalert2'; // ¡IMPORTADO!
+import { FaCalendarPlus, FaStethoscope, FaFileDownload, FaFileInvoice } from 'react-icons/fa'; // Se fue FaArrowLeft
+import Swal from 'sweetalert2';
 import './UserDashboard.css';
 
 function UserDashboard() {
   const { user } = useAuth();
-  const navigate = useNavigate();
-
-  const goBack = () => {
-    navigate(-1); // Navega a la página anterior
-  };
+  // Se eliminó navigate y goBack
 
   const handleComingSoon = (feature) => {
-    // ¡CAMBIO!
     Swal.fire({
       title: 'Próximamente',
       text: `La funcionalidad de "${feature}" estará disponible pronto.`,
@@ -25,18 +20,16 @@ function UserDashboard() {
     });
   };
 
+  // --- ¡DISEÑO SIMPLIFICADO! ---
+  // Se eliminó el <header> y el botón "Volver"
   return (
     <div className="user-dashboard-layout">
       
-      <header className="main-header">
-        <button onClick={goBack} className="back-button">
-          <FaArrowLeft /> Volver
-        </button>
-        <div className="header-text">
-          <h1>Hola, {user?.username}!</h1>
-          <p>Bienvenido a tu portal de salud en HealthTrack.</p>
-        </div>
-      </header>
+      {/* Mensaje de bienvenida (sin el header de antes) */}
+      <div className="welcome-header">
+        <h1>Hola, {user?.username}!</h1>
+        <p>Bienvenido a tu portal de salud en HealthTrack.</p>
+      </div>
 
       <main className="widget-grid">
 
