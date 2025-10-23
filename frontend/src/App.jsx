@@ -15,7 +15,7 @@ import AgendarCita from './components/AgendarCita';
 import AdminDashboard from './components/AdminDashboard';
 import GestionMedicos from './components/GestionMedicos';
 import GestionCitas from './components/GestionCitas';
-import UserLayout from './components/UserLayout';
+import UserLayout from './components/UserLayout'; 
 
 // Lógica
 // --- ¡AQUÍ ESTÁ LA CORRECCIÓN! ---
@@ -38,10 +38,9 @@ function App() {
       
       {/* --- LÓGICA DE RUTAS DE ADMIN (Anidadas) --- */}
       <Route path="/admin" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>}>
-        {/* <Route index element={<AdminHome />} /> */}
         <Route path="gestion-medicos" element={<GestionMedicos />} />
         <Route path="gestion-citas" element={<GestionCitas />} />
-        <Route path="facturacion" element={<Facturacion />} /> {/* Asumiendo que crearás este componente */}
+        {/* Aquí irán las otras rutas del admin como "facturacion", etc. */}
       </Route>
 
       {/* --- LÓGICA DE RUTAS DE USUARIO (Anidadas) --- */}
@@ -54,8 +53,5 @@ function App() {
     </Routes>
   );
 }
-
-// Asegúrate de importar Facturacion si lo estás usando
-import Facturacion from './components/Facturacion';
 
 export default App;
