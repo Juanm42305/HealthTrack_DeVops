@@ -1,115 +1,107 @@
-/* Contenido COMPLETO y NUEVO para frontend/src/components/UserDashboard.css */
+/* Contenido COMPLETO y ACTUALIZADO para frontend/src/components/UserDashboard.css */
 
 .user-dashboard-layout {
-  padding: 2.5rem;
-  background-color: #f4f7fa;
-  min-height: calc(100vh - 60px); /* Resta la altura del nav principal si lo tienes */
-  font-family: "Poppins", sans-serif;
+  width: 100%;
 }
 
-.main-header {
-  display: flex;
-  align-items: center;
-  margin-bottom: 2.5rem;
-  position: relative;
+/* Encabezado de bienvenida (Hola, Juan!) */
+.welcome-header {
+  padding: 2.5rem 2.5rem 0 2.5rem;
+  background: #f4f7fa; /* Fondo gris claro a juego */
 }
 
-.header-text {
-  text-align: center;
-  flex-grow: 1; /* Centra el texto */
-}
-
-.main-header h1 {
-  font-size: 2.5rem;
+.welcome-header h1 {
+  font-size: 2rem;
+  font-weight: 700;
   color: #2c3e50;
 }
 
-.main-header p {
-  color: #777;
+.welcome-header p {
   font-size: 1.1rem;
-}
-
-/* --- Botón para volver --- */
-.back-button {
-  position: absolute;
-  left: 0;
-  top: 50%;
-  transform: translateY(-50%);
-  background: white;
-  border: 1px solid #ddd;
   color: #555;
-  padding: 0.6rem 1.2rem;
-  border-radius: 50px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  font-size: 0.9rem;
-  transition: all 0.3s ease;
+  margin-top: 0.25rem;
 }
 
-.back-button:hover {
-  background-color: #f1f1f1;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-}
-
-/* --- Rejilla de Widgets --- */
+/* La cuadrícula que contiene las tarjetas */
 .widget-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 2rem;
-  max-width: 1200px;
-  margin: 0 auto;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.5rem;
+  padding: 2.5rem;
+  background-color: #f4f7fa; /* Fondo gris claro */
+  
+  /* Esto asegura que las filas de tarjetas se estiren */
+  align-items: stretch;
 }
 
-.widget.user-widget {
-  background: white;
-  padding: 2rem;
-  border-radius: 15px;
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
-  text-align: center;
-  transition: transform 0.3s, box-shadow 0.3s;
-  cursor: pointer;
-  display: flex;
-  flex-direction: column;
-}
-
-.widget.user-widget:hover {
-  transform: translateY(-8px);
-  box-shadow: 0 12px 30px rgba(79, 70, 229, 0.15);
-}
-
+/* El enlace que envuelve la tarjeta */
 .widget-link {
   text-decoration: none;
   color: inherit;
+  
+  /* ¡Importante! Hace que el enlace ocupe todo el espacio de la celda del grid */
+  display: flex;
+}
+
+/* La tarjeta individual */
+.widget.user-widget {
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  padding: 1.5rem;
+  text-decoration: none;
+  color: inherit;
+  width: 100%; /* Asegura que llene el 'widget-link' */
+  
+  /* --- ¡AQUÍ ESTÁ EL CAMBIO CLAVE! --- */
+  display: flex;
+  flex-direction: column; /* Apila el contenido verticalmente */
+  /* --- FIN DEL CAMBIO --- */
+  
+  /* Animación */
+  transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
+  cursor: pointer;
+}
+
+.widget.user-widget:hover {
+  transform: scale(1.04);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
 }
 
 .widget-icon {
   font-size: 3rem;
-  color: #4f46e5;
+  color: #4f46e5; /* Morado/Azul del usuario */
   margin-bottom: 1rem;
 }
 
-.widget.user-widget h3 {
-  font-size: 1.4rem;
-  color: #1e293b;
-  margin-bottom: 0.75rem;
+.widget h3 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #2c3e50;
+  margin: 0;
 }
 
-.widget.user-widget p {
-  color: #64748b;
-  flex-grow: 1; /* Empuja el botón hacia abajo */
-  margin-bottom: 1.5rem;
+.widget p {
+  font-size: 0.9rem;
+  color: #555;
+  line-height: 1.5;
+  margin-top: 0.5rem;
+  
+  /* --- ¡ESTE ES EL CAMBIO MÁS IMPORTANTE! --- */
+  flex-grow: 1; /* Hace que el párrafo crezca para llenar el espacio vacío */
 }
 
+/* Botón "Próximamente" */
 .widget-button-placeholder {
-  margin-top: auto; /* Se alinea al final */
-  background: #eef2ff;
-  color: #4f46e5;
-  border: 1px solid #c7d2fe;
-  padding: 0.7rem 1.5rem;
-  border-radius: 5px;
-  font-size: 1rem;
-  font-weight: 500;
-  cursor: pointer;
+  background-color: #f4f5f7;
+  color: #6b7280;
+  border: 1px solid #e5e7eb;
+  padding: 0.7rem 1rem;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  margin-top: 1rem;
+  text-align: center;
+  width: 100%;
+  cursor: not-allowed;
 }

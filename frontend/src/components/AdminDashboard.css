@@ -1,4 +1,4 @@
-/* Contenido COMPLETO y RECONSTRUIDO para frontend/src/components/AdminDashboard.css */
+/* Contenido COMPLETO y RECONSTRUIDO for frontend/src/components/AdminDashboard.css */
 
 .admin-dashboard-layout {
   display: flex;
@@ -109,4 +109,106 @@
   overflow-y: auto;
 }
 
-/* El resto de tus estilos para .main-header, .widget-grid, .widget, etc. pueden ir aquí y funcionarán */
+/* Estilos del Contenido Principal */
+.admin-main-content {
+  flex-grow: 1;
+  padding: 0; /* Quitamos padding para que el header ocupe todo */
+  overflow-y: auto;
+  background-color: #f4f7fa; /* Fondo gris claro */
+}
+
+/* Header (Panel de Control) */
+.admin-main-content .main-header {
+  padding: 1.5rem 2.5rem;
+  background: #ffffff;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.admin-main-content .main-header h1 {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #2c3e50;
+  margin: 0;
+}
+
+.admin-main-content .main-header p {
+  font-size: 1.1rem;
+  color: #555;
+  margin-top: 0.25rem;
+}
+
+
+/* Cuadrícula de Widgets */
+.admin-main-content .widget-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.5rem;
+  padding: 2.5rem; /* Espacio alrededor de la cuadrícula */
+}
+
+/* La Tarjeta de Widget */
+.admin-main-content .widget {
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  text-decoration: none; /* Quita subrayado si es un Link */
+  color: inherit; /* Hereda color de texto */
+  
+  /* Animación */
+  transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
+  cursor: pointer;
+}
+
+/* Efecto de Zoom al pasar el cursor */
+.admin-main-content .widget:hover {
+  transform: scale(1.04);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+}
+
+.admin-main-content .widget-icon {
+  font-size: 3rem;
+  color: #3498db; /* Azul de Admin */
+  margin-bottom: 1rem;
+}
+
+.admin-main-content .widget h3 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #2c3e50;
+  margin: 0;
+}
+
+.admin-main-content .widget p {
+  font-size: 0.9rem;
+  color: #555;
+  line-height: 1.5;
+  margin-top: 0.5rem;
+  flex-grow: 1; /* Empuja el botón hacia abajo */
+}
+
+.admin-main-content .widget button {
+  background: #3498db; /* Azul de Admin */
+  color: white;
+  border: none;
+  padding: 0.7rem 1rem;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 600;
+  margin-top: 1rem;
+  transition: background-color 0.2s ease;
+  align-self: flex-start; /* Alinea el botón */
+}
+
+.admin-main-content .widget button:hover {
+  background-color: #2980b9; /* Azul más oscuro */
+}
+
+/* Quita el subrayado feo que se ve en tu captura */
+.admin-main-content .widget a {
+  text-decoration: none;
+  color: inherit;
+}
