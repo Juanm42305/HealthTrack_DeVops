@@ -1,27 +1,27 @@
-// Contenido COMPLETO y CORREGIDO para backend/server.js
+// Contenido COMPLETO y DEFINITIVO para backend/server.js
 
 const express = require('express');
 const cors = require('cors');
 const { Pool } = require('pg');
 const bcrypt = require('bcrypt');
 
-// --- ¡LÍNEAS QUE FALTABAN! ---
-const multer = require('multer'); // Para manejar la subida de archivos
-const cloudinary = require('cloudinary').v2; // Para conectar con Cloudinary
-// ---------------------------------
+// --- ¡LÍNEAS QUE FALTABAN Y CAUSABAN EL ERROR! ---
+const multer = require('multer');
+const cloudinary = require('cloudinary').v2;
+// ----------------------------------------------------
 
 const app = express();
 const PORT = process.env.PORT || 3001;
 
-// --- ¡CONFIGURACIÓN QUE FALTABA! ---
+// Configuración de Cloudinary (usa los secretos que guardaste en Render)
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
   api_key: process.env.CLOUDINARY_API_KEY,
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
-const upload = multer({ dest: 'uploads/' });
-// -------------------------------------
 
+// Configuración de Multer para guardar el archivo temporalmente
+const upload = multer({ dest: 'uploads/' });
 
 // Configuración de la conexión a la base de datos desde las variables de entorno de Render
 const pool = new Pool({
@@ -40,7 +40,7 @@ app.get('/api', (req, res) => {
 });
 
 
-// --- RUTAS DE AUTENTicación Y USUARIOS ---
+// --- RUTAS DE AUTENTICACIÓN Y USUARIOS ---
 app.post('/api/register', async (req, res) => {
   const { username, password } = req.body;
   if (!username || !password) return res.status(400).json({ error: 'Usuario y contraseña son requeridos' });
@@ -125,7 +125,6 @@ app.put('/api/profile/patient/:userId', async (req, res) => {
   }
 });
 
-// --- ¡NUEVA RUTA PARA SUBIR FOTO DE PERFIL! ---
 app.post('/api/profile/patient/:userId/avatar', upload.single('avatar'), async (req, res) => {
   const { userId } = req.params;
   if (!req.file) {
