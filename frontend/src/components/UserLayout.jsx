@@ -1,18 +1,24 @@
-// Contenido COMPLETO para el NUEVO archivo frontend/src/components/UserLayout.jsx
+// Contenido COMPLETO y CORREGIDO para frontend/src/components/UserLayout.jsx
 
 import React from 'react';
-import { Link, Outlet, useNavigate } from 'react-router-dom';
+import { Link, Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { FaTachometerAlt, FaUser, FaStethoscope, FaSignOutAlt } from 'react-icons/fa';
-import './UserLayout.css'; // Crearemos este archivo CSS
+import './UserLayout.css'; // Asegúrate de que el archivo CSS exista
 
 function UserLayout() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation(); // Hook para saber qué ruta está activa
 
   const handleLogout = () => {
     logout();
     navigate('/');
+  };
+
+  // Función para determinar si un enlace está activo
+  const isLinkActive = (path) => {
+    return location.pathname === path;
   };
 
   return (
@@ -29,9 +35,10 @@ function UserLayout() {
         </div>
         
         <nav className="sidebar-nav">
-          <Link to="/dashboard" className="nav-link"><FaTachometerAlt /> <span>Dashboard</span></Link>
-          <Link to="/profile" className="nav-link"><FaUser /> <span>Mi Perfil</span></Link>
-          <Link to="/mis-citas" className="nav-link"><FaStethoscope /> <span>Mis Citas</span></Link>
+          {/* --- ¡ENLACES CORREGIDOS AQUÍ! --- */}
+          <Link to="/user/dashboard" className={`nav-link ${isLinkActive('/user/dashboard') ? 'active' : ''}`}><FaTachometerAlt /> <span>Dashboard</span></Link>
+          <Link to="/user/profile" className={`nav-link ${isLinkActive('/user/profile') ? 'active' : ''}`}><FaUser /> <span>Mi Perfil</span></Link>
+          <Link to="/user/mis-citas" className={`nav-link ${isLinkActive('/user/mis-citas') ? 'active' : ''}`}><FaStethoscope /> <span>Mis Citas</span></Link>
         </nav>
 
         <div className="sidebar-footer">
@@ -39,9 +46,9 @@ function UserLayout() {
         </div>
       </aside>
 
-      {/* --- Área de Contenido Principal (Aquí se mostrarán las páginas) --- */}
+      {/* --- Área de Contenido Principal --- */}
       <main className="user-main-content">
-        <Outlet /> {/* ¡La magia está aquí! Outlet renderiza la ruta hija */}
+        <Outlet /> {/* Outlet renderiza la ruta hija (ej. UserDashboard, Profile, etc.) */}
       </main>
     </div>
   );
