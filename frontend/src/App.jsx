@@ -1,4 +1,4 @@
-// Contenido COMPLETO y REESTRUCTURADO para frontend/src/App.jsx
+// Contenido COMPLETO y CORREGIDO para frontend/src/App.jsx
 
 import React from 'react';
 import { Routes, Route } from 'react-router-dom';
@@ -12,13 +12,15 @@ import UserDashboard from './components/UserDashboard';
 import Profile from './components/Profile';
 import MisCitas from './components/MisCitas';
 import AgendarCita from './components/AgendarCita';
-import AdminDashboard from './components/AdminDashboard'; // Importamos el layout del Admin
+import AdminDashboard from './components/AdminDashboard';
 import GestionMedicos from './components/GestionMedicos';
 import GestionCitas from './components/GestionCitas';
-import UserLayout from './components/UserLayout'; // <-- ¡IMPORTAMOS LA PLANTILLA DE USUARIO!
+import UserLayout from './components/UserLayout';
 
 // Lógica
-import ProtectedRoute from './components/ProtectedRoute';
+// --- ¡AQUÍ ESTÁ LA CORRECCIÓN! ---
+// La ruta correcta es './context/ProtectedRoute', no './components'
+import ProtectedRoute from './context/ProtectedRoute'; 
 
 function App() {
   return (
@@ -39,6 +41,7 @@ function App() {
         {/* <Route index element={<AdminHome />} /> */}
         <Route path="gestion-medicos" element={<GestionMedicos />} />
         <Route path="gestion-citas" element={<GestionCitas />} />
+        <Route path="facturacion" element={<Facturacion />} /> {/* Asumiendo que crearás este componente */}
       </Route>
 
       {/* --- LÓGICA DE RUTAS DE USUARIO (Anidadas) --- */}
@@ -51,5 +54,8 @@ function App() {
     </Routes>
   );
 }
+
+// Asegúrate de importar Facturacion si lo estás usando
+import Facturacion from './components/Facturacion';
 
 export default App;
