@@ -1,7 +1,8 @@
-// Contenido COMPLETO y CORREGIDO para frontend/src/components/AgendarCita.jsx
+// Contenido COMPLETO y ACTUALIZADO para frontend/src/components/AgendarCita.jsx
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import Swal from 'sweetalert2'; // ¡IMPORTADO!
 import './AgendarCita.css';
 
 function AgendarCita() {
@@ -40,11 +41,13 @@ function AgendarCita() {
 
   const handleAgendar = async () => {
     if (!selectedSlot) {
-      alert("Por favor, selecciona un horario.");
+      // ¡CAMBIO!
+      Swal.fire('Atención', 'Por favor, selecciona un horario.', 'warning');
       return;
     }
     if (!motivo) {
-      alert("Por favor, describe brevemente el motivo de tu cita.");
+      // ¡CAMBIO!
+      Swal.fire('Atención', 'Por favor, describe brevemente el motivo de tu cita.', 'warning');
       return;
     }
     const apiUrl = import.meta.env.VITE_API_URL;
@@ -55,11 +58,12 @@ function AgendarCita() {
     });
 
     if (response.ok) {
-      alert('¡Cita agendada con éxito!');
-      // --- ¡REDIRECCIÓN CORREGIDA! ---
+      // ¡CAMBIO!
+      await Swal.fire('¡Éxito!', 'Cita agendada con éxito.', 'success');
       navigate('/user/mis-citas'); 
     } else {
-      alert('Error al agendar la cita. Es posible que alguien la haya tomado. Por favor, refresca.');
+      // ¡CAMBIO!
+      Swal.fire('Error', 'Error al agendar la cita. Es posible que alguien la haya tomado. Por favor, refresca.', 'error');
     }
   };
 

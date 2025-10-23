@@ -1,43 +1,68 @@
-// Contenido COMPLETO y CONVERTIDO A LAYOUT para frontend/src/components/AdminDashboard.jsx
+// Contenido COMPLETO y ACTUALIZADO para frontend/src/components/AdminDashboard.jsx
 
 import React from 'react';
-import { Link, useNavigate, Outlet, useLocation } from 'react-router-dom'; // <-- ¡IMPORTAMOS OUTLET y useLocation!
+import { Link, useNavigate, Outlet, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { FaTachometerAlt, FaUserMd, FaCalendarAlt, FaFileInvoiceDollar, FaFlask, FaSignOutAlt } from 'react-icons/fa';
-import { useMedicos } from '../context/MedicoContext'; // Asumiendo que MedicoContext está disponible
+import { useMedicos } from '../context/MedicoContext'; 
+import Swal from 'sweetalert2'; // ¡IMPORTADO!
 import './AdminDashboard.css';
 
-// --- ¡NUEVO! Componente para la página principal del dashboard ---
-// Esto es lo que se mostrará en la ruta "/dashboard" del admin
+// --- Componente para la página principal del dashboard ---
 function AdminHome() {
   const navigate = useNavigate();
   const { fetchMedicos } = useMedicos();
 
   const handleAddDoctor = async () => {
-    const username = prompt("Ingresa el nombre de usuario para el nuevo médico (SOLO LETRAS):");
-    const password = prompt("Ingresa la contraseña numérica temporal (SOLO NÚMEROS):");
-
-    if (!username || !password) return alert("Ambos campos son requeridos.");
-    if (!/^[A-Za-z]+$/.test(username)) return alert("El nombre de usuario solo puede contener letras.");
-    if (!/^[0-9]+$/.test(password)) return alert("La contraseña solo puede contener números.");
-
-    const apiUrl = import.meta.env.VITE_API_URL;
-    try {
-      const response = await fetch(`${apiUrl}/api/admin/add-doctor`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password }),
-      });
-
-      if (response.ok) {
-        alert(`✅ Médico "${username}" creado exitosamente.`);
-        if (fetchMedicos) fetchMedicos();
-      } else {
-        const errorData = await response.json();
-        alert(`Error al crear el médico: ${errorData.error}`);
+    // ¡CAMBIO! Usamos SweetAlert2 para múltiples inputs
+    const { value: formValues } = await Swal.fire({
+      title: 'Crear Nuevo Médico',
+      html:
+        '<input id="swal-input1" class="swal2-input" placeholder="Nombre de usuario (letras)" required>' +
+        '<input id="swal-input2" class="swal2-input" placeholder="Contraseña (números)" type="password" required>',
+      focusConfirm: false,
+      preConfirm: () => {
+        const username = document.getElementById('swal-input1').value;
+        const password = document.getElementById('swal-input2').value;
+        if (!username || !password) {
+          Swal.showValidationMessage(`Ambos campos son requeridos.`);
+          return false;
+        }
+        if (!/^[A-Za-z]+$/.test(username)) {
+          Swal.showValidationMessage(`El nombre de usuario solo puede contener letras.`);
+          return false;
+        }
+        if (!/^[0-9]+$/.test(password)) {
+          Swal.showValidationMessage(`La contraseña solo puede contener números.`);
+          return false;
+        }
+        return { username, password };
       }
-    } catch (error) {
-      alert("Error de red al intentar crear el médico.");
+    });
+
+    if (formValues) {
+      const { username, password } = formValues;
+      const apiUrl = import.meta.env.VITE_API_URL;
+      try {
+        const response = await fetch(`${apiUrl}/api/admin/add-doctor`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, password }),
+        });
+
+        if (response.ok) {
+          // ¡CAMBIO!
+          Swal.fire('¡Éxito!', `Médico "${username}" creado exitosamente.`, 'success');
+          if (fetchMedicos) fetchMedicos();
+        } else {
+          const errorData = await response.json();
+          // ¡CAMBIO!
+          Swal.fire('Error', `Error al crear el médico: ${errorData.error}`, 'error');
+        }
+      } catch (error) {
+        // ¡CAMBIO!
+        Swal.fire('Error', 'Error de red al intentar crear el médico.', 'error');
+      }
     }
   };
   
@@ -76,14 +101,13 @@ function AdminHome() {
 function AdminDashboard() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
-  const location = useLocation(); // Hook para saber en qué ruta estamos
+  const location = useLocation(); 
 
   const handleLogout = () => {
     logout();
     navigate('/');
   };
 
-  // Función para determinar si un enlace está activo
   const isLinkActive = (path) => {
     return location.pathname.startsWith(path);
   };
@@ -115,9 +139,6 @@ function AdminDashboard() {
       </aside>
 
       <main className="admin-main-content">
-        {/* --- ¡CAMBIO CLAVE! --- */}
-        {/* Si estamos en la ruta exacta "/dashboard", mostramos los widgets. */}
-        {/* Si no, Outlet se encarga de mostrar la página hija (ej: GestionMedicos) */}
         {location.pathname === '/dashboard' ? <AdminHome /> : <Outlet />}
       </main>
     </div>

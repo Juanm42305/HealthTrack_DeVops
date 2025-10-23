@@ -1,9 +1,10 @@
-// Contenido COMPLETO y CORREGIDO para frontend/src/components/UserDashboard.jsx
+// Contenido COMPLETO y ACTUALIZADO para frontend/src/components/UserDashboard.jsx
 
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { FaCalendarPlus, FaStethoscope, FaFileDownload, FaFileInvoice, FaArrowLeft } from 'react-icons/fa';
+import Swal from 'sweetalert2'; // ¡IMPORTADO!
 import './UserDashboard.css';
 
 function UserDashboard() {
@@ -15,7 +16,13 @@ function UserDashboard() {
   };
 
   const handleComingSoon = (feature) => {
-    alert(`La funcionalidad de "${feature}" estará disponible próximamente.`);
+    // ¡CAMBIO!
+    Swal.fire({
+      title: 'Próximamente',
+      text: `La funcionalidad de "${feature}" estará disponible pronto.`,
+      icon: 'info',
+      confirmButtonText: 'Entendido'
+    });
   };
 
   return (
@@ -33,7 +40,6 @@ function UserDashboard() {
 
       <main className="widget-grid">
 
-        {/* --- ¡ENLACE CORREGIDO! --- */}
         <Link to="/user/agendar-cita" className="widget-link">
           <div className="widget user-widget">
             <FaCalendarPlus className="widget-icon" />
@@ -42,7 +48,6 @@ function UserDashboard() {
           </div>
         </Link>
 
-        {/* --- ¡ENLACE CORREGIDO! --- */}
         <Link to="/user/mis-citas" className="widget-link">
           <div className="widget user-widget">
             <FaStethoscope className="widget-icon" />

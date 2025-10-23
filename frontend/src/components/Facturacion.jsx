@@ -1,15 +1,15 @@
-// Contenido COMPLETO para frontend/src/components/Facturacion.jsx
+// Contenido COMPLETO y ACTUALIZADO para frontend/src/components/Facturacion.jsx
 
 import React, { useState, useEffect } from 'react';
-import './Facturacion.css'; // Crearemos este CSS
+import Swal from 'sweetalert2'; // ¡IMPORTADO!
+import './Facturacion.css'; 
 
 function Facturacion() {
-  const [users, setUsers] = useState([]); // Para la lista de pacientes
-  const [invoices, setInvoices] = useState([]); // Para la lista de facturas
+  const [users, setUsers] = useState([]); 
+  const [invoices, setInvoices] = useState([]); 
   
-  // Cargar pacientes y facturas al inicio
   useEffect(() => {
-    // ... (Aquí iría la lógica para cargar usuarios y facturas existentes)
+    // ... 
   }, []);
 
   const handleCreateInvoice = async (e) => {
@@ -27,12 +27,16 @@ function Facturacion() {
         body: JSON.stringify({ user_id, amount, description }),
       });
       if (response.ok) {
-        alert('¡Factura creada! El paciente ya puede verla para pagar.');
+        // ¡CAMBIO!
+        Swal.fire('¡Éxito!', '¡Factura creada! El paciente ya puede verla para pagar.', 'success');
+        e.target.reset(); // Limpia el formulario
       } else {
-        alert('Error al crear la factura.');
+        // ¡CAMBIO!
+        Swal.fire('Error', 'Error al crear la factura.', 'error');
       }
     } catch (error) {
-      alert('Error de red.');
+      // ¡CAMBIO!
+      Swal.fire('Error', 'Error de red.', 'error');
     }
   };
 
@@ -45,7 +49,6 @@ function Facturacion() {
         <form onSubmit={handleCreateInvoice}>
           <div className="form-group">
             <label>Paciente</label>
-            {/* Idealmente, aquí se carga la lista de usuarios */}
             <input name="user_id" placeholder="ID del Usuario (ej. 1)" required />
           </div>
           <div className="form-group">
@@ -62,7 +65,6 @@ function Facturacion() {
 
       <div className="report-container">
         <h2>Reportes (Próximamente)</h2>
-        {/* Aquí iría la lista de facturas */}
       </div>
     </div>
   );

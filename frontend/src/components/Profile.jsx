@@ -1,9 +1,10 @@
-// Contenido COMPLETO y DEFINITIVO para frontend/src/components/Profile.jsx
+// Contenido COMPLETO y ACTUALIZADO para frontend/src/components/Profile.jsx
 
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { FaUser, FaNotesMedical, FaVials, FaSignOutAlt } from 'react-icons/fa';
+import Swal from 'sweetalert2'; // ¡IMPORTADO!
 import './Profile.css';
 
 function Profile() {
@@ -77,12 +78,13 @@ function Profile() {
         });
         if (!uploadResponse.ok) throw new Error('Error al subir la imagen.');
         const updatedProfileWithAvatar = await uploadResponse.json();
-        finalProfileData = await uploadResponse.json(); // Actualiza los datos con la respuesta
+        finalProfileData = await uploadResponse.json(); 
         setProfileData(finalProfileData);
         setSelectedFile(null);
         success = true;
       } catch (error) {
-        return alert("Error al subir la foto de perfil.");
+        // ¡CAMBIO!
+        return Swal.fire('Error', 'Error al subir la foto de perfil.', 'error');
       }
     }
 
@@ -95,16 +97,19 @@ function Profile() {
       if (textDataResponse.ok) {
         success = true;
       } else {
-        alert('Error al guardar los datos del perfil.');
+        // ¡CAMBIO!
+        Swal.fire('Error', 'Error al guardar los datos del perfil.', 'error');
         success = false;
       }
     } catch (error) {
-      alert('Error de conexión al guardar los datos.');
+      // ¡CAMBIO!
+      Swal.fire('Error', 'Error de conexión al guardar los datos.', 'error');
       success = false;
     }
     
     if (success) {
-      alert('✅ ¡Perfil actualizado exitosamente!');
+      // ¡CAMBIO!
+      Swal.fire('¡Éxito!', 'Perfil actualizado exitosamente.', 'success');
     }
   };
 
@@ -133,7 +138,12 @@ function Profile() {
         
         <nav className="profile-nav">
           <a href="#" className="nav-link active"><FaUser /> <span>Mi Perfil</span></a>
-          <a href="#" className="nav-link"><FaNotesMedical /> <span>Historial Médico</span></a>
+          
+          {/* --- ¡AQUÍ ESTÁ EL CAMBIO DE ROL! --- */}
+          {user?.role === 'medico' && (
+            <a href="#" className="nav-link"><FaNotesMedical /> <span>Historial Médico</span></a>
+          )}
+          
           <a href="#" className="nav-link"><FaVials /> <span>Resultados</span></a>
         </nav>
         <div className="sidebar-footer">
