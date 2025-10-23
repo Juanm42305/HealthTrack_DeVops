@@ -1,8 +1,15 @@
 // Contenido COMPLETO y ACTUALIZADO para frontend/src/components/GestionCitas.jsx
 
 import React, { useState, useEffect } from 'react';
-import Swal from 'sweetalert2'; // <-- ¡IMPORTADO!
-import './GestionCitas.css';
+import Swal from 'sweetalert2';
+import './GestionCitas.css'; 
+
+// --- URLs para las imágenes rotativas ---
+const promoImages = [
+  'https://images.unsplash.com/photo-1576091160550-2173dba999ef?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&ixlib=rb-1.2.1&q=80&w=400',
+  'https://images.unsplash.com/photo-1581091224003-05e1c2e40f84?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&ixlib=rb-1.2.1&q=80&w=400',
+  'https://images.unsplash.com/photo-1538108144341-2b1f8c1f3c3a?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&ixlib=rb-1.2.1&q=80&w=400'
+];
 
 function GestionCitas() {
   const [medicos, setMedicos] = useState([]);
@@ -15,8 +22,18 @@ function GestionCitas() {
     sede: ''
   });
   const [loading, setLoading] = useState(true);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
-  // Carga la lista de médicos al iniciar el componente
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentImageIndex((prevIndex) =>
+        prevIndex === promoImages.length - 1 ? 0 : prevIndex + 1
+      );
+    }, 2000); // Rota cada 2 segundos
+
+    return () => clearInterval(timer); 
+  }, []);
+
   useEffect(() => {
     const fetchMedicos = async () => {
       setLoading(true);
@@ -42,13 +59,7 @@ function GestionCitas() {
   const handleFormSubmit = async (e) => {
     e.preventDefault();
     if (new Date(`${formData.date}T${formData.endTime}`) <= new Date(`${formData.date}T${formData.startTime}`)) {
-      // --- ¡CAMBIO! ---
-      Swal.fire({
-          title: 'Error de Lógica',
-          text: 'La hora de fin debe ser posterior a la hora de inicio.',
-          icon: 'warning',
-          confirmButtonText: 'Entendido'
-      });
+      Swal.fire('Error de Lógica', 'La hora de fin debe ser posterior a la hora de inicio.', 'warning');
       return;
     }
 
@@ -61,32 +72,13 @@ function GestionCitas() {
       });
 
       if (response.ok) {
-        // --- ¡CAMBIO! ---
-        // Usamos await para que el modal se cierre DESPUÉS de dar clic en "Aceptar"
-        await Swal.fire({
-            title: '¡Éxito!',
-            text: `Agenda para el Dr. ${selectedMedico.primer_apellido || selectedMedico.username} generada exitosamente.`,
-            icon: 'success',
-            confirmButtonText: 'Aceptar'
-        });
-        setSelectedMedico(null); // Cierra el formulario al terminar
+        await Swal.fire('¡Éxito!', `Agenda para Dr. ${selectedMedico.primer_apellido || selectedMedico.username} generada.`, 'success');
+        setSelectedMedico(null); 
       } else {
-        // --- ¡CAMBIO! ---
-        Swal.fire({
-            title: 'Error',
-            text: 'Error al generar los horarios. Revise que no existan en la base de datos.',
-            icon: 'error',
-            confirmButtonText: 'Cerrar'
-        });
+        Swal.fire('Error', 'Error al generar los horarios.', 'error');
       }
     } catch (error) {
-      // --- ¡CAMBIO! ---
-      Swal.fire({
-          title: 'Error de Red',
-          text: 'No se pudo conectar con el servidor para generar la agenda.',
-          icon: 'error',
-          confirmButtonText: 'Cerrar'
-      });
+      Swal.fire('Error de Red', 'No se pudo conectar con el servidor.', 'error');
     }
   };
 
@@ -96,22 +88,44 @@ function GestionCitas() {
 
   return (
     <div className="gestion-citas-page">
-      <h1>Gestión de Agenda de Citas</h1>
-      <p>Selecciona un médico de la lista para configurar su agenda del día.</p>
       
-      <div className="medicos-list-container">
-        {medicos.map(medico => (
-          <div key={medico.user_id} className="medico-card">
-            <div className="medico-info">
-              <h4>{medico.nombres || 'Dr.'} {medico.primer_apellido || medico.username}</h4>
-              <p>{medico.especialidad || 'Sin especialidad asignada'}</p>
+      {/* Contenedor Principal (Izquierda) */}
+      <div className="citas-main-content"> 
+        <h1>Gestión de Agenda de Citas</h1>
+        <p>Selecciona un médico de la lista para configurar su agenda del día.</p>
+        
+        <div className="medicos-list-container">
+          {medicos.map(medico => (
+            <div key={medico.user_id} className="medico-card">
+              <div className="medico-info">
+                <h4>{medico.nombres || 'Dr.'} {medico.primer_apellido || medico.username}</h4>
+                <p>{medico.especialidad || 'Sin especialidad asignada'}</p>
+              </div>
+              <button className="btn-asignar" onClick={() => setSelectedMedico(medico)}>
+                Añadir Horario
+              </button>
             </div>
-            <button onClick={() => setSelectedMedico(medico)}>Añadir Horario</button>
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
-      
-      {/* --- FORMULARIO MODAL PARA AÑADIR HORARIOS --- */}
+
+      {/* Contenedor Lateral (Derecha) */}
+      <div className="citas-sidebar-promo"> 
+        <h3>Tu Salud, Nuestra Prioridad</h3>
+        <p>Equipos de última generación y los mejores especialistas.</p>
+        <div className="image-carousel-container">
+          {promoImages.map((src, index) => (
+            <img
+              key={src}
+              src={src}
+              alt="Instalaciones de HealthTrack"
+              className={`carousel-image ${index === currentImageIndex ? 'active' : ''}`}
+            />
+          ))}
+        </div>
+      </div>
+
+      {/* Formulario Modal (no cambia) */}
       {selectedMedico && (
         <div className="modal-overlay" onClick={() => setSelectedMedico(null)}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
@@ -127,7 +141,7 @@ function GestionCitas() {
               </div>
               <div className="form-row">
                 <div className="form-group">
-                  <label>Hora de Inicio (8 AM - 6 PM)</label>
+                  <label>Hora de Inicio</label>
                   <input type="time" name="startTime" value={formData.startTime} onChange={handleFormChange} min="08:00" max="18:00" required />
                 </div>
                 <div className="form-group">

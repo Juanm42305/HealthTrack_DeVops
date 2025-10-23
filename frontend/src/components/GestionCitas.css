@@ -1,75 +1,141 @@
-/* Contenido COMPLETO y REDISEÑADO para frontend/src/components/GestionCitas.css */
+/* Contenido COMPLETO y ACTUALIZADO para frontend/src/components/GestionCitas.css */
 
+/* --- 1. Diseño de Página Principal (2 Columnas) --- */
 .gestion-citas-page {
-  /* No necesita fondo ni altura, ya que vive dentro del layout del admin */
+  display: flex;
+  gap: 2rem;
+  padding: 2.5rem;
+  background-color: #f4f7fa;
+  /* Quitamos el min-height que daba problemas */
 }
 
-.gestion-citas-page h1 {
-  font-size: 2.2rem;
-  color: #1e293b; /* Un color oscuro más suave */
+/* Contenedor principal de la izquierda */
+.citas-main-content {
+  flex: 3; /* Ocupa 3/4 partes */
+  display: flex;
+  flex-direction: column;
+}
+
+.citas-main-content h1 {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #2c3e50;
   margin-bottom: 0.5rem;
 }
 
-.gestion-citas-page p {
-  color: #64748b; /* Un gris azulado */
-  margin-bottom: 2.5rem;
+.citas-main-content > p {
   font-size: 1.1rem;
+  color: #555;
+  margin-bottom: 2rem;
 }
 
+/* Contenedor lateral de la derecha */
+.citas-sidebar-promo {
+  flex: 1; /* Ocupa 1/4 parte */
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  height: fit-content; /* Se ajusta al contenido */
+}
+
+.citas-sidebar-promo h3 {
+  font-size: 1.2rem;
+  color: #2c3e50;
+  margin-bottom: 0.5rem;
+}
+
+.citas-sidebar-promo p {
+  font-size: 0.9rem;
+  color: #555;
+  margin-bottom: 1.5rem;
+}
+
+
+/* --- 2. Carrusel de Imágenes Lateral --- */
+.image-carousel-container {
+  width: 100%;
+  aspect-ratio: 1 / 1; /* Hace la imagen cuadrada */
+  position: relative;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.carousel-image {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0;
+  /* Transición suave de 1 segundo para el fade */
+  transition: opacity 1s ease-in-out;
+}
+
+.carousel-image.active {
+  opacity: 1; /* La imagen activa se muestra */
+}
+
+
+/* --- 3. Tarjetas de Médico Modernas --- */
 .medicos-list-container {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  /* Columnas responsivas */
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
   gap: 1.5rem;
 }
 
 .medico-card {
-  background: white;
+  background: #ffffff;
   border-radius: 12px;
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.07);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
   padding: 1.5rem;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  border: 1px solid #e2e8f0;
-  transition: transform 0.3s, box-shadow 0.3s;
-  cursor: pointer;
+  
+  /* Animación */
+  transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
 }
 
 .medico-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 10px 25px rgba(79, 70, 229, 0.1);
+  transform: translateY(-5px) scale(1.02);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
 }
 
 .medico-info h4 {
-  margin: 0;
+  font-size: 1.15rem;
+  font-weight: 600;
   color: #2c3e50;
-  font-size: 1.2rem;
+  margin: 0 0 0.25rem 0;
 }
 
 .medico-info p {
-  margin: 0.25rem 0 0;
-  color: #95a5a6;
   font-size: 0.9rem;
+  color: #555;
+  margin: 0;
 }
 
-.medico-card button {
+.btn-asignar {
   background-color: #3498db;
   color: white;
   border: none;
-  padding: 0.6rem 1.2rem;
+  padding: 0.6rem 1rem;
   border-radius: 8px;
   cursor: pointer;
-  font-weight: 500;
-  transition: background-color 0.3s;
+  font-size: 0.9rem;
+  font-weight: 600;
+  transition: background-color 0.2s ease;
+  white-space: nowrap; /* Evita que el texto se rompa */
 }
 
-.medico-card button:hover {
+.btn-asignar:hover {
   background-color: #2980b9;
 }
 
-/* --- Estilos para el Formulario Modal --- */
-/* (Son los mismos que en EditMedicoModal para consistencia) */
 
+/* --- 4. Estilos del Modal (ya los tenías) --- */
 .modal-overlay {
   position: fixed;
   top: 0;
@@ -91,33 +157,72 @@
   width: 90%;
   max-width: 500px;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-  animation: fadeIn 0.3s ease-in-out;
 }
 
 .modal-content h2 {
   margin-bottom: 1.5rem;
+  color: #333;
+}
+
+.form-group {
+  margin-bottom: 1rem;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+  color: #555;
+}
+
+.form-group input,
+.form-group select {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-family: inherit;
 }
 
 .form-row {
   display: flex;
   gap: 1rem;
 }
-
 .form-row .form-group {
   flex: 1;
 }
 
-.form-group { margin-bottom: 1.5rem; }
-.form-group label { display: block; margin-bottom: 0.5rem; font-weight: 500; color: #555; }
-.form-group input, .form-group select { width: 100%; padding: 0.75rem; border: 1px solid #ccc; border-radius: 8px; font-size: 1rem; }
-.modal-actions { display: flex; justify-content: flex-end; gap: 1rem; margin-top: 2rem; }
-.btn-cancel, .btn-save { padding: 0.7rem 1.5rem; border: none; border-radius: 8px; font-size: 1rem; cursor: pointer; transition: background-color 0.3s; }
-.btn-cancel { background-color: #f1f1f1; color: #333; }
-.btn-cancel:hover { background-color: #e0e0e0; }
-.btn-save { background-color: #4f46e5; color: white; }
-.btn-save:hover { background-color: #4338ca; }
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  margin-top: 2rem;
+}
 
-@keyframes fadeIn {
-  from { opacity: 0; transform: scale(0.95); }
-  to { opacity: 1; transform: scale(1); }
+.btn-cancel, .btn-save {
+  padding: 0.7rem 1.5rem;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background-color 0.3s;
+  font-weight: 600;
+}
+
+.btn-cancel {
+  background-color: #f1f1f1;
+  color: #333;
+  border: 1px solid #ddd;
+}
+.btn-cancel:hover {
+  background-color: #e0e0e0;
+}
+
+.btn-save {
+  background-color: #28a745; /* Verde para 'Guardar' */
+  color: white;
+}
+.btn-save:hover {
+  background-color: #218838;
 }
