@@ -1,5 +1,104 @@
-/* Contenido para frontend/src/components/MisCitas.css */
-.mis-citas-container { padding: 2rem; max-width: 900px; margin: 2rem auto; }
-.status-badge { padding: 0.2rem 0.5rem; border-radius: 5px; color: white; background: #6c757d; }
-.status-agendada .status-badge { background: #007bff; }
-.btn-cancelar { background: #dc3545; color: white; border: none; padding: 0.5rem 1rem; border-radius: 5px; cursor: pointer; }
+/* Contenido COMPLETO para frontend/src/components/MisCitas.css */
+
+.mis-citas-container {
+  padding: 2.5rem; /* Más espacio */
+  background-color: #f4f7fa; /* Un fondo gris muy suave */
+  min-height: 100vh;
+}
+
+.mis-citas-container h1 {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #2c3e50; /* Azul oscuro */
+  margin-bottom: 2rem;
+  border-bottom: 3px solid #3498db; /* Línea azul */
+  padding-bottom: 0.5rem;
+}
+
+.mis-citas-container .loading-text,
+.mis-citas-container .no-citas-text {
+  font-size: 1.1rem;
+  color: #555;
+  margin-top: 2rem;
+}
+
+.citas-list {
+  display: grid;
+  /* Crea columnas automáticas. Cada una de min 320px y max 1fr */
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 1.5rem; /* Espacio entre tarjetas */
+}
+
+/* --- ESTILO Y ANIMACIÓN DE LA TARJETA --- */
+.cita-card {
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  padding: 1.5rem;
+  border-left: 5px solid #3498db; /* Borde izquierdo azul */
+  
+  /* ¡La magia de la animación! */
+  transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
+}
+
+/* ¡La animación de zoom y sombra al pasar el cursor! */
+.cita-card:hover {
+  transform: scale(1.04); /* Zoom del 4% */
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+}
+/* --- FIN DE LA ANIMACIÓN --- */
+
+
+.cita-card h3 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 1rem;
+}
+
+.cita-card p {
+  font-size: 1rem;
+  color: #4a4a4a;
+  line-height: 1.6;
+  margin-bottom: 0.5rem;
+}
+
+.cita-card p strong {
+  color: #2c3e50; /* Azul oscuro para los títulos */
+  min-width: 80px; /* Alinea los valores */
+  display: inline-block;
+}
+
+.cita-status {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  border-radius: 15px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: #fff;
+}
+
+.status-agendada {
+  background-color: #28a745; /* Verde */
+}
+
+.status-completada {
+  background-color: #6c757d; /* Gris */
+}
+
+.btn-cancelar {
+  background-color: #e74c3c; /* Rojo */
+  color: white;
+  border: none;
+  padding: 0.6rem 1rem;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 600;
+  margin-top: 1rem;
+  transition: background-color 0.2s ease;
+}
+
+.btn-cancelar:hover {
+  background-color: #c0392b; /* Rojo más oscuro */
+}

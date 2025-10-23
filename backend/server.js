@@ -1,29 +1,26 @@
-// Contenido COMPLETO y DEFINITIVO para backend/server.js
+// Contenido COMPLETO y CORREGIDO para backend/server.js
 
 const express = require('express');
 const cors = require('cors');
 const { Pool } = require('pg');
 const bcrypt = require('bcrypt');
-
-// --- ¡LÍNEAS QUE FALTABAN Y CAUSABAN EL ERROR! ---
-const multer = require('multer'); // Para manejar la subida de archivos
-const cloudinary = require('cloudinary').v2; // Para conectar con Cloudinary
-// ----------------------------------------------------
+const multer = require('multer'); 
+const cloudinary = require('cloudinary').v2; 
 
 const app = express();
 const PORT = process.env.PORT || 3001;
 
-// Configuración de Cloudinary (usa los secretos que guardaste en Render)
+// Configuración de Cloudinary
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
   api_key: process.env.CLOUDINARY_API_KEY,
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
-// Configuración de Multer para guardar el archivo temporalmente
+// Configuración de Multer
 const upload = multer({ dest: 'uploads/' });
 
-// Configuración de la conexión a la base de datos desde las variables de entorno de Render
+// Configuración de la conexión a PostgreSQL
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
   ssl: {
@@ -147,7 +144,7 @@ app.post('/api/profile/patient/:userId/avatar', upload.single('avatar'), async (
   }
 });
 
-// --- ¡NUEVAS RUTAS PARA PERFIL DE MÉDICO! ---
+// --- RUTAS PARA PERFIL DE MÉDICO ---
 app.get('/api/profile/doctor/:userId', async (req, res) => {
   const { userId } = req.params;
   try {
@@ -354,6 +351,7 @@ app.get('/api/appointments/available-times/:date', async (req, res) => {
   }
 });
 
+// --- ¡ESTE ES EL BLOQUE CORREGIDO! ---
 app.put('/api/appointments/book/:id', async (req, res) => {
   const { id } = req.params;
   const { patient_id, description } = req.body;
@@ -362,10 +360,10 @@ app.put('/api/appointments/book/:id', async (req, res) => {
     const updatedAppointment = await pool.query(query, [patient_id, description, id]);
     if (updatedAppointment.rows.length === 0) return res.status(404).json({ error: 'La cita no está disponible o no existe.' });
     res.json(updatedAppointment.rows[0]);
-  } catch (err) {
+  } catch (err) { // <--- AÑADÍ LAS LLAVES AQUÍ
     console.error('Error al agendar cita:', err.message);
     res.status(500).json({ error: 'Error en el servidor.' });
-  }
+  } // <--- Y AQUÍ
 });
 
 app.post('/api/doctor/schedule-procedure', async (req, res) => {
@@ -383,6 +381,7 @@ app.post('/api/doctor/schedule-procedure', async (req, res) => {
   }
 });
 
+// --- RUTA "MIS CITAS" (MODIFICADA) ---
 app.get('/api/my-appointments/:patientId', async (req, res) => {
   const { patientId } = req.params;
   try {
@@ -390,8 +389,8 @@ app.get('/api/my-appointments/:patientId', async (req, res) => {
       SELECT a.id, a.appointment_time, a.sede, a.status, a.description, dp.nombres as doctor_nombres, dp.primer_apellido as doctor_apellido, dp.especialidad
       FROM appointments a
       JOIN doctor_profiles dp ON a.doctor_id = dp.user_id
-      WHERE a.patient_id = $1
-      ORDER BY a.appointment_time DESC
+      WHERE a.patient_id = $1 AND a.appointment_time >= NOW()
+      ORDER BY a.appointment_time ASC
     `;
     const result = await pool.query(query, [patientId]);
     res.json(result.rows);
@@ -400,6 +399,7 @@ app.get('/api/my-appointments/:patientId', async (req, res) => {
     res.status(500).json({ error: 'Error en el servidor.' });
   }
 });
+
 
 app.put('/api/appointments/cancel/:id', async (req, res) => {
   const { id } = req.params;
