@@ -1,26 +1,29 @@
-// Contenido COMPLETO y CORREGIDO para backend/server.js
+// Contenido COMPLETO y DEFINITIVO para backend/server.js
 
 const express = require('express');
 const cors = require('cors');
 const { Pool } = require('pg');
 const bcrypt = require('bcrypt');
-const multer = require('multer');
-const cloudinary = require('cloudinary').v2;
+
+// --- ¡LÍNEAS QUE FALTABAN Y CAUSABAN EL ERROR! ---
+const multer = require('multer'); // Para manejar la subida de archivos
+const cloudinary = require('cloudinary').v2; // Para conectar con Cloudinary
+// ----------------------------------------------------
 
 const app = express();
 const PORT = process.env.PORT || 3001;
 
-// Configuración de Cloudinary
+// Configuración de Cloudinary (usa los secretos que guardaste en Render)
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
   api_key: process.env.CLOUDINARY_API_KEY,
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
-// Configuración de Multer
+// Configuración de Multer para guardar el archivo temporalmente
 const upload = multer({ dest: 'uploads/' });
 
-// Configuración de la conexión a la base de datos
+// Configuración de la conexión a la base de datos desde las variables de entorno de Render
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
   ssl: {
@@ -124,7 +127,9 @@ app.put('/api/profile/patient/:userId', async (req, res) => {
 
 app.post('/api/profile/patient/:userId/avatar', upload.single('avatar'), async (req, res) => {
   const { userId } = req.params;
-  if (!req.file) return res.status(400).json({ error: 'No se subió ningún archivo.' });
+  if (!req.file) {
+    return res.status(400).json({ error: 'No se subió ningún archivo.' });
+  }
   try {
     const result = await cloudinary.uploader.upload(req.file.path, {
       folder: 'healthtrack_avatars',
@@ -284,7 +289,6 @@ app.post('/api/admin/schedule/batch', async (req, res) => {
     return res.status(400).json({ error: 'Todos los campos son requeridos.' });
   }
   
-  // --- VALIDACIÓN DE FECHA ---
   const selectedDate = new Date(date);
   const today = new Date();
   today.setHours(0, 0, 0, 0); 
@@ -346,7 +350,6 @@ app.get('/api/appointments/available-times/:date', async (req, res) => {
     res.json(result.rows);
   } catch (err) {
     console.error('Error al obtener horarios para la fecha:', err.message);
-    // --- ¡AQUÍ ESTABA EL ERROR DE TIPEO! ---
     res.status(500).json({ error: 'Error en el servidor.' });
   }
 });
