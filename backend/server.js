@@ -1,14 +1,26 @@
-// Contenido COMPLETO y DEFINITIVO para backend/server.js
+// Contenido COMPLETO y CORREGIDO para backend/server.js
 
 const express = require('express');
 const cors = require('cors');
 const { Pool } = require('pg');
 const bcrypt = require('bcrypt');
+const multer = require('multer');
+const cloudinary = require('cloudinary').v2;
 
 const app = express();
 const PORT = process.env.PORT || 3001;
 
-// Configuración de la conexión a la base de datos desde las variables de entorno de Render
+// Configuración de Cloudinary
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
+
+// Configuración de Multer
+const upload = multer({ dest: 'uploads/' });
+
+// Configuración de la conexión a la base de datos
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
   ssl: {
@@ -25,7 +37,7 @@ app.get('/api', (req, res) => {
 });
 
 
-// --- RUTAS DE AUTENTicación Y USUARIOS ---
+// --- RUTAS DE AUTENTICACIÓN Y USUARIOS ---
 app.post('/api/register', async (req, res) => {
   const { username, password } = req.body;
   if (!username || !password) return res.status(400).json({ error: 'Usuario y contraseña son requeridos' });
@@ -92,21 +104,100 @@ app.get('/api/profile/patient/:userId', async (req, res) => {
 
 app.put('/api/profile/patient/:userId', async (req, res) => {
   const { userId } = req.params;
-  const { nombres, primer_apellido, segundo_apellido, edad, fecha_nacimiento, numero_cedula } = req.body;
+  const { nombres, primer_apellido, segundo_apellido, edad, fecha_nacimiento, numero_cedula, tipo_de_sangre, direccion_residencia } = req.body;
   try {
     const query = `
       UPDATE patient_profiles
-      SET nombres = $1, primer_apellido = $2, segundo_apellido = $3, edad = $4, fecha_nacimiento = $5, numero_cedula = $6
-      WHERE user_id = $7
+      SET nombres = $1, primer_apellido = $2, segundo_apellido = $3, edad = $4, fecha_nacimiento = $5, numero_cedula = $6, tipo_de_sangre = $7, direccion_residencia = $8
+      WHERE user_id = $9
       RETURNING *
     `;
-    const values = [nombres, primer_apellido, segundo_apellido, edad, fecha_nacimiento, numero_cedula, userId];
+    const values = [nombres, primer_apellido, segundo_apellido, edad, fecha_nacimiento, numero_cedula, tipo_de_sangre, direccion_residencia, userId];
     const updatedProfile = await pool.query(query, values);
     if (updatedProfile.rows.length === 0) return res.status(404).json({ error: "Perfil no encontrado para actualizar." });
     res.json(updatedProfile.rows[0]);
   } catch (err) {
     console.error('Error al actualizar perfil:', err.message);
     res.status(500).json({ error: "Error en el servidor." });
+  }
+});
+
+app.post('/api/profile/patient/:userId/avatar', upload.single('avatar'), async (req, res) => {
+  const { userId } = req.params;
+  if (!req.file) return res.status(400).json({ error: 'No se subió ningún archivo.' });
+  try {
+    const result = await cloudinary.uploader.upload(req.file.path, {
+      folder: 'healthtrack_avatars',
+      public_id: `avatar_${userId}`,
+      overwrite: true,
+      transformation: [{ width: 200, height: 200, crop: 'fill', gravity: 'face' }]
+    });
+    const avatarUrl = result.secure_url;
+    const query = 'UPDATE patient_profiles SET avatar_url = $1 WHERE user_id = $2 RETURNING *';
+    const updatedProfile = await pool.query(query, [avatarUrl, userId]);
+    res.json(updatedProfile.rows[0]);
+  } catch (err) {
+    console.error('Error al subir avatar:', err.message);
+    res.status(500).json({ error: 'Error en el servidor al subir la imagen.' });
+  }
+});
+
+// --- ¡NUEVAS RUTAS PARA PERFIL DE MÉDICO! ---
+app.get('/api/profile/doctor/:userId', async (req, res) => {
+  const { userId } = req.params;
+  try {
+    const query = `
+      SELECT u.username, dp.* FROM users u
+      JOIN doctor_profiles dp ON u.id = dp.user_id
+      WHERE u.id = $1
+    `;
+    const profile = await pool.query(query, [userId]);
+    if (profile.rows.length === 0) return res.status(404).json({ error: "Perfil de médico no encontrado." });
+    res.json(profile.rows[0]);
+  } catch (err) {
+    console.error('Error al obtener perfil de médico:', err.message);
+    res.status(500).json({ error: "Error en el servidor." });
+  }
+});
+
+app.put('/api/profile/doctor/:userId', async (req, res) => {
+  const { userId } = req.params;
+  const { nombres, primer_apellido, segundo_apellido, edad, fecha_nacimiento, numero_cedula, tipo_de_sangre, direccion_residencia, especialidad, consultorio, sede } = req.body;
+  try {
+    const query = `
+      UPDATE doctor_profiles
+      SET nombres = $1, primer_apellido = $2, segundo_apellido = $3, edad = $4, fecha_nacimiento = $5, numero_cedula = $6, 
+          tipo_de_sangre = $7, direccion_residencia = $8, especialidad = $9, consultorio = $10, sede = $11
+      WHERE user_id = $12
+      RETURNING *
+    `;
+    const values = [nombres, primer_apellido, segundo_apellido, edad, fecha_nacimiento, numero_cedula, tipo_de_sangre, direccion_residencia, especialidad, consultorio, sede, userId];
+    const updatedProfile = await pool.query(query, values);
+    if (updatedProfile.rows.length === 0) return res.status(404).json({ error: "Perfil no encontrado para actualizar." });
+    res.json(updatedProfile.rows[0]);
+  } catch (err) {
+    console.error('Error al actualizar perfil de médico:', err.message);
+    res.status(500).json({ error: "Error en el servidor." });
+  }
+});
+
+app.post('/api/profile/doctor/:userId/avatar', upload.single('avatar'), async (req, res) => {
+  const { userId } = req.params;
+  if (!req.file) return res.status(400).json({ error: 'No se subió ningún archivo.' });
+  try {
+    const result = await cloudinary.uploader.upload(req.file.path, {
+      folder: 'healthtrack_avatars',
+      public_id: `avatar_doc_${userId}`,
+      overwrite: true,
+      transformation: [{ width: 200, height: 200, crop: 'fill', gravity: 'face' }]
+    });
+    const avatarUrl = result.secure_url;
+    const query = 'UPDATE doctor_profiles SET avatar_url = $1 WHERE user_id = $2 RETURNING *';
+    const updatedProfile = await pool.query(query, [avatarUrl, userId]);
+    res.json(updatedProfile.rows[0]);
+  } catch (err) {
+    console.error('Error al subir avatar de médico:', err.message);
+    res.status(500).json({ error: 'Error en el servidor al subir la imagen.' });
   }
 });
 
@@ -187,14 +278,20 @@ app.post('/api/admin/schedule', async (req, res) => {
   }
 });
 
-// =================================================================
-// ============== ¡¡¡NUEVA RUTA AÑADIDA AQUÍ!!! ==============
-// =================================================================
 app.post('/api/admin/schedule/batch', async (req, res) => {
   const { doctor_id, date, startTime, endTime, interval, sede } = req.body;
   if (!doctor_id || !date || !startTime || !endTime || !interval || !sede) {
     return res.status(400).json({ error: 'Todos los campos son requeridos.' });
   }
+  
+  // --- VALIDACIÓN DE FECHA ---
+  const selectedDate = new Date(date);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0); 
+  if (selectedDate < today) {
+    return res.status(400).json({ error: 'No se pueden crear horarios en una fecha pasada.' });
+  }
+
   const client = await pool.connect();
   try {
     await client.query('BEGIN');
@@ -249,7 +346,8 @@ app.get('/api/appointments/available-times/:date', async (req, res) => {
     res.json(result.rows);
   } catch (err) {
     console.error('Error al obtener horarios para la fecha:', err.message);
-    res.status(5im).json({ error: 'Error en el servidor.' });
+    // --- ¡AQUÍ ESTABA EL ERROR DE TIPEO! ---
+    res.status(500).json({ error: 'Error en el servidor.' });
   }
 });
 
@@ -314,7 +412,7 @@ app.put('/api/appointments/cancel/:id', async (req, res) => {
     res.json({ message: 'Cita cancelada exitosamente.' });
   } catch (err) {
     console.error('Error al cancelar cita:', err.message);
-    res.status(5G00).json({ error: 'Error en el servidor.' });
+    res.status(500).json({ error: 'Error en el servidor.' });
   }
 });
 
