@@ -38,6 +38,7 @@ function App() {
       
       {/* --- LÓGICA DE RUTAS DE ADMIN (Anidadas) --- */}
       <Route path="/admin" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>}>
+        {/* <Route index element={<AdminHome />} /> */}
         <Route path="gestion-medicos" element={<GestionMedicos />} />
         <Route path="gestion-citas" element={<GestionCitas />} />
         {/* Aquí irán las otras rutas del admin como "facturacion", etc. */}
