@@ -1,4 +1,4 @@
-// Contenido COMPLETO y CORREGIDO para backend/server.js
+// Contenido COMPLETO y CORREGIDO FINAL para backend/server.js
 
 const express = require('express');
 const cors = require('cors');
@@ -345,6 +345,7 @@ app.post('/api/admin/schedule/batch', async (req, res) => {
 });
 
 app.get('/api/appointments/available-days', async (req, res) => {
+  const { date } = req.params; // La ruta no usa params, pero la mantenemos compatible si se necesita en el futuro
   try {
     const query = `
       SELECT DISTINCT DATE(appointment_time) as available_date
@@ -357,6 +358,33 @@ app.get('/api/appointments/available-days', async (req, res) => {
     res.json(dates);
   } catch (err) {
     console.error('Error al obtener días disponibles:', err.message);
+    res.status(500).json({ error: 'Error en el servidor.' });
+  }
+});
+
+app.get('/api/appointments/available-times/:date', async (req, res) => {
+  const { date } = req.params;
+  try {
+    const query = `
+      SELECT 
+        a.id, 
+        a.appointment_time, 
+        a.sede, 
+        a.status,
+        u.username as doctor_name, 
+        dp.nombres as doctor_nombres, 
+        dp.primer_apellido as doctor_apellido, 
+        dp.especialidad
+      FROM appointments a
+      JOIN users u ON a.doctor_id = u.id
+      JOIN doctor_profiles dp ON a.doctor_id = dp.user_id
+      WHERE DATE(a.appointment_time) = $1 
+      ORDER BY a.appointment_time ASC;
+    `;
+    const result = await pool.query(query, [date]);
+    res.json(result.rows);
+  } catch (err) {
+    console.error('Error al obtener horarios para la fecha:', err.message);
     res.status(500).json({ error: 'Error en el servidor.' });
   }
 });
@@ -390,10 +418,10 @@ app.put('/api/appointments/book/:id', async (req, res) => {
     const updatedAppointment = await pool.query(query, [patient_id, description, id]);
     if (updatedAppointment.rows.length === 0) return res.status(404).json({ error: 'La cita no está disponible o no existe.' });
     res.json(updatedAppointment.rows[0]);
-  } catch (err) { // <--- AÑADÍ LAS LLAVES AQUÍ
+  } catch (err) { 
     console.error('Error al agendar cita:', err.message);
     res.status(500).json({ error: 'Error en el servidor.' });
-  } // <--- Y AQUÍ
+  } 
 });
 
 app.post('/api/doctor/schedule-procedure', async (req, res) => {
@@ -414,23 +442,23 @@ app.post('/api/doctor/schedule-procedure', async (req, res) => {
 app.get('/api/doctor/my-appointments/:doctorId', async (req, res) => {
   const { doctorId } = req.params;
   try {
+    // --- CONSULTA CORREGIDA FINAL (SIN CARACTERES OCULTOS) ---
     const query = `
       SELECT 
         a.id, 
         a.appointment_time, 
         a.sede, 
         a.status, 
-        pp.nombres as patient_nombres, 
-        pp.primer_apellido as patient_apellido, 
-        pp.numero_cedula as patient_cedula 
+        pp.nombres AS patient_nombres, 
+        pp.primer_apellido AS patient_apellido, 
+        pp.numero_cedula AS patient_cedula 
       FROM appointments a
-      -- Usamos INNER JOIN porque solo queremos citas agendadas (patient_id no nulo)
-      JOIN patient_profiles pp ON a.patient_id = pp.user_id 
+      INNER JOIN patient_profiles pp ON a.patient_id = pp.user_id 
       WHERE a.doctor_id = $1 
         AND a.status = 'agendada'
       ORDER BY a.appointment_time ASC;
     `;
-    // --- FIN DEL CAMBIO ---
+    // --- FIN CONSULTA CORREGIDA ---
 
     console.log(`[Backend Debug] Buscando citas agendadas para Dr.${doctorId} (SIN filtro de tiempo)`); // Log de debug
     const result = await pool.query(query, [doctorId]);
@@ -472,17 +500,15 @@ app.get('/api/doctor/patients/search', async (req, res) => {
     const searchQuery = `%${query.toLowerCase()}%`;
     const result = await pool.query(
       `SELECT
-          u.id as user_id,
+          u.id AS user_id,
           u.username,
           pp.nombres,
           pp.primer_apellido,
           pp.segundo_apellido,
-          pp.numero_cedula,
-          pp.telefono,
-          pp.email
+          pp.numero_cedula
         FROM users u
         JOIN patient_profiles pp ON u.id = pp.user_id
-        WHERE u.role = 'paciente' AND (
+        WHERE u.role = 'usuario' AND ( -- Rol corregido a 'usuario'
             LOWER(pp.nombres) LIKE $1 OR
             LOWER(pp.primer_apellido) LIKE $1 OR
             LOWER(pp.segundo_apellido) LIKE $1 OR
@@ -505,13 +531,12 @@ app.get('/api/doctor/patients/:patientId/profile', async (req, res) => {
   try {
     const result = await pool.query(
       `SELECT
-          u.id as user_id,
+          u.id AS user_id,
           u.username,
-          u.email,
           pp.* -- Selecciona todas las columnas del perfil del paciente
         FROM users u
         JOIN patient_profiles pp ON u.id = pp.user_id
-        WHERE u.id = $1 AND u.role = 'paciente'`,
+        WHERE u.id = $1 AND u.role = 'usuario'`, -- Rol corregido a 'usuario'
       [patientId]
     );
     if (result.rows.length === 0) {
