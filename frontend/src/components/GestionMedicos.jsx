@@ -1,176 +1,135 @@
-// Contenido COMPLETO y CORREGIDO para frontend/src/components/GestionCitas.jsx
+// Contenido COMPLETO y CORREGIDO para frontend/src/components/GestionMedicos.jsx
 
 import React, { useState, useEffect } from 'react';
 import Swal from 'sweetalert2';
-import './GestionCitas.css'; 
+import { FaUserEdit, FaArrowLeft, FaPlusCircle } from 'react-icons/fa';
+import { useNavigate } from 'react-router-dom';
+import EditMedicoModal from './EditMedicoModal'; // Importado
+import { useMedicos } from '../context/MedicoContext'; // Importado desde context
+import './GestionMedicos.css'; 
 
-const promoImages = [
-  'https://images.unsplash.com/photo-1576091160550-2173dba999ef?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&ixlib=rb-1.2.1&q=80&w=400',
-  'https://images.unsplash.com/photo-1581091224003-05e1c2e40f84?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&ixlib=rb-1.2.1&q=80&w=400',
-  'https://images.unsplash.com/photo-1538108144341-2b1f8c1f3c3a?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&ixlib=rb-1.2.1&q=80&w=400'
-];
-
-function GestionCitas() {
-  const [medicos, setMedicos] = useState([]);
-  const [selectedMedico, setSelectedMedico] = useState(null); 
-  const [formData, setFormData] = useState({
-    date: new Date().toISOString().split('T')[0], 
-    startTime: '08:00',
-    endTime: '18:00',
-    interval: '30',
-    sede: ''
-  });
+function GestionMedicos() {
+  const navigate = useNavigate();
+  const { medicos, fetchMedicos } = useMedicos(); // Usamos el context
+  const [selectedMedico, setSelectedMedico] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
+  const goBack = () => navigate(-1);
+
+  // Cargamos los médicos al inicio
   useEffect(() => {
-    const timer = setInterval(() => {
-      setCurrentImageIndex((prevIndex) =>
-        prevIndex === promoImages.length - 1 ? 0 : prevIndex + 1
-      );
-    }, 2000); 
-
-    return () => clearInterval(timer); 
-  }, []);
-
-  useEffect(() => {
-    const fetchMedicos = async () => {
-      setLoading(true);
-      const apiUrl = import.meta.env.VITE_API_URL;
-      try {
-        const response = await fetch(`${apiUrl}/api/admin/doctors`);
-        if (response.ok) {
-          setMedicos(await response.json());
-        }
-      } catch (error) {
-        console.error("Error al cargar médicos:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchMedicos();
-  }, []);
-
-  const handleFormChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
-
-  const handleFormSubmit = async (e) => {
-    e.preventDefault();
-    if (new Date(`${formData.date}T${formData.endTime}`) <= new Date(`${formData.date}T${formData.startTime}`)) {
-      Swal.fire('Error de Lógica', 'La hora de fin debe ser posterior a la hora de inicio.', 'warning');
-      return;
+    // Si los médicos ya están en el contexto, no necesitamos cargar de nuevo (si ya se hizo en el Dashboard)
+    // Pero forzamos la carga por si acaso
+    if (fetchMedicos) {
+      fetchMedicos().finally(() => setLoading(false));
     }
+  }, [fetchMedicos]);
 
+
+  // Función para manejar el guardado desde el modal
+  const handleSaveMedico = async (updatedData) => {
     const apiUrl = import.meta.env.VITE_API_URL;
+    
+    // Solo enviamos los datos relevantes al backend
+    const dataToSend = {
+      nombres: updatedData.nombres,
+      primer_apellido: updatedData.primer_apellido,
+      segundo_apellido: updatedData.segundo_apellido,
+      especialidad: updatedData.especialidad,
+      consultorio: updatedData.consultorio,
+      sede: updatedData.sede,
+      // Nota: otros campos como edad/cedula/fecha nacimiento se deberían manejar si se necesita editar
+    };
+
     try {
-      const response = await fetch(`${apiUrl}/api/admin/schedule/batch`, {
-        method: 'POST',
+      const response = await fetch(`${apiUrl}/api/admin/doctors/${updatedData.user_id}`, {
+        method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...formData, doctor_id: selectedMedico.user_id }),
+        body: JSON.stringify(dataToSend),
       });
 
       if (response.ok) {
-        await Swal.fire('¡Éxito!', `Agenda para Dr. ${selectedMedico.primer_apellido || selectedMedico.username} generada.`, 'success');
-        setSelectedMedico(null); 
+        Swal.fire('¡Éxito!', 'Perfil de médico actualizado.', 'success');
+        setSelectedMedico(null); // Cerrar modal
+        fetchMedicos(); // Refrescar la lista de la tabla
       } else {
-        Swal.fire('Error', 'Error al generar los horarios.', 'error');
+        const errorData = await response.json();
+        Swal.fire('Error', errorData.error || 'Error al actualizar el perfil.', 'error');
       }
     } catch (error) {
+      console.error("Error al actualizar médico:", error);
       Swal.fire('Error de Red', 'No se pudo conectar con el servidor.', 'error');
     }
   };
 
+  // Función para redirigir a la creación de médicos (si es necesario)
+  const handleAddDoctorRedirect = () => {
+    // Esto te lleva al dashboard principal, donde está el widget para añadir médico
+    navigate('/dashboard'); 
+  };
+
+
   if (loading) {
-    return <div className="loading-container">Cargando médicos...</div>;
+    return <div className="loading">Cargando lista de médicos...</div>;
   }
 
-  // --- ¡ESTRUCTURA CORREGIDA! ---
   return (
-    <div className="gestion-citas-page">
+    <div className="gestion-container">
       
-      {/* --- Contenedor Principal (Izquierda) --- */}
-      {/* ¡CAMBIO! Se usa <div> en lugar de <main> */}
-      <div className="citas-main-content"> 
-        <h1>Gestión de Agenda de Citas</h1>
-        <p>Selecciona un médico de la lista para configurar su agenda del día.</p>
-        
-        <div className="medicos-list-container">
-          {medicos.map(medico => (
-            <div key={medico.user_id} className="medico-card">
-              <div className="medico-info">
-                <h4>{medico.nombres || 'Dr.'} {medico.primer_apellido || medico.username}</h4>
-                <p>{medico.especialidad || 'Sin especialidad asignada'}</p>
-              </div>
-              <button className="btn-asignar" onClick={() => setSelectedMedico(medico)}>
-                Añadir Horario
-              </button>
-            </div>
-          ))}
-        </div>
-      </div>
+      <header className="main-header">
+        <button onClick={goBack} className="back-button">
+          <FaArrowLeft /> Volver
+        </button>
+      </header>
+      
+      <h1>Gestión de Médicos</h1>
+      <p>Lista de especialistas registrados en HealthTrack.</p>
 
-      {/* --- Contenedor Lateral (Derecha) --- */}
-      {/* ¡CAMBIO! Se usa <div> en lugar de <aside> */}
-      <div className="citas-sidebar-promo"> 
-        <h3>Tu Salud, Nuestra Prioridad</h3>
-        <p>Equipos de última generación y los mejores especialistas.</p>
-        <div className="image-carousel-container">
-          {promoImages.map((src, index) => (
-            <img
-              key={src}
-              src={src}
-              alt="Instalaciones de HealthTrack"
-              className={`carousel-image ${index === currentImageIndex ? 'active' : ''}`}
-            />
-          ))}
-        </div>
-      </div>
+      <button onClick={handleAddDoctorRedirect} className="add-doctor-btn">
+        <FaPlusCircle /> Añadir Nuevo Médico (Ir al Dashboard)
+      </button>
 
-      {/* --- Formulario Modal (no cambia) --- */}
+      <table className="medicos-table">
+        <thead>
+          <tr>
+            <th>Nombre</th>
+            <th>Usuario</th>
+            <th>Especialidad</th>
+            <th>Consultorio</th>
+            <th>Sede</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          {medicos.map((medico) => (
+            <tr key={medico.user_id}>
+              <td>{medico.nombres || 'N/A'} {medico.primer_apellido || medico.username}</td>
+              <td>{medico.username}</td>
+              <td>{medico.especialidad || 'General'}</td>
+              <td>{medico.consultorio || 'N/A'}</td>
+              <td>{medico.sede || 'N/A'}</td>
+              <td>
+                <button 
+                  className="edit-btn"
+                  onClick={() => setSelectedMedico(medico)}
+                >
+                  <FaUserEdit /> Editar
+                </button>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+
+      {/* Modal de edición */}
       {selectedMedico && (
-        <div className="modal-overlay" onClick={() => setSelectedMedico(null)}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-            <h2>Generar Agenda para Dr. {selectedMedico.primer_apellido || selectedMedico.username}</h2>
-            <form onSubmit={handleFormSubmit}>
-              {/* (Tu formulario sigue aquí igual que antes) */}
-              <div className="form-group">
-                <label>Día de Trabajo</label>
-                <input type="date" name="date" value={formData.date} min={new Date().toISOString().split('T')[0]} onChange={handleFormChange} required />
-              </div>
-              <div className="form-group">
-                <label>Sede</label>
-                <input type="text" name="sede" placeholder="Ej: Sede Principal" onChange={handleFormChange} value={formData.sede} required />
-              </div>
-              <div className="form-row">
-                <div className="form-group">
-                  <label>Hora de Inicio</label>
-                  <input type="time" name="startTime" value={formData.startTime} onChange={handleFormChange} min="08:00" max="18:00" required />
-                </div>
-                <div className="form-group">
-                  <label>Hora de Fin</label>
-                  <input type="time" name="endTime" value={formData.endTime} onChange={handleFormChange} min="08:00" max="18:00" required />
-                </div>
-              </div>
-              <div className="form-group">
-                <label>Duración de cada cita (minutos)</label>
-                <select name="interval" value={formData.interval} onChange={handleFormChange}>
-                  <option value="15">15</option>
-                  <option value="30">30</option>
-                  <option value="45">45</option>
-                  <option value="60">60</option>
-                </select>
-              </div>
-              <div className="modal-actions">
-                <button type="button" className="btn-cancel" onClick={() => setSelectedMedico(null)}>Cancelar</button>
-                <button type="submit" className="btn-save">Generar Horarios</button>
-              </div>
-            </form>
-          </div>
-        </div>
+        <EditMedicoModal
+          medico={selectedMedico}
+          onClose={() => setSelectedMedico(null)}
+          onSave={handleSaveMedico}
+        />
       )}
     </div>
   );
 }
-
-export default GestionCitas;
+export default GestionMedicos;
