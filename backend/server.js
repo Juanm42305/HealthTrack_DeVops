@@ -411,11 +411,28 @@ app.post('/api/doctor/schedule-procedure', async (req, res) => {
   }
 });
 
+// --- RUTA "MIS CITAS" (MODIFICADA) ---
+app.get('/api/my-appointments/:patientId', async (req, res) => {
+  const { patientId } = req.params;
+  try {
+    const query = `
+      SELECT a.id, a.appointment_time, a.sede, a.status, a.description, dp.nombres as doctor_nombres, dp.primer_apellido as doctor_apellido, dp.especialidad
+      FROM appointments a
+      JOIN doctor_profiles dp ON a.doctor_id = dp.user_id
+      WHERE a.patient_id = $1 AND a.appointment_time >= NOW()
+      ORDER BY a.appointment_time ASC
+    `;
+    const result = await pool.query(query, [patientId]);
+    res.json(result.rows);
+  } catch (err) {
+    console.error('Error al obtener mis citas:', err.message);
+    res.status(500).json({ error: 'Error en el servidor.' });
+  }
+});
+
 app.get('/api/doctor/my-appointments/:doctorId', async (req, res) => {
   const { doctorId } = req.params;
   try {
-    // --- ¡CAMBIO TEMPORAL PARA DEBUG! ---
-    // Quitamos "AND a.appointment_time >= NOW()" para ver si trae algo
     const query = `
       SELECT 
         a.id, 
@@ -426,10 +443,10 @@ app.get('/api/doctor/my-appointments/:doctorId', async (req, res) => {
         pp.primer_apellido as patient_apellido, 
         pp.numero_cedula as patient_cedula 
       FROM appointments a
+      -- Usamos INNER JOIN porque solo queremos citas agendadas (patient_id no nulo)
       JOIN patient_profiles pp ON a.patient_id = pp.user_id 
       WHERE a.doctor_id = $1 
-        AND a.status = 'agendada'       -- Solo las agendadas
-      -- AND a.appointment_time >= NOW() -- <-- Condición de tiempo COMENTADA/QUITADA
+        AND a.status = 'agendada'
       ORDER BY a.appointment_time ASC;
     `;
     // --- FIN DEL CAMBIO ---
@@ -482,15 +499,16 @@ app.get('/api/doctor/patients/search', async (req, res) => {
           pp.numero_cedula,
           pp.telefono,
           pp.email
-        FROM users u
-        JOIN patient_profiles pp ON u.id = pp.user_id
-        WHERE u.role = 'usuario' AND ( 
-            LOWER(pp.nombres) LIKE $1 OR
-            LOWER(pp.primer_apellido) LIKE $1 OR
-            LOWER(pp.numero_cedula) LIKE $1 -- QUITAR otros campos como pp.segundo_apellido si tienes dudas
-        )
-        )
-        ORDER BY pp.nombres ASC`,
+       FROM users u
+       JOIN patient_profiles pp ON u.id = pp.user_id
+       WHERE u.role = 'paciente' AND (
+           LOWER(pp.nombres) LIKE $1 OR
+           LOWER(pp.primer_apellido) LIKE $1 OR
+           LOWER(pp.segundo_apellido) LIKE $1 OR
+           LOWER(pp.numero_cedula) LIKE $1 OR
+           LOWER(u.username) LIKE $1
+       )
+       ORDER BY pp.nombres ASC`,
       [searchQuery]
     );
     res.json(result.rows);
@@ -510,9 +528,9 @@ app.get('/api/doctor/patients/:patientId/profile', async (req, res) => {
           u.username,
           u.email,
           pp.* -- Selecciona todas las columnas del perfil del paciente
-        FROM users u
-        JOIN patient_profiles pp ON u.id = pp.user_id
-        WHERE u.id = $1 AND u.role = 'paciente'`,
+       FROM users u
+       JOIN patient_profiles pp ON u.id = pp.user_id
+       WHERE u.id = $1 AND u.role = 'paciente'`,
       [patientId]
     );
     if (result.rows.length === 0) {
@@ -534,8 +552,8 @@ app.get('/api/doctor/patients/:patientId/medical-records', async (req, res) => {
   try {
     const result = await pool.query(
       `SELECT * FROM medical_records
-        WHERE patient_id = $1
-        ORDER BY fecha_creacion DESC`,
+       WHERE patient_id = $1
+       ORDER BY fecha_creacion DESC`,
       [patientId]
     );
     res.json(result.rows);
@@ -548,8 +566,9 @@ app.get('/api/doctor/patients/:patientId/medical-records', async (req, res) => {
 // Ruta para crear un nuevo historial clínico
 app.post('/api/doctor/patients/:patientId/medical-records', async (req, res) => {
   const { patientId } = req.params;
-  // --- TEMPORAL: OBTENEMOS DOCTOR ID DEL BODY HASTA IMPLEMENTAR JWT ---
-  const { doctorId, appointment_id, motivo_consulta, registro, sexo, edad, habitacion, ocupacion,
+  const doctorId = req.user.id; // Asumiendo que el ID del doctor está en req.user.id
+  const {
+    appointment_id, motivo_consulta, registro, sexo, edad, habitacion, ocupacion,
     antecedentes_patologicos_cardiovasculares, antecedentes_patologicos_pulmonares,
     antecedentes_patologicos_digestivos, antecedentes_patologicos_diabetes,
     antecedentes_patologicos_renales, antecedentes_patologicos_quirurgicos,
@@ -559,9 +578,6 @@ app.post('/api/doctor/patients/:patientId/medical-records', async (req, res) => 
     antecedentes_no_patologicos_drogas, antecedentes_no_patologicos_inmunizaciones,
     antecedentes_no_patologicos_otros, observaciones_generales
   } = req.body;
-  // --- FIN TEMPORAL ---
-
-  if (!doctorId) return res.status(401).json({ error: 'ID de Doctor requerido para registrar el historial.' });
 
   try {
     const result = await pool.query(
@@ -599,8 +615,9 @@ app.post('/api/doctor/patients/:patientId/medical-records', async (req, res) => 
 // Ruta para actualizar un historial clínico existente
 app.put('/api/doctor/patients/:patientId/medical-records/:recordId', async (req, res) => {
   const { patientId, recordId } = req.params;
-  // --- TEMPORAL: OBTENEMOS DOCTOR ID DEL BODY HASTA IMPLEMENTAR JWT ---
-  const { doctorId, motivo_consulta, registro, sexo, edad, habitacion, ocupacion,
+  const doctorId = req.user.id; // Asumiendo que el ID del doctor está en req.user.id
+  const {
+    motivo_consulta, registro, sexo, edad, habitacion, ocupacion,
     antecedentes_patologicos_cardiovasculares, antecedentes_patologicos_pulmonares,
     antecedentes_patologicos_digestivos, antecedentes_patologicos_diabetes,
     antecedentes_patologicos_renales, antecedentes_patologicos_quirurgicos,
@@ -610,9 +627,6 @@ app.put('/api/doctor/patients/:patientId/medical-records/:recordId', async (req,
     antecedentes_no_patologicos_drogas, antecedentes_no_patologicos_inmunizaciones,
     antecedentes_no_patologicos_otros, observaciones_generales
   } = req.body;
-  // --- FIN TEMPORAL ---
-
-  if (!doctorId) return res.status(401).json({ error: 'ID de Doctor requerido para actualizar el historial.' });
 
   try {
     const result = await pool.query(
@@ -626,8 +640,8 @@ app.put('/api/doctor/patients/:patientId/medical-records/:recordId', async (req,
         antecedentes_no_patologicos_alcohol = $17, antecedentes_no_patologicos_tabaquismo = $18,
         antecedentes_no_patologicos_drogas = $19, antecedentes_no_patologicos_inmunizaciones = $20,
         antecedentes_no_patologicos_otros = $21, observaciones_generales = $22
-        WHERE id = $23 AND patient_id = $24 AND doctor_id = $25
-        RETURNING *`,
+       WHERE id = $23 AND patient_id = $24 AND doctor_id = $25
+       RETURNING *`,
       [
         motivo_consulta, registro, sexo, edad, habitacion, ocupacion,
         antecedentes_patologicos_cardiovasculares, antecedentes_patologicos_pulmonares,
@@ -655,18 +669,14 @@ app.put('/api/doctor/patients/:patientId/medical-records/:recordId', async (req,
 // --- Ruta para Finalizar Cita ---
 app.put('/api/doctor/appointments/:appointmentId/finish', async (req, res) => {
   const { appointmentId } = req.params;
-  // --- TEMPORAL: OBTENEMOS DOCTOR ID DEL BODY HASTA IMPLEMENTAR JWT ---
-  const { doctorId } = req.body; 
-  // --- FIN TEMPORAL ---
-
-  if (!doctorId) return res.status(401).json({ error: 'ID de Doctor requerido para finalizar la cita.' });
+  const doctorId = req.user.id; // Asumiendo que el ID del doctor está en req.user.id
 
   try {
     const result = await pool.query(
       `UPDATE appointments
-        SET status = 'finalizada'
-        WHERE id = $1 AND doctor_id = $2
-        RETURNING *`,
+       SET status = 'finalizada'
+       WHERE id = $1 AND doctor_id = $2
+       RETURNING *`,
       [appointmentId, doctorId]
     );
 
@@ -680,7 +690,6 @@ app.put('/api/doctor/appointments/:appointmentId/finish', async (req, res) => {
     res.status(500).json({ error: 'Error interno del servidor al finalizar la cita.' });
   }
 });
-
 
 // --- INICIAR SERVIDOR ---
 app.listen(PORT, () => {
