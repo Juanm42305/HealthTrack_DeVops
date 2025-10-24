@@ -1,10 +1,10 @@
-// Contenido COMPLETO y ACTUALIZADO para frontend/src/App.jsx
+// Contenido COMPLETO y DEFINITIVO para frontend/src/App.jsx
 
 import React from 'react';
 import { Routes, Route } from 'react-router-dom';
 
 // Vistas Públicas
-import WelcomePage from './components/WelcomePage';
+import WelcomePage from './components/WelcomePage'; // <-- ¡Verifica esta importación!
 import Login from './components/Login';
 import Register from './components/Register';
 
@@ -14,21 +14,21 @@ import DashboardDispatcher from './components/DashboardDispatcher';
 
 // --- Layouts ---
 import AdminDashboard from './components/AdminDashboard';
-import UserLayout from './components/UserLayout'; 
-import DoctorLayout from './components/DoctorLayout'; // ¡NUEVO!
+import UserLayout from './components/UserLayout';
+import DoctorLayout from './components/DoctorLayout';
 
 // --- Páginas de Admin ---
 import GestionMedicos from './components/GestionMedicos';
-import GestionCitas from './components/GestionCitas';
+import GestionCitas from './components/GestionCitas'; // <-- ¡Y esta!
 // (Importa Facturacion, Laboratorio, etc. si las tienes)
 
 // --- Páginas de Usuario ---
 import UserDashboard from './components/UserDashboard';
-import Profile from './components/Profile'; // Componente reutilizable
+import Profile from './components/Profile';
 import MisCitas from './components/MisCitas';
 import AgendarCita from './components/AgendarCita';
 
-// --- ¡NUEVAS PÁGINAS DE MÉDICO! ---
+// --- Páginas de Médico ---
 import DoctorDashboard from './components/DoctorDashboard';
 import DoctorCitas from './components/DoctorCitas';
 import DoctorPacientes from './components/DoctorPacientes';
@@ -40,26 +40,27 @@ import DoctorResultados from './components/DoctorResultados';
 function App() {
   return (
     <Routes>
-      {/* Rutas Públicas */}
+      {/* --- ¡LA RUTA MÁS IMPORTANTE! --- */}
       <Route path="/" element={<WelcomePage />} />
+
+      {/* --- OTRAS RUTAS PÚBLICAS --- */}
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
 
-      {/* Ruta del Dispatcher (decide qué dashboard mostrar) */}
+      {/* Ruta del Dispatcher */}
       <Route
         path="/dashboard"
         element={<ProtectedRoute><DashboardDispatcher /></ProtectedRoute>}
       />
-      
-      {/* --- LÓGICA DE RUTAS DE ADMIN (Anidadas) --- */}
+
+      {/* Rutas de Admin */}
       <Route path="/admin" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>}>
-        {/* <Route index element={<AdminHome />} />  // (La ruta base /admin la maneja AdminDashboard) */}
         <Route path="gestion-medicos" element={<GestionMedicos />} />
-        <Route path="gestion-citas" element={<GestionCitas />} />
-        {/* (Aquí tus otras rutas: "facturacion", "laboratorio") */}
+        <Route path="gestion-citas" element={<GestionCitas />} /> {/* <-- La ruta para la agenda */}
+        {/* (Otras rutas admin) */}
       </Route>
 
-      {/* --- LÓGICA DE RUTAS DE USUARIO (Anidadas) --- */}
+      {/* Rutas de Usuario */}
       <Route path="/user" element={<ProtectedRoute><UserLayout /></ProtectedRoute>}>
         <Route path="dashboard" element={<UserDashboard />} />
         <Route path="profile" element={<Profile />} />
@@ -67,10 +68,10 @@ function App() {
         <Route path="agendar-cita" element={<AgendarCita />} />
       </Route>
 
-      {/* --- ¡NUEVO GRUPO DE RUTAS DE MÉDICO! --- */}
+      {/* Rutas de Médico */}
       <Route path="/doctor" element={<ProtectedRoute><DoctorLayout /></ProtectedRoute>}>
         <Route path="dashboard" element={<DoctorDashboard />} />
-        <Route path="profile" element={<Profile />} /> {/* Reutilizamos Profile */}
+        <Route path="profile" element={<Profile />} />
         <Route path="citas" element={<DoctorCitas />} />
         <Route path="pacientes" element={<DoctorPacientes />} />
         <Route path="historiales" element={<DoctorHistoriales />} />
