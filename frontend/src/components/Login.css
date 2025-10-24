@@ -1,3 +1,5 @@
+/* Contenido CORREGIDO para frontend/src/components/Login.css */
+
 /* Reinicio global */
 * {
   margin: 0;
@@ -5,20 +7,38 @@
   box-sizing: border-box;
 }
 
-/* Fondo degradado a pantalla completa */
-body,
-html,
-#root {
-  height: 100%;
+/* **IMPORTANTE:** Se eliminó el fondo de body, html, #root de aquí. */
+/* El fondo lo manejará WelcomePage.jsx */
+
+/* --- Contenedor de Superposición (Ocupa toda la ventana) --- */
+.login-overlay {
+  position: fixed; /* Mantiene la superposición sobre la WelcomePage */
+  top: 0;
+  left: 0;
   width: 100%;
-  background: linear-gradient(135deg, #4f46e5, #06b6d4);
-  font-family: "Poppins", sans-serif;
+  height: 100%;
   display: flex;
   justify-content: center;
   align-items: center;
+  z-index: 100; /* Asegura que esté por encima del fondo */
+  background: rgba(0, 0, 0, 0.4); /* Capa oscura semi-transparente */
 }
 
-/* Contenedor principal */
+/* Caja del formulario (igual que antes) */
+.login-container {
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(10px); 
+  padding: 3rem 2.5rem;
+  border-radius: 20px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+  text-align: center;
+  width: 90%;
+  max-width: 400px;
+  animation: fadeIn 0.8s ease-in-out;
+  color: #fff; 
+}
+
+/* Contenedor principal (NO USADO, pero mantenido por si acaso) */
 .login-page {
   display: flex;
   justify-content: center;
@@ -29,18 +49,6 @@ html,
   color: #fff;
 }
 
-/* Caja del formulario */
-.login-container {
-  background: rgba(255, 255, 255, 0.15);
-  backdrop-filter: blur(20px);
-  padding: 3rem 2.5rem;
-  border-radius: 20px;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
-  text-align: center;
-  width: 90%;
-  max-width: 400px;
-  animation: fadeIn 0.8s ease-in-out;
-}
 
 /* Logo y título */
 .login-logo {

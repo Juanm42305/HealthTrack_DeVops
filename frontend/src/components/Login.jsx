@@ -1,4 +1,4 @@
-// Contenido completo para frontend/src/components/Login.jsx
+// Contenido COMPLETO y CORREGIDO para frontend/src/components/Login.jsx
 
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
@@ -9,7 +9,7 @@ function Login() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const navigate = useNavigate();
-  const { login } = useAuth(); // Obtenemos la función de login del cerebro
+  const { login } = useAuth(); 
 
   const handleLogin = async (event) => {
     event.preventDefault();
@@ -22,10 +22,9 @@ function Login() {
         body: JSON.stringify({ username, password }),
       });
 
-      const data = await response.json(); // Leemos la respuesta del backend
+      const data = await response.json(); 
 
       if (response.ok) {
-        // ¡CAMBIO CLAVE! Pasamos el objeto 'user' completo a la función login.
         login(data.user); 
         navigate('/dashboard'); 
       } else {
@@ -36,10 +35,11 @@ function Login() {
     }
   };
 
-  // ... El resto del JSX de tu formulario sigue igual ...
+  // --- ¡CAMBIO CLAVE EN EL JSX! ---
+  // Usamos el contenedor de superposición para que flote sobre el fondo de WelcomePage
   return (
-    <div className="login-page">
-      <div className="login-container">
+    <div className="login-overlay"> 
+      <div className="login-container"> 
         <div className="login-logo">
           <span>💙</span> HealthTrack
         </div>
