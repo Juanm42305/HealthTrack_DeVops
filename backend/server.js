@@ -285,10 +285,14 @@ app.post('/api/admin/schedule/batch', async (req, res) => {
   if (!doctor_id || !date || !startTime || !endTime || !interval || !sede) {
     return res.status(400).json({ error: 'Todos los campos son requeridos.' });
   }
-  
-  const selectedDate = new Date(date);
+
+  // --- ¡CORRECCIÓN EN MANEJO DE FECHAS! ---
+  const selectedDateStr = date; // ej: "2025-10-24"
   const today = new Date();
   today.setHours(0, 0, 0, 0); 
+  const selectedDate = new Date(selectedDateStr + 'T00:00:00'); // Asegura que empiece al inicio del día en UTC/local
+  
+  // Validar que la fecha seleccionada no sea pasada (considerando zona horaria local implícita)
   if (selectedDate < today) {
     return res.status(400).json({ error: 'No se pueden crear horarios en una fecha pasada.' });
   }
@@ -296,19 +300,44 @@ app.post('/api/admin/schedule/batch', async (req, res) => {
   const client = await pool.connect();
   try {
     await client.query('BEGIN');
-    const start = new Date(`${date}T${startTime}`);
-    const end = new Date(`${date}T${endTime}`);
+    
+    // Convertir startTime y endTime a objetos Date en el día correcto
+    // Usamos UTC para evitar problemas de zona horaria al construir la fecha/hora
+    const startDateTime = new Date(`${selectedDateStr}T${startTime}:00Z`); 
+    const endDateTime = new Date(`${selectedDateStr}T${endTime}:00Z`);
     const intervalMinutes = parseInt(interval, 10);
-    for (let time = start; time < end; time.setMinutes(time.getMinutes() + intervalMinutes)) {
-      const appointment_time = time.toISOString();
-      const query = "INSERT INTO appointments (doctor_id, appointment_time, sede, status, appointment_type) VALUES ($1, $2, $3, 'disponible', 'general')";
-      await client.query(query, [parseInt(doctor_id, 10), appointment_time, sede]);
+
+    // Validar que la hora de fin sea posterior a la de inicio
+    if (endDateTime <= startDateTime) {
+         await client.query('ROLLBACK'); // Deshacer transacción antes de salir
+         return res.status(400).json({ error: 'La hora de fin debe ser posterior a la hora de inicio.' });
     }
+
+    console.log(`[Backend] Generando slots para Dr.${doctor_id} en ${selectedDateStr} de ${startTime} a ${endTime} cada ${intervalMinutes} min.`);
+
+    // Iterar usando UTC para consistencia
+    for (let currentTime = new Date(startDateTime); currentTime < endDateTime; currentTime.setUTCMinutes(currentTime.getUTCMinutes() + intervalMinutes)) {
+      
+      // Convertir a formato ISO String (YYYY-MM-DDTHH:mm:ss.sssZ) que PostgreSQL entiende bien
+      const appointment_time_iso = currentTime.toISOString(); 
+      
+      // Comprobación opcional para evitar insertar fuera del rango si algo sale mal
+      const currentHour = currentTime.getUTCHours();
+      if (currentHour < parseInt(startTime.split(':')[0]) || currentHour >= parseInt(endTime.split(':')[0])) {
+          console.warn(`[Backend] Omitiendo slot fuera de rango: ${appointment_time_iso}`);
+          continue; 
+      }
+
+      console.log(`[Backend] Insertando slot: ${appointment_time_iso}`);
+      const query = "INSERT INTO appointments (doctor_id, appointment_time, sede, status, appointment_type) VALUES ($1, $2, $3, 'disponible', 'general')";
+      await client.query(query, [parseInt(doctor_id, 10), appointment_time_iso, sede]);
+    }
+    
     await client.query('COMMIT');
     res.status(201).json({ message: 'Horarios generados exitosamente.' });
   } catch (err) {
     await client.query('ROLLBACK');
-    console.error('Error al crear horarios en lote:', err.message);
+    console.error('[Backend] Error al crear horarios en lote:', err.message);
     res.status(500).json({ error: 'Error en el servidor al generar los horarios.' });
   } finally {
     client.release();
