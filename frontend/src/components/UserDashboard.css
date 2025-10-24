@@ -1,4 +1,5 @@
 /* Contenido COMPLETO y ACTUALIZADO para frontend/src/components/UserDashboard.css */
+/* Incluye estilos originales + estilos para notificaciones del Doctor Dashboard */
 
 .user-dashboard-layout {
   width: 100%;
@@ -29,7 +30,7 @@
   gap: 1.5rem;
   padding: 2.5rem;
   background-color: #f4f7fa; /* Fondo gris claro */
-  
+
   /* Esto asegura que las filas de tarjetas se estiren */
   align-items: stretch;
 }
@@ -38,7 +39,7 @@
 .widget-link {
   text-decoration: none;
   color: inherit;
-  
+
   /* ¡Importante! Hace que el enlace ocupe todo el espacio de la celda del grid */
   display: flex;
 }
@@ -52,12 +53,10 @@
   text-decoration: none;
   color: inherit;
   width: 100%; /* Asegura que llene el 'widget-link' */
-  
-  /* --- ¡AQUÍ ESTÁ EL CAMBIO CLAVE! --- */
+
   display: flex;
   flex-direction: column; /* Apila el contenido verticalmente */
-  /* --- FIN DEL CAMBIO --- */
-  
+
   /* Animación */
   transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
   cursor: pointer;
@@ -86,8 +85,7 @@
   color: #555;
   line-height: 1.5;
   margin-top: 0.5rem;
-  
-  /* --- ¡ESTE ES EL CAMBIO MÁS IMPORTANTE! --- */
+
   flex-grow: 1; /* Hace que el párrafo crezca para llenar el espacio vacío */
 }
 
@@ -104,4 +102,63 @@
   text-align: center;
   width: 100%;
   cursor: not-allowed;
+}
+
+/* --- ESTILOS AÑADIDOS PARA LAS NOTIFICACIONES DEL DOCTOR DASHBOARD --- */
+
+/* Sección de Notificaciones en el Dashboard */
+.notifications-dashboard-section {
+  padding: 1.5rem 2.5rem; /* Menos padding vertical que los widgets */
+  background-color: #f4f7fa; /* Mismo fondo gris */
+  border-bottom: 1px solid #e0e0e0; /* Separador sutil */
+}
+
+.notifications-dashboard-section h2 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #2c3e50;
+  margin: 0 0 1rem 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.loading-notifications,
+.no-notifications-dashboard {
+  font-size: 1rem;
+  color: #6c757d; /* Gris */
+  padding: 1rem;
+  text-align: center;
+  background-color: #fff;
+  border-radius: 8px;
+  border: 1px dashed #ced4da;
+}
+
+/* Cuadrícula para las tarjetas de notificación */
+.notifications-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); /* Columnas responsivas */
+  gap: 1rem;
+}
+
+/* Tarjeta de notificación individual */
+.notification-card {
+  background-color: #e7f3fe; /* Fondo azul claro */
+  border-left: 5px solid #0d6efd; /* Borde izquierdo azul */
+  padding: 1rem;
+  border-radius: 8px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+}
+
+.notification-message {
+  font-weight: 500;
+  color: #0a58ca; /* Azul oscuro */
+  margin: 0 0 0.25rem 0;
+  font-size: 0.95rem;
+}
+
+.notification-details {
+  font-size: 0.8rem;
+  color: #555;
+  margin: 0;
 }
