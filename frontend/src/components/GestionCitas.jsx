@@ -1,14 +1,13 @@
-// Contenido COMPLETO y ACTUALIZADO para frontend/src/components/GestionCitas.jsx
+// Contenido COMPLETO y CORREGIDO para frontend/src/components/GestionCitas.jsx
 
 import React, { useState, useEffect } from 'react';
 import Swal from 'sweetalert2';
 import './GestionCitas.css'; 
 
-// --- URLs para las imágenes rotativas ---
 const promoImages = [
-  'https://images.unsplash.com/photo-1576091160550-2173dba999ef?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&ixlib=rb-1.2.1&q=80&w=400',
-  'https://images.unsplash.com/photo-1581091224003-05e1c2e40f84?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&ixlib=rb-1.2.1&q=80&w=400',
-  'https://images.unsplash.com/photo-1538108144341-2b1f8c1f3c3a?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&ixlib=rb-1.2.1&q=80&w=400'
+  'https://static.ferrovial.com/wp-content/uploads/2019/11/13131006/hospital-central-muprespa-madrid-ferconsa-2.jpg',
+  'https://hic.fcv.org/co/images/institutos/instituto-de-cancer/unidad-de-trasplante-de-medula-osea/instalaciones-trasplante-medula-osea-46.jpg',
+  'https://comisionfilmicacolombia.com/wp-content/uploads/2023/10/Santander-Piedecuesta-Hospital-Internacional-baja-19-1.jpg'
 ];
 
 function GestionCitas() {
@@ -29,7 +28,7 @@ function GestionCitas() {
       setCurrentImageIndex((prevIndex) =>
         prevIndex === promoImages.length - 1 ? 0 : prevIndex + 1
       );
-    }, 2000); // Rota cada 2 segundos
+    }, 2000); 
 
     return () => clearInterval(timer); 
   }, []);
@@ -86,10 +85,12 @@ function GestionCitas() {
     return <div className="loading-container">Cargando médicos...</div>;
   }
 
+  // --- ¡ESTRUCTURA CORREGIDA! ---
   return (
     <div className="gestion-citas-page">
       
-      {/* Contenedor Principal (Izquierda) */}
+      {/* --- Contenedor Principal (Izquierda) --- */}
+      {/* ¡CAMBIO! Se usa <div> en lugar de <main> */}
       <div className="citas-main-content"> 
         <h1>Gestión de Agenda de Citas</h1>
         <p>Selecciona un médico de la lista para configurar su agenda del día.</p>
@@ -109,7 +110,8 @@ function GestionCitas() {
         </div>
       </div>
 
-      {/* Contenedor Lateral (Derecha) */}
+      {/* --- Contenedor Lateral (Derecha) --- */}
+      {/* ¡CAMBIO! Se usa <div> en lugar de <aside> */}
       <div className="citas-sidebar-promo"> 
         <h3>Tu Salud, Nuestra Prioridad</h3>
         <p>Equipos de última generación y los mejores especialistas.</p>
@@ -125,12 +127,13 @@ function GestionCitas() {
         </div>
       </div>
 
-      {/* Formulario Modal (no cambia) */}
+      {/* --- Formulario Modal (no cambia) --- */}
       {selectedMedico && (
         <div className="modal-overlay" onClick={() => setSelectedMedico(null)}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <h2>Generar Agenda para Dr. {selectedMedico.primer_apellido || selectedMedico.username}</h2>
             <form onSubmit={handleFormSubmit}>
+              {/* (Tu formulario sigue aquí igual que antes) */}
               <div className="form-group">
                 <label>Día de Trabajo</label>
                 <input type="date" name="date" value={formData.date} min={new Date().toISOString().split('T')[0]} onChange={handleFormChange} required />
