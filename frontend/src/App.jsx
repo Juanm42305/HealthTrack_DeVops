@@ -31,10 +31,11 @@ import AgendarCita from './components/AgendarCita';
 // --- Páginas de Médico ---
 import DoctorDashboard from './components/DoctorDashboard';
 import DoctorCitas from './components/DoctorCitas';
-import DoctorPacientes from './components/DoctorPacientes'; // Importado
+// ELIMINAR ESTA LÍNEA QUE ES EL ERROR: import DoctorPacientes from './components/DoctorPacientes'; // Importado
 import DoctorHistoriales from './components/DoctorHistoriales'; // Importado
 import DoctorDiagnosticos from './components/DoctorDiagnosticos';
 import DoctorResultados from './components/DoctorResultados';
+import DoctorPatients from './components/DoctorPatients'; // <--- ESTA ES LA IMPORTACIÓN CORRECTA
 
 
 function App() {
@@ -71,7 +72,7 @@ function App() {
         <Route path="dashboard" element={<DoctorDashboard />} />
         <Route path="profile" element={<Profile />} /> {/* Reutilizamos Profile */}
         <Route path="citas" element={<DoctorCitas />} />
-        <Route path="pacientes" element={<DoctorPacientes />} />
+        <Route path="pacientes" element={<DoctorPatients />} /> {/* <--- USAR EL NOMBRE CORRECTO AQUÍ */}
         {/* --- ¡NUEVAS RUTAS AÑADIDAS AQUÍ! --- */}
         <Route path="pacientes/:patientId/historiales" element={<DoctorHistoriales />} /> {/* Ruta específica */}
         <Route path="historiales" element={<DoctorHistoriales />} /> {/* Ruta general para el menú */}
