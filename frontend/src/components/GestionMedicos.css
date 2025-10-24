@@ -1,8 +1,25 @@
-/* Contenido para frontend/src/components/GestionMedicos.css */
+/* Contenido COMPLETO y CORREGIDO para frontend/src/components/GestionMedicos.css */
 
 .gestion-container {
-  padding: 2rem;
+  padding: 2.5rem; /* Padding uniforme con otros dashboards */
   color: #333;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.gestion-container h1 {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #2c3e50;
+    margin-bottom: 0.5rem;
+    border-bottom: 2px solid #3498db; /* Azul Admin */
+    padding-bottom: 0.5rem;
+}
+
+.gestion-container > p {
+    font-size: 1.1rem;
+    color: #555;
+    margin-bottom: 2rem;
 }
 
 .loading {
@@ -11,10 +28,32 @@
   margin-top: 5rem;
 }
 
+/* --- Botón para Añadir Médico (Redirecciona al Dashboard) --- */
+.add-doctor-btn {
+    background-color: #28a745; /* Verde para acción de adición */
+    color: white;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 1rem;
+    font-weight: 600;
+    margin-bottom: 2rem;
+    transition: background-color 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+.add-doctor-btn:hover {
+    background-color: #218838;
+}
+
+
+/* --- Estilos de la Tabla --- */
 .medicos-table {
   width: 100%;
   border-collapse: collapse;
-  margin-top: 2rem;
+  margin-top: 1.5rem;
   background: white;
   border-radius: 8px;
   overflow: hidden;
@@ -34,18 +73,51 @@
 .medicos-table th {
   font-weight: 600;
   color: #4b5563;
+  font-size: 0.9rem;
+  text-transform: uppercase;
 }
 
-.edit-btn {
-  background-color: #4f46e5;
-  color: white;
+/* --- Botones de Acción en la Tabla --- */
+.action-buttons {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.edit-btn, .delete-btn {
   border: none;
   padding: 0.5rem 1rem;
   border-radius: 5px;
   cursor: pointer;
   transition: background-color 0.3s;
+  font-size: 0.9rem;
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.edit-btn {
+  background-color: #3498db; /* Azul de Admin */
+  color: white;
 }
 
 .edit-btn:hover {
-  background-color: #4338ca;
+  background-color: #2980b9;
+}
+
+.delete-btn {
+    background-color: #e74c3c; /* Rojo para eliminar */
+    color: white;
+}
+
+.delete-btn:hover {
+    background-color: #c0392b;
+}
+
+/* Estilo para la fila de "No hay médicos" */
+.medicos-table tbody td {
+    text-align: center;
+    padding: 2rem 0;
+    color: #7f8c8d;
+    font-style: italic;
 }
