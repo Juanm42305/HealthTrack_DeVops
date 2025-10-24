@@ -439,18 +439,17 @@ app.get('/api/my-appointments/:patientId', async (req, res) => {
   }
 });
 
-// --- ¡NUEVA RUTA PARA CITAS DEL MÉDICO! ---
 app.get('/api/doctor/my-appointments/:doctorId', async (req, res) => {
   const { doctorId } = req.params;
   try {
-    // Seleccionamos datos de la cita y del paciente asociado
+    // --- ¡CAMBIO TEMPORAL PARA DEBUG! ---
+    // Quitamos "AND a.appointment_time >= NOW()" para ver si trae algo
     const query = `
       SELECT 
         a.id, 
         a.appointment_time, 
         a.sede, 
         a.status, 
-        a.description, 
         pp.nombres as patient_nombres, 
         pp.primer_apellido as patient_apellido, 
         pp.numero_cedula as patient_cedula 
@@ -458,13 +457,17 @@ app.get('/api/doctor/my-appointments/:doctorId', async (req, res) => {
       JOIN patient_profiles pp ON a.patient_id = pp.user_id 
       WHERE a.doctor_id = $1 
         AND a.status = 'agendada'       -- Solo las agendadas
-        AND a.appointment_time >= NOW() -- Solo futuras (igual que paciente)
-      ORDER BY a.appointment_time ASC;  -- Las más próximas primero
+      -- AND a.appointment_time >= NOW() -- <-- Condición de tiempo COMENTADA/QUITADA
+      ORDER BY a.appointment_time ASC;
     `;
+    // --- FIN DEL CAMBIO ---
+
+    console.log(`[Backend Debug] Buscando citas agendadas para Dr.${doctorId} (SIN filtro de tiempo)`); // Log de debug
     const result = await pool.query(query, [doctorId]);
+    console.log(`[Backend Debug] Encontradas ${result.rows.length} citas.`); // Log de debug
     res.json(result.rows);
   } catch (err) {
-    console.error('Error al obtener citas del médico:', err.message);
+    console.error('[Backend] Error al obtener citas del médico (sin filtro tiempo):', err.message);
     res.status(500).json({ error: 'Error en el servidor al obtener citas del médico.' });
   }
 });
