@@ -1,4 +1,4 @@
-// Contenido COMPLETO y ACTUALIZADO para frontend/src/components/AgendarCita.jsx
+// Contenido COMPLETO y CON LOG para frontend/src/components/AgendarCita.jsx
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
@@ -26,15 +26,19 @@ function AgendarCita() {
       setLoadingTimes(true);
       const apiUrl = import.meta.env.VITE_API_URL;
       try {
+        console.log(`[AgendarCita] Fetching times for date: ${date}`); // Log fecha
         const response = await fetch(`${apiUrl}/api/appointments/available-times/${date}`);
+        console.log(`[AgendarCita] API Response Status: ${response.status}`); // Log status respuesta
         if (response.ok) {
-          setAvailableTimes(await response.json());
+          const data = await response.json();
+          console.log('[AgendarCita] Available times received:', data); // Log datos recibidos
+          setAvailableTimes(data);
         } else {
           setAvailableTimes([]);
           Swal.fire('Error', 'No se pudieron cargar los horarios para esta fecha.', 'error');
         }
       } catch (error) {
-        console.error("Error al cargar horarios:", error);
+        console.error("[AgendarCita] Error al cargar horarios:", error);
         Swal.fire('Error', 'Error de conexión al cargar horarios.', 'error');
       } finally {
         setLoadingTimes(false);
@@ -45,6 +49,7 @@ function AgendarCita() {
   };
 
   const handleAgendar = async () => {
+    // ... (lógica de handleAgendar sin cambios)
     if (!selectedSlot) {
       Swal.fire('Atención', 'Por favor, selecciona un horario disponible.', 'warning');
       return;
@@ -85,6 +90,7 @@ function AgendarCita() {
     }
   };
 
+
   return (
     <div className="agendar-page-content">
       <header className="main-header">
@@ -118,18 +124,23 @@ function AgendarCita() {
               <h2>2. Elige un horario</h2>
               {loadingTimes ? <p>Buscando horarios...</p> : (
                 <div className="time-slots">
-                  {availableTimes.length > 0 ? availableTimes.map(slot => (
-                    <button
-                      key={slot.id}
-                      className={`time-slot ${selectedSlot?.id === slot.id ? 'selected' : ''} ${slot.status !== 'disponible' ? 'unavailable' : ''}`}
-                      onClick={() => setSelectedSlot(slot)}
-                      disabled={slot.status !== 'disponible'}
-                    >
-                      {/* --- CAMBIO AQUÍ --- */}
-                      {new Date(slot.appointment_time).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })}
-                      {slot.status !== 'disponible' && <span> (Ocupado)</span>}
-                    </button>
-                  )) : <p>No hay horarios programados para este día.</p>}
+                  {availableTimes.length > 0 ? availableTimes.map(slot => {
+                      // --- ¡LOG AÑADIDO AQUÍ! ---
+                      console.log(`[AgendarCita] Slot ID: ${slot.id}, Status recibido: '${slot.status}', Tipo: ${typeof slot.status}`);
+                      // --- FIN DEL LOG ---
+
+                      return ( // <-- RETURN AÑADIDO
+                        <button
+                          key={slot.id}
+                          className={`time-slot ${selectedSlot?.id === slot.id ? 'selected' : ''} ${slot.status !== 'disponible' ? 'unavailable' : ''}`}
+                          onClick={() => setSelectedSlot(slot)}
+                          disabled={slot.status !== 'disponible'}
+                        >
+                          {new Date(slot.appointment_time).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })}
+                          {slot.status !== 'disponible' && <span> (Ocupado)</span>}
+                        </button>
+                      ); // <-- CIERRE DEL RETURN
+                   }) : <p>No hay horarios programados para este día.</p>}
                 </div>
               )}
             </div>
@@ -140,7 +151,6 @@ function AgendarCita() {
               <h2>3. Confirma tu cita</h2>
               <div className="confirmation-details">
                 <p><strong>Fecha:</strong> {new Date(selectedSlot.appointment_time).toLocaleDateString()}</p>
-                 {/* --- CAMBIO AQUÍ --- */}
                 <p><strong>Hora:</strong> {new Date(selectedSlot.appointment_time).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })}</p>
                 <p><strong>Médico:</strong> {selectedSlot.doctor_nombres} {selectedSlot.doctor_apellido}</p>
                 <p><strong>Sede:</strong> {selectedSlot.sede}</p>
