@@ -4,7 +4,7 @@ import React from 'react';
 import { Routes, Route } from 'react-router-dom';
 
 // Vistas Públicas
-import WelcomePage from './components/WelcomePage';
+import WelcomePage from './components/WelcomePage'; // Ahora es el Layout
 import Login from './components/Login';
 import Register from './components/Register';
 
@@ -20,7 +20,7 @@ import DoctorLayout from './components/DoctorLayout';
 // --- Páginas de Admin ---
 import GestionMedicos from './components/GestionMedicos';
 import GestionCitas from './components/GestionCitas';
-// (Importa Facturacion, Laboratorio, etc. si las tienes)
+// import Facturacion from './components/Facturacion'; // Si existe
 
 // --- Páginas de Usuario ---
 import UserDashboard from './components/UserDashboard';
@@ -31,20 +31,25 @@ import AgendarCita from './components/AgendarCita';
 // --- Páginas de Médico ---
 import DoctorDashboard from './components/DoctorDashboard';
 import DoctorCitas from './components/DoctorCitas';
-// ELIMINAR ESTA LÍNEA QUE ES EL ERROR: import DoctorPacientes from './components/DoctorPacientes'; // Importado
-import DoctorHistoriales from './components/DoctorHistoriales'; // Importado
+import DoctorHistoriales from './components/DoctorHistoriales'; 
 import DoctorDiagnosticos from './components/DoctorDiagnosticos';
 import DoctorResultados from './components/DoctorResultados';
-import DoctorPatients from './components/DoctorPatients'; // <--- ESTA ES LA IMPORTACIÓN CORRECTA
+import DoctorPatients from './components/DoctorPatients';
 
 
 function App() {
   return (
     <Routes>
-      {/* Rutas Públicas */}
-      <Route path="/" element={<WelcomePage />} />
-      <Route path="/login" element={<Login />} />
-      <Route path="/register" element={<Register />} />
+      {/* --- RUTA PÚBLICA / LAYOUT DE AUTENTICACIÓN --- */}
+      {/* WelcomePage actúa como un layout que proporciona el fondo. */}
+      <Route path="/" element={<WelcomePage />}> 
+          {/* Si path es "/", WelcomePage muestra su contenido principal */}
+          
+          {/* Rutas Anidadas: Se mostrarán DENTRO del Outlet de WelcomePage */}
+          {/* Estas rutas se superpondrán al fondo de WelcomePage */}
+          <Route path="login" element={<Login />} /> 
+          <Route path="register" element={<Register />} /> 
+      </Route>
 
       {/* Ruta del Dispatcher */}
       <Route
@@ -56,13 +61,13 @@ function App() {
       <Route path="/admin" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>}>
         <Route path="gestion-medicos" element={<GestionMedicos />} />
         <Route path="gestion-citas" element={<GestionCitas />} />
-        {/* (Otras rutas admin) */}
+        {/* <Route path="facturacion" element={<Facturacion />} /> */}
       </Route>
 
       {/* Rutas de Usuario */}
       <Route path="/user" element={<ProtectedRoute><UserLayout /></ProtectedRoute>}>
         <Route path="dashboard" element={<UserDashboard />} />
-        <Route path="profile" element={<Profile />} />
+        <Route path="profile" element={<Profile />} /> 
         <Route path="mis-citas" element={<MisCitas />} />
         <Route path="agendar-cita" element={<AgendarCita />} />
       </Route>
@@ -70,13 +75,12 @@ function App() {
       {/* Rutas de Médico */}
       <Route path="/doctor" element={<ProtectedRoute><DoctorLayout /></ProtectedRoute>}>
         <Route path="dashboard" element={<DoctorDashboard />} />
-        <Route path="profile" element={<Profile />} /> {/* Reutilizamos Profile */}
+        <Route path="profile" element={<Profile />} /> 
         <Route path="citas" element={<DoctorCitas />} />
-        <Route path="pacientes" element={<DoctorPatients />} /> {/* <--- USAR EL NOMBRE CORRECTO AQUÍ */}
-        {/* --- ¡NUEVAS RUTAS AÑADIDAS AQUÍ! --- */}
-        <Route path="pacientes/:patientId/historiales" element={<DoctorHistoriales />} /> {/* Ruta específica */}
-        <Route path="historiales" element={<DoctorHistoriales />} /> {/* Ruta general para el menú */}
-        {/* --- FIN NUEVAS RUTAS --- */}
+        <Route path="pacientes" element={<DoctorPatients />} /> 
+        {/* Rutas de Historiales */}
+        <Route path="pacientes/:patientId/historiales" element={<DoctorHistoriales />} /> 
+        <Route path="historiales" element={<DoctorHistoriales />} /> 
         <Route path="diagnosticos" element={<DoctorDiagnosticos />} />
         <Route path="resultados" element={<DoctorResultados />} />
       </Route>
