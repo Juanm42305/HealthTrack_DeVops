@@ -361,31 +361,22 @@ app.get('/api/appointments/available-days', async (req, res) => {
   }
 });
 
-app.get('/api/appointments/available-times/:date', async (req, res) => {
-  const { date } = req.params;
+app.get('/api/my-appointments/:patientId', async (req, res) => {
+  const { patientId } = req.params;
   try {
-    // --- ¡CORRECCIÓN EN EL SELECT! ---
-    // Añadimos "a.status" a la lista de columnas seleccionadas.
     const query = `
-      SELECT 
-        a.id, 
-        a.appointment_time, 
-        a.sede, 
-        a.status, -- <-- ¡ESTABA FALTANDO ESTO!
-        u.username as doctor_name, 
-        dp.nombres as doctor_nombres, 
-        dp.primer_apellido as doctor_apellido, 
-        dp.especialidad
+      SELECT a.id, a.appointment_time, a.sede, a.status, a.description, dp.nombres as doctor_nombres, dp.primer_apellido as doctor_apellido, dp.especialidad
       FROM appointments a
-      JOIN users u ON a.doctor_id = u.id
       JOIN doctor_profiles dp ON a.doctor_id = dp.user_id
-      WHERE DATE(a.appointment_time) = $1 
-      ORDER BY a.appointment_time ASC;
+      WHERE a.patient_id = $1 
+        AND a.appointment_time >= NOW()
+        AND a.status = 'agendada' -- MUST be 'agendada'
+      ORDER BY a.appointment_time ASC
     `;
-    const result = await pool.query(query, [date]);
+    const result = await pool.query(query, [patientId]);
     res.json(result.rows);
   } catch (err) {
-    console.error('Error al obtener horarios para la fecha:', err.message);
+    console.error('Error al obtener mis citas:', err.message);
     res.status(500).json({ error: 'Error en el servidor.' });
   }
 });
@@ -420,25 +411,6 @@ app.post('/api/doctor/schedule-procedure', async (req, res) => {
   }
 });
 
-// --- RUTA "MIS CITAS" (MODIFICADA) ---
-app.get('/api/my-appointments/:patientId', async (req, res) => {
-  const { patientId } = req.params;
-  try {
-    const query = `
-      SELECT a.id, a.appointment_time, a.sede, a.status, a.description, dp.nombres as doctor_nombres, dp.primer_apellido as doctor_apellido, dp.especialidad
-      FROM appointments a
-      JOIN doctor_profiles dp ON a.doctor_id = dp.user_id
-      WHERE a.patient_id = $1 AND a.appointment_time >= NOW()
-      ORDER BY a.appointment_time ASC
-    `;
-    const result = await pool.query(query, [patientId]);
-    res.json(result.rows);
-  } catch (err) {
-    console.error('Error al obtener mis citas:', err.message);
-    res.status(500).json({ error: 'Error en el servidor.' });
-  }
-});
-
 app.get('/api/doctor/my-appointments/:doctorId', async (req, res) => {
   const { doctorId } = req.params;
   try {
@@ -456,7 +428,7 @@ app.get('/api/doctor/my-appointments/:doctorId', async (req, res) => {
       FROM appointments a
       JOIN patient_profiles pp ON a.patient_id = pp.user_id 
       WHERE a.doctor_id = $1 
-        AND a.status = 'agendada'       -- Solo las agendadas
+        AND a.status = 'agendada'       -- Solo las agendadas
       -- AND a.appointment_time >= NOW() -- <-- Condición de tiempo COMENTADA/QUITADA
       ORDER BY a.appointment_time ASC;
     `;
@@ -487,6 +459,226 @@ app.put('/api/appointments/cancel/:id', async (req, res) => {
   } catch (err) {
     console.error('Error al cancelar cita:', err.message);
     res.status(500).json({ error: 'Error en el servidor.' });
+  }
+});
+
+// --- Rutas del Módulo de Pacientes del Doctor ---
+
+// Ruta para buscar pacientes por nombre/cédula
+app.get('/api/doctor/patients/search', async (req, res) => {
+  const { query } = req.query;
+  if (!query) {
+    return res.status(400).json({ error: 'El parámetro de búsqueda "query" es requerido.' });
+  }
+  try {
+    const searchQuery = `%${query.toLowerCase()}%`;
+    const result = await pool.query(
+      `SELECT
+          u.id as user_id,
+          u.username,
+          pp.nombres,
+          pp.primer_apellido,
+          pp.segundo_apellido,
+          pp.numero_cedula,
+          pp.telefono,
+          pp.email
+        FROM users u
+        JOIN patient_profiles pp ON u.id = pp.user_id
+        WHERE u.role = 'paciente' AND (
+            LOWER(pp.nombres) LIKE $1 OR
+            LOWER(pp.primer_apellido) LIKE $1 OR
+            LOWER(pp.segundo_apellido) LIKE $1 OR
+            LOWER(pp.numero_cedula) LIKE $1 OR
+            LOWER(u.username) LIKE $1
+        )
+        ORDER BY pp.nombres ASC`,
+      [searchQuery]
+    );
+    res.json(result.rows);
+  } catch (err) {
+    console.error('[Backend] Error al buscar pacientes:', err.message);
+    res.status(500).json({ error: 'Error interno del servidor al buscar pacientes.' });
+  }
+});
+
+// Ruta para obtener el perfil completo de un paciente específico
+app.get('/api/doctor/patients/:patientId/profile', async (req, res) => {
+  const { patientId } = req.params;
+  try {
+    const result = await pool.query(
+      `SELECT
+          u.id as user_id,
+          u.username,
+          u.email,
+          pp.* -- Selecciona todas las columnas del perfil del paciente
+        FROM users u
+        JOIN patient_profiles pp ON u.id = pp.user_id
+        WHERE u.id = $1 AND u.role = 'paciente'`,
+      [patientId]
+    );
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Paciente no encontrado.' });
+    }
+    res.json(result.rows[0]);
+  } catch (err) {
+    console.error(`[Backend] Error al obtener perfil del paciente ${patientId}:`, err.message);
+    res.status(500).json({ error: 'Error interno del servidor al obtener el perfil del paciente.' });
+  }
+});
+
+
+// --- Rutas del Módulo de Historiales Clínicos ---
+
+// Ruta para obtener todos los historiales de un paciente
+app.get('/api/doctor/patients/:patientId/medical-records', async (req, res) => {
+  const { patientId } = req.params;
+  try {
+    const result = await pool.query(
+      `SELECT * FROM medical_records
+        WHERE patient_id = $1
+        ORDER BY fecha_creacion DESC`,
+      [patientId]
+    );
+    res.json(result.rows);
+  } catch (err) {
+    console.error(`[Backend] Error al obtener historiales del paciente ${patientId}:`, err.message);
+    res.status(500).json({ error: 'Error interno del servidor al obtener historiales.' });
+  }
+});
+
+// Ruta para crear un nuevo historial clínico
+app.post('/api/doctor/patients/:patientId/medical-records', async (req, res) => {
+  const { patientId } = req.params;
+  // --- TEMPORAL: OBTENEMOS DOCTOR ID DEL BODY HASTA IMPLEMENTAR JWT ---
+  const { doctorId, appointment_id, motivo_consulta, registro, sexo, edad, habitacion, ocupacion,
+    antecedentes_patologicos_cardiovasculares, antecedentes_patologicos_pulmonares,
+    antecedentes_patologicos_digestivos, antecedentes_patologicos_diabetes,
+    antecedentes_patologicos_renales, antecedentes_patologicos_quirurgicos,
+    antecedentes_patologicos_alergicos, antecedentes_patologicos_transfusiones,
+    antecedentes_patologicos_medicamentos, antecedentes_patologicos_especifique,
+    antecedentes_no_patologicos_alcohol, antecedentes_no_patologicos_tabaquismo,
+    antecedentes_no_patologicos_drogas, antecedentes_no_patologicos_inmunizaciones,
+    antecedentes_no_patologicos_otros, observaciones_generales
+  } = req.body;
+  // --- FIN TEMPORAL ---
+
+  if (!doctorId) return res.status(401).json({ error: 'ID de Doctor requerido para registrar el historial.' });
+
+  try {
+    const result = await pool.query(
+      `INSERT INTO medical_records (
+        patient_id, doctor_id, appointment_id, motivo_consulta, registro, sexo, edad, habitacion, ocupacion,
+        antecedentes_patologicos_cardiovasculares, antecedentes_patologicos_pulmonares,
+        antecedentes_patologicos_digestivos, antecedentes_patologicos_diabetes,
+        antecedentes_patologicos_renales, antecedentes_patologicos_quirurgicos,
+        antecedentes_patologicos_alergicos, antecedentes_patologicos_transfusiones,
+        antecedentes_patologicos_medicamentos, antecedentes_patologicos_especifique,
+        antecedentes_no_patologicos_alcohol, antecedentes_no_patologicos_tabaquismo,
+        antecedentes_no_patologicos_drogas, antecedentes_no_patologicos_inmunizaciones,
+        antecedentes_no_patologicos_otros, observaciones_generales
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25)
+      RETURNING *`,
+      [
+        patientId, doctorId, appointment_id, motivo_consulta, registro, sexo, edad, habitacion, ocupacion,
+        antecedentes_patologicos_cardiovasculares, antecedentes_patologicos_pulmonares,
+        antecedentes_patologicos_digestivos, antecedentes_patologicos_diabetes,
+        antecedentes_patologicos_renales, antecedentes_patologicos_quirurgicos,
+        antecedentes_patologicos_alergicos, antecedentes_patologicos_transfusiones,
+        antecedentes_patologicos_medicamentos, antecedentes_patologicos_especifique,
+        antecedentes_no_patologicos_alcohol, antecedentes_no_patologicos_tabaquismo,
+        antecedentes_no_patologicos_drogas, antecedentes_no_patologicos_inmunizaciones,
+        antecedentes_no_patologicos_otros, observaciones_generales
+      ]
+    );
+    res.status(201).json(result.rows[0]);
+  } catch (err) {
+    console.error(`[Backend] Error al crear historial para paciente ${patientId}:`, err.message);
+    res.status(500).json({ error: 'Error interno del servidor al crear el historial.' });
+  }
+});
+
+// Ruta para actualizar un historial clínico existente
+app.put('/api/doctor/patients/:patientId/medical-records/:recordId', async (req, res) => {
+  const { patientId, recordId } = req.params;
+  // --- TEMPORAL: OBTENEMOS DOCTOR ID DEL BODY HASTA IMPLEMENTAR JWT ---
+  const { doctorId, motivo_consulta, registro, sexo, edad, habitacion, ocupacion,
+    antecedentes_patologicos_cardiovasculares, antecedentes_patologicos_pulmonares,
+    antecedentes_patologicos_digestivos, antecedentes_patologicos_diabetes,
+    antecedentes_patologicos_renales, antecedentes_patologicos_quirurgicos,
+    antecedentes_patologicos_alergicos, antecedentes_patologicos_transfusiones,
+    antecedentes_patologicos_medicamentos, antecedentes_patologicos_especifique,
+    antecedentes_no_patologicos_alcohol, antecedentes_no_patologicos_tabaquismo,
+    antecedentes_no_patologicos_drogas, antecedentes_no_patologicos_inmunizaciones,
+    antecedentes_no_patologicos_otros, observaciones_generales
+  } = req.body;
+  // --- FIN TEMPORAL ---
+
+  if (!doctorId) return res.status(401).json({ error: 'ID de Doctor requerido para actualizar el historial.' });
+
+  try {
+    const result = await pool.query(
+      `UPDATE medical_records SET
+        motivo_consulta = $1, registro = $2, sexo = $3, edad = $4, habitacion = $5, ocupacion = $6,
+        antecedentes_patologicos_cardiovasculares = $7, antecedentes_patologicos_pulmonares = $8,
+        antecedentes_patologicos_digestivos = $9, antecedentes_patologicos_diabetes = $10,
+        antecedentes_patologicos_renales = $11, antecedentes_patologicos_quirurgicos = $12,
+        antecedentes_patologicos_alergicos = $13, antecedentes_patologicos_transfusiones = $14,
+        antecedentes_patologicos_medicamentos = $15, antecedentes_patologicos_especifique = $16,
+        antecedentes_no_patologicos_alcohol = $17, antecedentes_no_patologicos_tabaquismo = $18,
+        antecedentes_no_patologicos_drogas = $19, antecedentes_no_patologicos_inmunizaciones = $20,
+        antecedentes_no_patologicos_otros = $21, observaciones_generales = $22
+        WHERE id = $23 AND patient_id = $24 AND doctor_id = $25
+        RETURNING *`,
+      [
+        motivo_consulta, registro, sexo, edad, habitacion, ocupacion,
+        antecedentes_patologicos_cardiovasculares, antecedentes_patologicos_pulmonares,
+        antecedentes_patologicos_digestivos, antecedentes_patologicos_diabetes,
+        antecedentes_patologicos_renales, antecedentes_patologicos_quirurgicos,
+        antecedentes_patologicos_alergicos, antecedentes_patologicos_transfusiones,
+        antecedentes_patologicos_medicamentos, antecedentes_patologicos_especifique,
+        antecedentes_no_patologicos_alcohol, antecedentes_no_patologicos_tabaquismo,
+        antecedentes_no_patologicos_drogas, antecedentes_no_patologicos_inmunizaciones,
+        antecedentes_no_patologicos_otros, observaciones_generales,
+        recordId, patientId, doctorId
+      ]
+    );
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Historial clínico no encontrado o no autorizado para actualizar.' });
+    }
+    res.json(result.rows[0]);
+  } catch (err) {
+    console.error(`[Backend] Error al actualizar historial ${recordId} para paciente ${patientId}:`, err.message);
+    res.status(500).json({ error: 'Error interno del servidor al actualizar el historial.' });
+  }
+});
+
+
+// --- Ruta para Finalizar Cita ---
+app.put('/api/doctor/appointments/:appointmentId/finish', async (req, res) => {
+  const { appointmentId } = req.params;
+  // --- TEMPORAL: OBTENEMOS DOCTOR ID DEL BODY HASTA IMPLEMENTAR JWT ---
+  const { doctorId } = req.body; 
+  // --- FIN TEMPORAL ---
+
+  if (!doctorId) return res.status(401).json({ error: 'ID de Doctor requerido para finalizar la cita.' });
+
+  try {
+    const result = await pool.query(
+      `UPDATE appointments
+        SET status = 'finalizada'
+        WHERE id = $1 AND doctor_id = $2
+        RETURNING *`,
+      [appointmentId, doctorId]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Cita no encontrada o no autorizada para finalizar.' });
+    }
+
+    res.json({ message: 'Cita finalizada con éxito.', appointment: result.rows[0] });
+  } catch (err) {
+    console.error(`[Backend] Error al finalizar cita ${appointmentId}:`, err.message);
+    res.status(500).json({ error: 'Error interno del servidor al finalizar la cita.' });
   }
 });
 
