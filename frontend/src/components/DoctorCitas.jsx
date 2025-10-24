@@ -1,11 +1,11 @@
-// Contenido COMPLETO y CON LOGS para frontend/src/components/DoctorCitas.jsx
+// Contenido COMPLETO y CORREGIDO FINAL para frontend/src/components/DoctorCitas.jsx
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { FaArrowLeft } from 'react-icons/fa';
+import { FaArrowLeft, FaFileMedical } from 'react-icons/fa'; // Se añade FaFileMedical
 import Swal from 'sweetalert2';
-import './MisCitas.css';
+import './MisCitas.css'; // Usamos MisCitas.css para los estilos de la tarjeta
 
 function DoctorCitas() {
   const { user } = useAuth();
@@ -16,35 +16,20 @@ function DoctorCitas() {
   const goBack = () => navigate(-1);
 
   const fetchDoctorCitas = useCallback(async () => {
-    // --- ¡LOG AÑADIDO! ---
-    console.log('[DoctorCitas] Verificando usuario:', user);
-
     if (!user?.id || user.role !== 'medico') {
-        // --- ¡LOG AÑADIDO! ---
-        console.log('[DoctorCitas] Condición de salida temprana cumplida. No se hará fetch.');
-        setLoading(false); // Importante quitar el estado de carga
+        setLoading(false); 
         return;
     }
-    // --- FIN LOGS ---
 
     setLoading(true);
     const apiUrl = import.meta.env.VITE_API_URL;
     try {
-      // --- ¡LOG AÑADIDO! ---
-      console.log(`[DoctorCitas] Fetching: ${apiUrl}/api/doctor/my-appointments/${user.id}`);
-
       const response = await fetch(`${apiUrl}/api/doctor/my-appointments/${user.id}`);
       
-      // --- ¡LOG AÑADIDO! ---
-      console.log('[DoctorCitas] Respuesta API:', response.status, response.ok);
-
       if (response.ok) {
         const data = await response.json();
-        // --- ¡LOG AÑADIDO! ---
-        console.log('[DoctorCitas] Citas recibidas:', data);
         setCitas(data);
       } else {
-        console.error("[DoctorCitas] Error al cargar citas - Respuesta no OK:", response.status);
         Swal.fire('Error', 'No se pudieron cargar tus citas asignadas.', 'error');
       }
     } catch (error) {
@@ -53,11 +38,9 @@ function DoctorCitas() {
     } finally {
       setLoading(false);
     }
-  }, [user]); // Depende del usuario (doctor)
+  }, [user]);
 
   useEffect(() => {
-    // --- ¡LOG AÑADIDO! ---
-    console.log('[DoctorCitas] useEffect ejecutado. Llamando a fetchDoctorCitas...');
     fetchDoctorCitas();
   }, [fetchDoctorCitas]);
 
@@ -93,9 +76,19 @@ function DoctorCitas() {
                   <strong>Hora:</strong>
                   {new Date(cita.appointment_time).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })}
                 </p>
-                <p><strong>Motivo Consulta:</strong> {cita.description}</p>
+                <p><strong>Motivo Agendado:</strong> {cita.description}</p>
                 <p><strong>Sede:</strong> {cita.sede}</p>
                 <p><strong>Estado:</strong> <span className={`cita-status status-${cita.status}`}> {cita.status === 'agendada' ? 'Agendada' : cita.status} </span></p>
+
+                {/* --- ¡BOTÓN DE ACCIÓN CLAVE! --- */}
+                <button 
+                  className="btn-atender-cita"
+                  // Redirige al módulo de Historiales, pasando el ID del paciente y el ID de la Cita (citaId)
+                  onClick={() => navigate(`/doctor/pacientes/${cita.patient_id}/historiales?citaId=${cita.id}`)}
+                >
+                  <FaFileMedical /> Iniciar Atención
+                </button>
+
               </div>
             ))}
           </div>

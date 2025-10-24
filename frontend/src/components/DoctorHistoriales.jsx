@@ -1,8 +1,9 @@
 // frontend/src/components/DoctorHistoriales.jsx
 
 import React, { useState, useEffect, useCallback } from 'react';
+// Importamos useSearchParams
 import { FaArrowLeft, FaDownload, FaCheckCircle, FaPlusCircle, FaHistory } from 'react-icons/fa';
-import { useNavigate, useParams, Link } from 'react-router-dom';
+import { useNavigate, useParams, Link, useSearchParams } from 'react-router-dom'; 
 import { useAuth } from '../context/AuthContext';
 import Swal from 'sweetalert2';
 import HistoriaClinicaForm from './HistoriaClinicaForm';
@@ -10,12 +11,16 @@ import './DoctorHistoriales.css';
 
 function DoctorHistoriales() {
   const navigate = useNavigate();
-  const { user } = useAuth(); // Doctor ID
-  const { patientId } = useParams(); // ID del paciente de la URL
+  const { user } = useAuth(); 
+  const { patientId } = useParams(); 
+  
+  // --- ¡CAMBIO CLAVE! Capturamos el citaId de la URL ---
+  const [searchParams] = useSearchParams();
+  const appointmentId = searchParams.get('citaId'); 
   
   const [patientData, setPatientData] = useState(null);
   const [historiales, setHistoriales] = useState([]);
-  const [selectedRecord, setSelectedRecord] = useState(null); // Historial actual en edición
+  const [selectedRecord, setSelectedRecord] = useState(null); 
   const [loading, setLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
 
@@ -23,6 +28,7 @@ function DoctorHistoriales() {
   const apiUrl = import.meta.env.VITE_API_URL;
   
   // --- Lógica de Carga ---
+  // ... (fetchHistoriales y fetchPatientProfile sin cambios)
   const fetchHistoriales = useCallback(async (pId) => {
     if (!pId) return;
     try {
@@ -30,11 +36,9 @@ function DoctorHistoriales() {
       if (response.ok) {
         const data = await response.json();
         setHistoriales(data);
-        // Muestra el formulario de nuevo historial si no hay registros
         if (data.length === 0) {
             setSelectedRecord(null); 
         } else {
-            // Muestra el último historial creado por defecto
             setSelectedRecord(data[0]);
         }
       } else {
@@ -66,7 +70,6 @@ function DoctorHistoriales() {
         fetchHistoriales(patientId)
       ]).finally(() => setLoading(false));
     } else {
-        // Si no hay patientId, ya cargó la vista general.
         setLoading(false);
     }
   }, [patientId, fetchPatientProfile, fetchHistoriales]);
@@ -81,8 +84,13 @@ function DoctorHistoriales() {
       : `${apiUrl}/api/doctor/patients/${patientId}/medical-records`;
 
     try {
-        // Enviar doctorId en el cuerpo (temporalmente)
-        const dataToSend = { ...recordData, doctorId: user.id }; 
+        // Enviar doctorId y appointmentId (si existe) en el cuerpo (temporalmente)
+        const dataToSend = { 
+            ...recordData, 
+            doctorId: user.id,
+            // Solo incluimos appointmentId si existe
+            ...(appointmentId && { appointment_id: appointmentId }) 
+        }; 
 
         const response = await fetch(url, {
             method: method,
@@ -92,7 +100,7 @@ function DoctorHistoriales() {
 
         if (response.ok) {
             Swal.fire('¡Éxito!', `Historial ${method === 'POST' ? 'creado' : 'actualizado'} correctamente.`, 'success');
-            await fetchHistoriales(patientId); // Recargar la lista
+            await fetchHistoriales(patientId); 
         } else {
             const errorData = await response.json();
             Swal.fire('Error', errorData.error || 'No se pudo guardar el historial.', 'error');
@@ -105,41 +113,51 @@ function DoctorHistoriales() {
     }
   };
 
-  // --- Lógica de Finalizar Cita ---
+  // --- Lógica de Finalizar Cita (Usa el ID capturado de la URL) ---
   const handleFinishAppointment = async () => {
-    // Necesitas el ID de la cita. Dado que no lo obtenemos en esta vista, lo pediremos.
-    const { value: appointmentId } = await Swal.fire({
-        title: 'Finalizar Cita',
-        input: 'text',
-        inputLabel: 'ID de la Cita a finalizar (ej. 33)',
-        inputPlaceholder: 'Ingresa el ID de la cita',
-        showCancelButton: true,
-        inputValidator: (value) => {
-            if (!value) return '¡Necesitas ingresar el ID de la cita!';
-            if (isNaN(parseInt(value))) return 'Debe ser un número válido.';
-        }
-    });
-
-    if (appointmentId) {
-        try {
-            const response = await fetch(`${apiUrl}/api/doctor/appointments/${appointmentId}/finish`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ doctorId: user.id }) // Enviamos el ID del doctor
-            });
-            if (response.ok) {
-                Swal.fire('¡Cita Finalizada!', 'La cita ha sido marcada como finalizada.', 'success');
-                // Esto hará que la notificación de citas pendientes desaparezca
-                navigate('/doctor/citas'); 
-            } else {
-                const errorData = await response.json();
-                Swal.fire('Error', errorData.error || 'No se pudo finalizar la cita.', 'error');
+    if (!appointmentId) {
+        // Si el doctor llega desde Historiales general, todavía se lo pedimos
+        const { value: manualAppointmentId } = await Swal.fire({
+            title: 'Finalizar Cita',
+            input: 'text',
+            inputLabel: 'ID de la Cita a finalizar (Necesario para cambiar estado)',
+            inputPlaceholder: 'Ingresa el ID de la cita',
+            showCancelButton: true,
+            inputValidator: (value) => {
+                if (!value) return '¡Necesitas ingresar el ID de la cita!';
+                if (isNaN(parseInt(value))) return 'Debe ser un número válido.';
             }
-        } catch (error) {
-            Swal.fire('Error de Red', 'Error al finalizar la cita.', 'error');
-        }
+        });
+        if (!manualAppointmentId) return;
+
+        // Usamos el ID manual si se proporciona
+        await executeFinishAppointment(manualAppointmentId);
+
+    } else {
+        // Usamos el ID de la URL si se proporcionó (flujo normal desde Mis Citas)
+        await executeFinishAppointment(appointmentId);
     }
   };
+
+  const executeFinishAppointment = async (idToFinish) => {
+     try {
+        const response = await fetch(`${apiUrl}/api/doctor/appointments/${idToFinish}/finish`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ doctorId: user.id }) 
+        });
+        if (response.ok) {
+            Swal.fire('¡Cita Finalizada!', 'La cita ha sido marcada como finalizada. Refresca Mis Citas.', 'success');
+            // Redirigir a la lista de citas para ver el cambio
+            navigate('/doctor/citas'); 
+        } else {
+            const errorData = await response.json();
+            Swal.fire('Error', errorData.error || 'No se pudo finalizar la cita.', 'error');
+        }
+    } catch (error) {
+        Swal.fire('Error de Red', 'Error al finalizar la cita.', 'error');
+    }
+  }
 
 
   // --- Lógica para Generar PDF (Placeholder) ---
@@ -156,14 +174,14 @@ function DoctorHistoriales() {
     return <div className="loading-container">Cargando datos del paciente...</div>;
   }
 
-  // Si no hay patientId en la URL, mostramos la vista general
+  // Vista general si se accede directamente desde el menú
   if (!patientId) {
       return (
           <div className="doctor-historiales-page-content">
               <header className="main-header"><button onClick={goBack} className="back-button"><FaArrowLeft /> Volver</button></header>
               <div className="doctor-historiales-container">
                   <h1>Módulo de Historiales Clínicos</h1>
-                  <p>Por favor, busca un paciente en la sección de <Link to="/doctor/pacientes">Pacientes</Link> para acceder a su historial.</p>
+                  <p>Por favor, busca un paciente en la sección de <Link to="/doctor/pacientes">Pacientes</Link> o inicia la atención desde <Link to="/doctor/citas">Mis Citas</Link>.</p>
               </div>
           </div>
       );
@@ -181,7 +199,7 @@ function DoctorHistoriales() {
       <div className="historial-header-info">
         <h1>Historia Clínica del Paciente</h1>
         <h2>{patientData.nombres} {patientData.primer_apellido} ({patientData.username})</h2>
-        <p>Cédula: {patientData.numero_cedula || 'N/A'} | Edad: {patientData.edad || 'N/A'}</p>
+        <p>Cédula: {patientData.numero_cedula || 'N/A'} | Edad: {patientData.edad || 'N/A'} | Cita Actual ID: {appointmentId || 'N/A'}</p>
       </div>
 
       <div className="historial-content-grid">
@@ -218,7 +236,12 @@ function DoctorHistoriales() {
                 <button onClick={handleGeneratePDF} disabled={!selectedRecord} className="btn-pdf">
                     <FaDownload /> Descargar PDF
                 </button>
-                <button onClick={handleFinishAppointment} className="btn-finish">
+                <button 
+                  onClick={handleFinishAppointment} 
+                  // El botón se deshabilita si no estamos en una cita activa O no hay historial guardado.
+                  disabled={!appointmentId && !selectedRecord} 
+                  className="btn-finish"
+                >
                     <FaCheckCircle /> Finalizar Cita
                 </button>
             </div>
