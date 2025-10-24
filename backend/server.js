@@ -1,4 +1,4 @@
-// Contenido COMPLETO y CORREGIDO FINAL (Limpieza y Roles) para backend/server.js
+// Contenido COMPLETO y CORREGIDO FINAL para backend/server.js
 
 const express = require('express');
 const cors = require('cors');
@@ -150,7 +150,7 @@ app.get('/api/profile/doctor/:userId', async (req, res) => {
   try {
     const query = `
       SELECT u.username, dp.* FROM users u
-      JOIN doctor_profiles dp ON u.id = pp.user_id
+      JOIN doctor_profiles dp ON u.id = dp.user_id
       WHERE u.id = $1
     `;
     const profile = await pool.query(query, [userId]);
@@ -258,11 +258,36 @@ app.put('/api/admin/doctors/:id', async (req, res) => {
     `;
     const values = [nombres, primer_apellido, segundo_apellido, edad, fecha_nacimiento, numero_cedula, especialidad, consultorio, sede, id];
     const updatedProfile = await pool.query(query, values);
-    if (updatedProfile.rows.length === 0) return res.status(404).json({ error: "Perfil no encontrado para actualizar." });
+    if (updatedProfile.rows.length === 0) return res.status(404).json({ error: "No se encontró el perfil del médico." });
     res.json(updatedProfile.rows[0]);
   } catch (err) {
     console.error('Error al actualizar médico:', err.message);
     res.status(500).json({ error: "Error en el servidor al actualizar médico" });
+  }
+});
+
+// --- RUTA NUEVA: ELIMINAR MÉDICO ---
+app.delete('/api/admin/doctors/:id', async (req, res) => {
+  const { id } = req.params;
+  const client = await pool.connect();
+  try {
+    // Intentamos eliminar de la tabla users. ON DELETE CASCADE debería manejar doctor_profiles.
+    const result = await client.query('DELETE FROM users WHERE id = $1 AND role = $2 RETURNING id', [id, 'medico']);
+
+    if (result.rowCount === 0) {
+      return res.status(404).json({ error: "No se encontró el médico para eliminar o no tiene el rol correcto." });
+    }
+
+    // Nota: Es posible que necesites limpiar citas relacionadas si ON DELETE CASCADE no está
+    // configurado para la tabla appointments. Por ahora, asumiremos que las citas quedan
+    // con doctor_id = NULL (por el FK en appointments) o se limpian con CASCADE.
+    
+    res.json({ message: "Médico y perfil asociado eliminados exitosamente." });
+  } catch (err) {
+    console.error('Error al eliminar médico:', err.message);
+    res.status(500).json({ error: "Error en el servidor al eliminar al médico." });
+  } finally {
+    client.release();
   }
 });
 
@@ -397,7 +422,7 @@ app.get('/api/my-appointments/:patientId', async (req, res) => {
       JOIN doctor_profiles dp ON a.doctor_id = dp.user_id
       WHERE a.patient_id = $1 
         AND a.appointment_time >= NOW()
-        AND a.status = 'agendada' -- MUST be 'agendada'
+        AND a.status = 'agendada' 
       ORDER BY a.appointment_time ASC
     `;
     const result = await pool.query(query, [patientId]);
@@ -527,7 +552,6 @@ app.get('/api/doctor/patients/search', async (req, res) => {
 // Ruta para obtener el perfil completo de un paciente específico
 app.get('/api/doctor/patients/:patientId/profile', async (req, res) => {
   const { patientId } = req.params;
-  // Comentario de rol va fuera del SQL para documentar:
   // Rol Paciente: 'usuario'
   try {
     const result = await pool.query(
