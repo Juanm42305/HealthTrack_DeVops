@@ -484,12 +484,11 @@ app.get('/api/doctor/patients/search', async (req, res) => {
           pp.email
         FROM users u
         JOIN patient_profiles pp ON u.id = pp.user_id
-        WHERE u.role = 'paciente' AND (
+        WHERE u.role = 'usuario' AND ( 
             LOWER(pp.nombres) LIKE $1 OR
             LOWER(pp.primer_apellido) LIKE $1 OR
-            LOWER(pp.segundo_apellido) LIKE $1 OR
-            LOWER(pp.numero_cedula) LIKE $1 OR
-            LOWER(u.username) LIKE $1
+            LOWER(pp.numero_cedula) LIKE $1 -- QUITAR otros campos como pp.segundo_apellido si tienes dudas
+        )
         )
         ORDER BY pp.nombres ASC`,
       [searchQuery]
