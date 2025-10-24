@@ -1,24 +1,24 @@
-// frontend/src/components/DoctorHistoriales.jsx
+// frontend/src/components/DoctorPatients.jsx
 import React from 'react';
 import { FaArrowLeft } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 
-function DoctorHistoriales() {
+function DoctorPatients() {
   const navigate = useNavigate();
   const goBack = () => navigate(-1);
 
   return (
-    <div className="doctor-historiales-page-content">
+    <div className="doctor-patients-page-content">
       <header className="main-header">
         <button onClick={goBack} className="back-button">
           <FaArrowLeft /> Volver
         </button>
       </header>
-      <div className="doctor-historiales-container">
-        <h1>Módulo de Historiales Clínicos (Próximamente)</h1>
-        <p>Aquí se gestionarán los historiales de los pacientes.</p>
+      <div className="doctor-patients-container">
+        <h1>Módulo de Pacientes (Próximamente)</h1>
+        <p>Aquí se buscarán y gestionarán los pacientes del médico.</p>
       </div>
     </div>
   );
 }
-export default DoctorHistoriales;
+export default DoctorPatients;
