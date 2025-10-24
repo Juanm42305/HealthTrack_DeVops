@@ -1,4 +1,4 @@
-// Contenido COMPLETO y CORREGIDO FINAL para backend/server.js
+// Contenido COMPLETO y CORREGIDO FINAL (Limpieza y Roles) para backend/server.js
 
 const express = require('express');
 const cors = require('cors');
@@ -150,7 +150,7 @@ app.get('/api/profile/doctor/:userId', async (req, res) => {
   try {
     const query = `
       SELECT u.username, dp.* FROM users u
-      JOIN doctor_profiles dp ON u.id = dp.user_id
+      JOIN doctor_profiles dp ON u.id = pp.user_id
       WHERE u.id = $1
     `;
     const profile = await pool.query(query, [userId]);
@@ -258,7 +258,7 @@ app.put('/api/admin/doctors/:id', async (req, res) => {
     `;
     const values = [nombres, primer_apellido, segundo_apellido, edad, fecha_nacimiento, numero_cedula, especialidad, consultorio, sede, id];
     const updatedProfile = await pool.query(query, values);
-    if (updatedProfile.rows.length === 0) return res.status(404).json({ error: "No se encontró el perfil del médico." });
+    if (updatedProfile.rows.length === 0) return res.status(404).json({ error: "Perfil no encontrado para actualizar." });
     res.json(updatedProfile.rows[0]);
   } catch (err) {
     console.error('Error al actualizar médico:', err.message);
@@ -283,7 +283,7 @@ app.post('/api/admin/schedule', async (req, res) => {
 app.post('/api/admin/schedule/batch', async (req, res) => {
   const { doctor_id, date, startTime, endTime, interval, sede } = req.body;
   if (!doctor_id || !date || !startTime || !endTime || !interval || !sede) {
-    return res.status(400).json({ error: 'Todos los campos son requeridos.' });
+    return res.status(400).json({ error: 'Todos los campos son requeridos' });
   }
 
   // --- ¡CORRECCIÓN EN MANEJO DE FECHAS! ---
@@ -345,7 +345,6 @@ app.post('/api/admin/schedule/batch', async (req, res) => {
 });
 
 app.get('/api/appointments/available-days', async (req, res) => {
-  const { date } = req.params; // La ruta no usa params, pero la mantenemos compatible si se necesita en el futuro
   try {
     const query = `
       SELECT DISTINCT DATE(appointment_time) as available_date
@@ -528,6 +527,8 @@ app.get('/api/doctor/patients/search', async (req, res) => {
 // Ruta para obtener el perfil completo de un paciente específico
 app.get('/api/doctor/patients/:patientId/profile', async (req, res) => {
   const { patientId } = req.params;
+  // Comentario de rol va fuera del SQL para documentar:
+  // Rol Paciente: 'usuario'
   try {
     const result = await pool.query(
       `SELECT
@@ -536,7 +537,7 @@ app.get('/api/doctor/patients/:patientId/profile', async (req, res) => {
           pp.* -- Selecciona todas las columnas del perfil del paciente
         FROM users u
         JOIN patient_profiles pp ON u.id = pp.user_id
-        WHERE u.id = $1 AND u.role = 'usuario'`, -- Rol corregido a 'usuario'
+        WHERE u.id = $1 AND u.role = 'usuario'`, // <-- CONSULTA LIMPIA
       [patientId]
     );
     if (result.rows.length === 0) {
