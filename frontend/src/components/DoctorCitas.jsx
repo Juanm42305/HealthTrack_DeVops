@@ -1,11 +1,11 @@
-// Contenido COMPLETO y ACTUALIZADO para frontend/src/components/DoctorCitas.jsx
+// Contenido COMPLETO y CON LOGS para frontend/src/components/DoctorCitas.jsx
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { FaArrowLeft } from 'react-icons/fa';
 import Swal from 'sweetalert2';
-import './MisCitas.css'; // Reutilizamos CSS
+import './MisCitas.css';
 
 function DoctorCitas() {
   const { user } = useAuth();
@@ -16,26 +16,48 @@ function DoctorCitas() {
   const goBack = () => navigate(-1);
 
   const fetchDoctorCitas = useCallback(async () => {
-    if (!user?.id || user.role !== 'medico') return;
+    // --- ¡LOG AÑADIDO! ---
+    console.log('[DoctorCitas] Verificando usuario:', user);
+
+    if (!user?.id || user.role !== 'medico') {
+        // --- ¡LOG AÑADIDO! ---
+        console.log('[DoctorCitas] Condición de salida temprana cumplida. No se hará fetch.');
+        setLoading(false); // Importante quitar el estado de carga
+        return;
+    }
+    // --- FIN LOGS ---
+
     setLoading(true);
     const apiUrl = import.meta.env.VITE_API_URL;
     try {
+      // --- ¡LOG AÑADIDO! ---
+      console.log(`[DoctorCitas] Fetching: ${apiUrl}/api/doctor/my-appointments/${user.id}`);
+
       const response = await fetch(`${apiUrl}/api/doctor/my-appointments/${user.id}`);
+      
+      // --- ¡LOG AÑADIDO! ---
+      console.log('[DoctorCitas] Respuesta API:', response.status, response.ok);
+
       if (response.ok) {
-        setCitas(await response.json());
+        const data = await response.json();
+        // --- ¡LOG AÑADIDO! ---
+        console.log('[DoctorCitas] Citas recibidas:', data);
+        setCitas(data);
       } else {
-        console.error("Error al cargar citas del médico - Respuesta no OK:", response.status);
+        console.error("[DoctorCitas] Error al cargar citas - Respuesta no OK:", response.status);
         Swal.fire('Error', 'No se pudieron cargar tus citas asignadas.', 'error');
       }
     } catch (error) {
-      console.error('Error al cargar citas del médico - Catch:', error);
+      console.error('[DoctorCitas] Error al cargar citas - Catch:', error);
       Swal.fire('Error', 'Error de conexión al cargar tus citas.', 'error');
     } finally {
       setLoading(false);
     }
-  }, [user]);
+  }, [user]); // Depende del usuario (doctor)
 
   useEffect(() => {
+    // --- ¡LOG AÑADIDO! ---
+    console.log('[DoctorCitas] useEffect ejecutado. Llamando a fetchDoctorCitas...');
     fetchDoctorCitas();
   }, [fetchDoctorCitas]);
 
@@ -69,7 +91,6 @@ function DoctorCitas() {
                 <p><strong>Fecha:</strong> {new Date(cita.appointment_time).toLocaleDateString('es-ES', { day: '2-digit', month: 'long', year: 'numeric' })}</p>
                 <p>
                   <strong>Hora:</strong>
-                  {/* --- CAMBIO AQUÍ --- */}
                   {new Date(cita.appointment_time).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })}
                 </p>
                 <p><strong>Motivo Consulta:</strong> {cita.description}</p>
