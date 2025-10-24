@@ -400,6 +400,36 @@ app.get('/api/my-appointments/:patientId', async (req, res) => {
   }
 });
 
+// --- ¡NUEVA RUTA PARA CITAS DEL MÉDICO! ---
+app.get('/api/doctor/my-appointments/:doctorId', async (req, res) => {
+  const { doctorId } = req.params;
+  try {
+    // Seleccionamos datos de la cita y del paciente asociado
+    const query = `
+      SELECT 
+        a.id, 
+        a.appointment_time, 
+        a.sede, 
+        a.status, 
+        a.description, 
+        pp.nombres as patient_nombres, 
+        pp.primer_apellido as patient_apellido, 
+        pp.numero_cedula as patient_cedula 
+      FROM appointments a
+      JOIN patient_profiles pp ON a.patient_id = pp.user_id 
+      WHERE a.doctor_id = $1 
+        AND a.status = 'agendada'       -- Solo las agendadas
+        AND a.appointment_time >= NOW() -- Solo futuras (igual que paciente)
+      ORDER BY a.appointment_time ASC;  -- Las más próximas primero
+    `;
+    const result = await pool.query(query, [doctorId]);
+    res.json(result.rows);
+  } catch (err) {
+    console.error('Error al obtener citas del médico:', err.message);
+    res.status(500).json({ error: 'Error en el servidor al obtener citas del médico.' });
+  }
+});
+
 
 app.put('/api/appointments/cancel/:id', async (req, res) => {
   const { id } = req.params;

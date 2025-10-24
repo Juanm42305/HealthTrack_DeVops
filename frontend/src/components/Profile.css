@@ -1,12 +1,14 @@
 /* Contenido COMPLETO y DEFINITIVO para frontend/src/components/Profile.css */
+/* Incorpora los estilos originales del usuario + los nuevos para secciones */
 
 .profile-page {
   display: flex;
   height: 100vh;
-  background-color: #f8f9fa;
-  font-family: "Poppins", sans-serif;
+  background-color: #f8f9fa; /* Manteniendo fondo original */
+  font-family: "Poppins", sans-serif; /* Manteniendo fuente original */
 }
 
+/* --- ESTILOS DE LA BARRA LATERAL (SIN CAMBIOS) --- */
 .profile-sidebar {
   width: 280px;
   background: #2c3e50;
@@ -25,7 +27,7 @@
   font-weight: bold;
   color: #3498db;
   border-bottom: 1px solid #34495e;
-  width: 100%; /* Asegura que la línea ocupe todo */
+  width: 100%;
 }
 
 .user-avatar {
@@ -148,29 +150,170 @@
 }
 
 
-/* --- Contenido Principal --- */
-.profile-content {
-  flex-grow: 1;
-  padding: 2.5rem;
-  overflow-y: auto;
+/* --- Contenido Principal (Formulario y Contenedores) --- */
+/* Estilos para el contenedor principal de la página de perfil (si se usa sin layout) */
+.profile-page-content {
+  background-color: #f4f7fa;
+  min-height: 100vh;
+  width: 100%; /* Asegura que ocupe todo el ancho si no hay sidebar */
+  overflow-y: auto; /* Permite scroll */
 }
 
-.profile-content h1 { font-size: 2.2rem; color: #333; }
-.profile-content p { color: #777; margin-bottom: 2rem; }
-.profile-form { background: white; padding: 2rem; border-radius: 10px; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08); }
-.form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem; }
-.form-group { display: flex; flex-direction: column; }
-.form-group.full-width { grid-column: 1 / -1; }
-.form-group label { margin-bottom: 0.5rem; font-weight: 500; color: #555; }
-.form-group input { padding: 0.75rem; border: 1px solid #ccc; border-radius: 8px; font-size: 1rem; }
-.form-group input:disabled { background-color: #f1f1f1; cursor: not-allowed; }
-.save-button { margin-top: 2rem; padding: 0.8rem 2rem; background-color: #3498db; color: white; border: none; border-radius: 8px; font-size: 1rem; cursor: pointer; transition: background-color 0.3s; float: right; }
-.save-button:hover { background-color: #2980b9; }
+/* Área principal donde va el formulario */
+.profile-content-area {
+  padding: 2.5rem;
+  max-width: 900px;
+  margin: 0 auto;
+  background-color: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  margin-top: 2rem; /* Espacio desde el header */
+  margin-bottom: 2rem;
+}
 
+
+.profile-content-area h1 {
+    font-size: 2rem; /* Título principal */
+    font-weight: 700;
+    color: #2c3e50;
+    margin-bottom: 0.5rem;
+    border-bottom: 2px solid #3498db;
+    padding-bottom: 0.5rem;
+}
+
+.profile-content-area > p { /* El párrafo debajo del H1 */
+    font-size: 1.1rem;
+    color: #555;
+    margin-bottom: 2rem;
+}
+
+/* --- ¡NUEVO! Estilo para los encabezados de sección (h3) --- */
+.profile-form h3 {
+  font-size: 1.4rem;
+  font-weight: 600;
+  color: #34495e;
+  margin-top: 2rem;
+  margin-bottom: 1.5rem; /* Más espacio debajo del título */
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+/* --- ¡NUEVO! Estilo para la línea divisoria <hr> --- */
+.form-divider {
+  border: none;
+  border-top: 1px solid #e0e0e0;
+  margin: 2.5rem 0;
+}
+
+/* --- Cuadrícula del formulario (Usando la versión del usuario) --- */
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); /* Mantenemos auto-fit */
+  gap: 1.5rem;
+}
+
+/* --- ¡NUEVO! Clase para forzar una sola columna --- */
+.form-grid.single-column {
+  grid-template-columns: 1fr;
+  max-width: 60%; /* Ajusta el ancho si es necesario */
+}
+
+/* --- Clase para ancho completo (ya la tenías) --- */
+.form-group.full-width {
+  grid-column: 1 / -1;
+}
+
+/* --- Estilos de los campos (sin cambios mayores) --- */
+.form-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.form-group label {
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+  color: #555;
+}
+
+.form-group input {
+  padding: 0.75rem;
+  border: 1px solid #ccc;
+  border-radius: 8px; /* Redondeado consistente */
+  font-size: 1rem;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease; /* Transición focus */
+}
+
+.form-group input:focus {
+  outline: none;
+  border-color: #4f46e5; /* Color de foco */
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15); /* Sombra de foco */
+}
+
+.form-group input:disabled, .form-group input:read-only {
+  background-color: #f1f1f1;
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+/* --- Botón de guardar (sin cambios mayores) --- */
+.save-button {
+  margin-top: 2.5rem; /* Más espacio arriba */
+  padding: 0.8rem 2rem;
+  background-color: #28a745; /* Verde */
+  color: white;
+  border: none;
+  border-radius: 8px; /* Redondeado consistente */
+  font-size: 1rem;
+  font-weight: 600; /* Un poco más grueso */
+  cursor: pointer;
+  transition: background-color 0.3s;
+  float: right; /* Mantenemos float si te funciona */
+}
+
+.save-button:hover {
+  background-color: #218838; /* Verde oscuro */
+}
+
+/* --- Loading Container (sin cambios) --- */
 .loading-container {
   display: flex;
   justify-content: center;
   align-items: center;
   height: 100vh;
   font-size: 1.5rem;
+}
+
+/* --- Responsividad (Añadida/Ajustada) --- */
+@media (max-width: 768px) {
+  .profile-page {
+    flex-direction: column; /* Apila sidebar y contenido en móvil si no hay layout */
+  }
+  .profile-sidebar {
+    width: 100%; /* Sidebar ocupa todo el ancho */
+    height: auto; /* Altura automática */
+    padding: 1rem;
+  }
+  .profile-content-area {
+    padding: 1.5rem;
+    margin-top: 1rem; /* Menos espacio */
+    margin-bottom: 1rem;
+  }
+  .form-grid {
+    grid-template-columns: 1fr; /* Siempre una columna */
+  }
+  .form-grid.single-column {
+    max-width: 100%; /* Ocupa todo el ancho */
+  }
+  .profile-content-area h1 {
+    font-size: 1.6rem;
+  }
+  .profile-form h3 {
+    font-size: 1.2rem;
+  }
+  .save-button {
+      float: none; /* Quita el float */
+      display: block; /* Ocupa todo el ancho */
+      width: 100%;
+      text-align: center;
+  }
 }
