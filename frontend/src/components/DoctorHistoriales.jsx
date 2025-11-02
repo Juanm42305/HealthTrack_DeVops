@@ -1,7 +1,6 @@
 // frontend/src/components/DoctorHistoriales.jsx
 
 import React, { useState, useEffect, useCallback } from 'react';
-// Importamos useSearchParams
 import { FaArrowLeft, FaDownload, FaCheckCircle, FaPlusCircle, FaHistory } from 'react-icons/fa';
 import { useNavigate, useParams, Link, useSearchParams } from 'react-router-dom'; 
 import { useAuth } from '../context/AuthContext';
@@ -14,7 +13,6 @@ function DoctorHistoriales() {
   const { user } = useAuth(); // Doctor ID
   const { patientId } = useParams(); // ID del paciente de la URL
   
-  // --- Capturamos el citaId de la URL ---
   const [searchParams] = useSearchParams();
   const appointmentId = searchParams.get('citaId'); 
   
@@ -76,7 +74,7 @@ function DoctorHistoriales() {
   }, [patientId, fetchPatientProfile, fetchHistoriales]);
 
   
-  // --- Lógica de Guardado (POST/PUT) CORREGIDA ---
+  // --- Lógica de Guardado (POST/PUT) ---
   const handleSaveRecord = async (recordData) => {
     setIsSaving(true);
     const method = recordData.id ? 'PUT' : 'POST';
@@ -206,7 +204,11 @@ function DoctorHistoriales() {
       
       <div className="historial-header-info">
         <h1>Historia Clínica del Paciente</h1>
-        <h2>{patientData?.nombres} {patientData?.primer_apellido} ({patientData?.username})</h2>
+        {/* CORRECCIÓN: Unir nombres y acceder a los campos correctos (numero_cedula, edad) */}
+        <h2>
+          {patientData?.nombres || patientData?.username} {patientData?.primer_apellido} {patientData?.segundo_apellido} 
+          ({patientData?.username})
+        </h2>
         <p>Cédula: {patientData?.numero_cedula || 'N/A'} | Edad: {patientData?.edad || 'N/A'} | Cita Actual ID: {appointmentId || 'N/A'}</p>
       </div>
 
