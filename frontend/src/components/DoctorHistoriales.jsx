@@ -13,6 +13,7 @@ function DoctorHistoriales() {
   const { user } = useAuth(); // Doctor ID
   const { patientId } = useParams(); // ID del paciente de la URL
   
+  // --- Capturamos el citaId de la URL ---
   const [searchParams] = useSearchParams();
   const appointmentId = searchParams.get('citaId'); 
   
@@ -53,7 +54,8 @@ function DoctorHistoriales() {
       if (response.ok) {
         setPatientData(await response.json());
       } else {
-        setPatientData({});
+        // En caso de error (ej. 404), establecemos un objeto vacío en lugar de null
+        setPatientData({}); 
         Swal.fire('Error', 'No se pudo cargar el perfil del paciente.', 'error');
       }
     } catch (error) {
@@ -62,13 +64,15 @@ function DoctorHistoriales() {
   }, [apiUrl]);
 
   useEffect(() => {
-    if (patientId) {
+    // CORRECCIÓN CLAVE: Solo hacer fetch si patientId existe y es un ID válido
+    if (patientId && !isNaN(parseInt(patientId))) { 
       setLoading(true);
       Promise.all([
         fetchPatientProfile(patientId),
         fetchHistoriales(patientId)
       ]).finally(() => setLoading(false));
     } else {
+        // Si no hay patientId válido (p.ej., 'undefined' al cargar), solo quitamos el loading.
         setLoading(false);
     }
   }, [patientId, fetchPatientProfile, fetchHistoriales]);
@@ -121,12 +125,11 @@ function DoctorHistoriales() {
     }
   };
 
-  // --- Lógica de Finalizar Cita (CORREGIDA) ---
+  // --- Lógica de Finalizar Cita ---
   const handleFinishAppointment = async () => {
     let idToFinish = appointmentId; 
 
     if (!idToFinish) {
-        // Pedimos el ID manualmente solo si no está en la URL
         const { value: manualAppointmentId } = await Swal.fire({
             title: 'Finalizar Cita',
             text: 'No se detectó el ID de la cita. Ingréselo manualmente para cambiar su estado.',
