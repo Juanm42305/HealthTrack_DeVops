@@ -1,8 +1,8 @@
 // frontend/src/components/DoctorHistoriales.jsx
 
 import React, { useState, useEffect, useCallback } from 'react';
+// Importamos useSearchParams
 import { FaArrowLeft, FaDownload, FaCheckCircle, FaPlusCircle, FaHistory } from 'react-icons/fa';
-// Importamos useSearchParams para leer la URL
 import { useNavigate, useParams, Link, useSearchParams } from 'react-router-dom'; 
 import { useAuth } from '../context/AuthContext';
 import Swal from 'sweetalert2';
@@ -14,7 +14,7 @@ function DoctorHistoriales() {
   const { user } = useAuth(); // Doctor ID
   const { patientId } = useParams(); // ID del paciente de la URL
   
-  // --- ¡CAMBIO CLAVE! Capturamos el citaId de la URL ---
+  // --- Capturamos el citaId de la URL ---
   const [searchParams] = useSearchParams();
   const appointmentId = searchParams.get('citaId'); 
   
@@ -55,8 +55,7 @@ function DoctorHistoriales() {
       if (response.ok) {
         setPatientData(await response.json());
       } else {
-        // Manejar el error para evitar el bloqueo del componente
-        setPatientData({}); // Establecer objeto vacío en caso de 404/500 para evitar fallos de render
+        setPatientData({});
         Swal.fire('Error', 'No se pudo cargar el perfil del paciente.', 'error');
       }
     } catch (error) {
@@ -67,7 +66,6 @@ function DoctorHistoriales() {
   useEffect(() => {
     if (patientId) {
       setLoading(true);
-      // Usamos Promise.all para cargar ambos datos simultáneamente
       Promise.all([
         fetchPatientProfile(patientId),
         fetchHistoriales(patientId)
@@ -78,7 +76,7 @@ function DoctorHistoriales() {
   }, [patientId, fetchPatientProfile, fetchHistoriales]);
 
   
-  // --- Lógica de Guardado (POST/PUT) ---
+  // --- Lógica de Guardado (POST/PUT) CORREGIDA ---
   const handleSaveRecord = async (recordData) => {
     setIsSaving(true);
     const method = recordData.id ? 'PUT' : 'POST';
@@ -86,8 +84,18 @@ function DoctorHistoriales() {
       ? `${apiUrl}/api/doctor/patients/${patientId}/medical-records/${recordData.id}`
       : `${apiUrl}/api/doctor/patients/${patientId}/medical-records`;
 
+    // 1. VALIDACIÓN DEL FRONTEND para campos NOT NULL
+    if (!user.id) {
+        setIsSaving(false);
+        return Swal.fire('Error', 'Debe iniciar sesión como médico para guardar.', 'error');
+    }
+    if (!recordData.motivo_consulta || recordData.motivo_consulta.trim() === '') {
+        setIsSaving(false);
+        return Swal.fire('Error', 'El campo Motivo de Consulta es obligatorio.', 'error');
+    }
+
     try {
-        // Envía doctorId y appointmentId (si existe) en el cuerpo
+        // 2. Construcción de los datos (Asegura que doctorId se envía correctamente)
         const dataToSend = { 
             ...recordData, 
             doctorId: user.id, // ID del doctor (para la corrección temporal de auth)
@@ -105,7 +113,7 @@ function DoctorHistoriales() {
             await fetchHistoriales(patientId); 
         } else {
             const errorData = await response.json();
-            Swal.fire('Error', errorData.error || 'No se pudo guardar el historial.', 'error');
+            Swal.fire('Error', errorData.error || 'Error interno del servidor al crear el historial.', 'error');
         }
     } catch (error) {
         console.error("Error al guardar historial:", error);
@@ -126,7 +134,7 @@ function DoctorHistoriales() {
             text: 'No se detectó el ID de la cita. Ingréselo manualmente para cambiar su estado.',
             input: 'text',
             inputLabel: 'ID de la Cita (ej. 33)',
-            inputPlaceholder: 'ID de la cita',
+            inputPlaceholder: 'Ingresa el ID de la cita',
             showCancelButton: true,
             inputValidator: (value) => {
                 if (!value || isNaN(parseInt(value))) return '¡Necesitas ingresar un número de ID de cita válido!';
@@ -148,7 +156,6 @@ function DoctorHistoriales() {
 
             if (response.ok) {
                 Swal.fire('¡Cita Finalizada!', 'La cita ha sido marcada como finalizada.', 'success');
-                // Redirigir a la lista de citas para refrescar el dashboard del doctor
                 navigate('/doctor/citas'); 
             } else {
                 const errorData = await response.json();
@@ -199,7 +206,6 @@ function DoctorHistoriales() {
       
       <div className="historial-header-info">
         <h1>Historia Clínica del Paciente</h1>
-        {/* Usamos encadenamiento opcional para evitar el error de 'nombres' de null */}
         <h2>{patientData?.nombres} {patientData?.primer_apellido} ({patientData?.username})</h2>
         <p>Cédula: {patientData?.numero_cedula || 'N/A'} | Edad: {patientData?.edad || 'N/A'} | Cita Actual ID: {appointmentId || 'N/A'}</p>
       </div>
@@ -240,7 +246,6 @@ function DoctorHistoriales() {
                 </button>
                 <button 
                   onClick={handleFinishAppointment} 
-                  // El botón se deshabilita si no hay ID de cita en la URL Y no hay historial guardado
                   disabled={!appointmentId && !selectedRecord} 
                   className="btn-finish"
                 >
