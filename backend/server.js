@@ -398,7 +398,7 @@ app.get('/api/appointments/available-times/:date', async (req, res) => {
       JOIN users u ON a.doctor_id = u.id
       JOIN doctor_profiles dp ON a.doctor_id = dp.user_id
       WHERE DATE(a.appointment_time) = $1 
-      AND a.appointment_time > NOW() -- <--- AÑADIDO FILTRO DE HORA FUTURA
+      AND a.appointment_time > NOW() -- <--- FILTRO DE HORA FUTURA (Soluciona slots pasados)
       ORDER BY a.appointment_time ASC;
     `;
     const result = await pool.query(query, [date]);
