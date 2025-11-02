@@ -266,7 +266,6 @@ app.put('/api/admin/doctors/:id', async (req, res) => {
   }
 });
 
-// --- RUTA NUEVA: ELIMINAR MÉDICO ---
 app.delete('/api/admin/doctors/:id', async (req, res) => {
   const { id } = req.params;
   const client = await pool.connect();
@@ -276,7 +275,7 @@ app.delete('/api/admin/doctors/:id', async (req, res) => {
     if (result.rowCount === 0) {
       return res.status(404).json({ error: "No se encontró el médico para eliminar o no tiene el rol correcto." });
     }
-    
+
     res.json({ message: "Médico y perfil asociado eliminados exitosamente." });
   } catch (err) {
     console.error('Error al eliminar médico:', err.message);
@@ -306,42 +305,50 @@ app.post('/api/admin/schedule/batch', async (req, res) => {
     return res.status(400).json({ error: 'Todos los campos son requeridos' });
   }
 
-  // --- ¡CORRECCIÓN EN MANEJO DE FECHAS! ---
-  const selectedDateStr = date; // ej: "2025-10-24"
+  const selectedDateStr = date; 
   const today = new Date();
   today.setHours(0, 0, 0, 0); 
-  const selectedDate = new Date(selectedDateStr + 'T00:00:00'); // Asegura que empiece al inicio del día en UTC/local
+  const selectedDate = new Date(selectedDateStr + 'T00:00:00');
   
-  // Validar que la fecha seleccionada no sea pasada (considerando zona horaria local implícita)
   if (selectedDate < today) {
     return res.status(400).json({ error: 'No se pueden crear horarios en una fecha pasada.' });
   }
 
   const client = await pool.connect();
   try {
+    // --- ¡VERIFICACIÓN DE DUPLICIDAD AÑADIDA! ---
+    const existingSlotsQuery = `
+      SELECT COUNT(*) 
+      FROM appointments 
+      WHERE doctor_id = $1 
+      AND DATE(appointment_time) = $2 
+      AND status = 'disponible';
+    `;
+    const existingSlotsResult = await client.query(existingSlotsQuery, [doctor_id, selectedDateStr]);
+    const count = parseInt(existingSlotsResult.rows[0].count, 10);
+
+    if (count > 0) {
+      return res.status(409).json({ error: 'Ya existen horarios disponibles para este médico en esta fecha. Elimine los existentes primero.' });
+    }
+    // --- FIN VERIFICACIÓN DE DUPLICIDAD ---
+
     await client.query('BEGIN');
     
-    // Convertir startTime y endTime a objetos Date en el día correcto
-    // Usamos UTC para evitar problemas de zona horaria al construir la fecha/hora
     const startDateTime = new Date(`${selectedDateStr}T${startTime}:00Z`); 
     const endDateTime = new Date(`${selectedDateStr}T${endTime}:00Z`);
     const intervalMinutes = parseInt(interval, 10);
 
-    // Validar que la hora de fin sea posterior a la de inicio
     if (endDateTime <= startDateTime) {
-         await client.query('ROLLBACK'); // Deshacer transacción antes de salir
+         await client.query('ROLLBACK');
          return res.status(400).json({ error: 'La hora de fin debe ser posterior a la hora de inicio.' });
     }
 
     console.log(`[Backend] Generando slots para Dr.${doctor_id} en ${selectedDateStr} de ${startTime} a ${endTime} cada ${intervalMinutes} min.`);
 
-    // Iterar usando UTC para consistencia
     for (let currentTime = new Date(startDateTime); currentTime < endDateTime; currentTime.setUTCMinutes(currentTime.getUTCMinutes() + intervalMinutes)) {
       
-      // Convertir a formato ISO String (YYYY-MM-DDTHH:mm:ss.sssZ) que PostgreSQL entiende bien
       const appointment_time_iso = currentTime.toISOString(); 
       
-      // Comprobación opcional para evitar insertar fuera del rango si algo sale mal
       const currentHour = currentTime.getUTCHours();
       if (currentHour < parseInt(startTime.split(':')[0]) || currentHour >= parseInt(endTime.split(':')[0])) {
           console.warn(`[Backend] Omitiendo slot fuera de rango: ${appointment_time_iso}`);
@@ -398,7 +405,7 @@ app.get('/api/appointments/available-times/:date', async (req, res) => {
       JOIN users u ON a.doctor_id = u.id
       JOIN doctor_profiles dp ON a.doctor_id = dp.user_id
       WHERE DATE(a.appointment_time) = $1 
-      AND a.appointment_time > NOW() -- <--- FILTRO DE HORA FUTURA (Soluciona slots pasados)
+      AND a.appointment_time > NOW() -- FILTRO DE HORA FUTURA
       ORDER BY a.appointment_time ASC;
     `;
     const result = await pool.query(query, [date]);
@@ -462,7 +469,6 @@ app.post('/api/doctor/schedule-procedure', async (req, res) => {
 app.get('/api/doctor/my-appointments/:doctorId', async (req, res) => {
   const { doctorId } = req.params;
   try {
-    // --- CONSULTA CORREGIDA FINAL (SIN CARACTERES OCULTOS) ---
     const query = `
       SELECT 
         a.id, 
@@ -478,11 +484,7 @@ app.get('/api/doctor/my-appointments/:doctorId', async (req, res) => {
         AND a.status = 'agendada'
       ORDER BY a.appointment_time ASC;
     `;
-    // --- FIN CONSULTA CORREGIDA ---
-
-    console.log(`[Backend Debug] Buscando citas agendadas para Dr.${doctorId} (SIN filtro de tiempo)`); // Log de debug
     const result = await pool.query(query, [doctorId]);
-    console.log(`[Backend Debug] Encontradas ${result.rows.length} citas.`); // Log de debug
     res.json(result.rows);
   } catch (err) {
     console.error('[Backend] Error al obtener citas del médico (sin filtro tiempo):', err.message);
