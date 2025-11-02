@@ -7,36 +7,35 @@ import Swal from 'sweetalert2';
 import './AgendarCita.css';
 
 function AgendarCita() {
-  // **CORRECCIÓN CLAVE:** Inicializa con la fecha de hoy para evitar errores de año 0002.
-  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]); 
-  const [availableTimes, setAvailableTimes] = useState([]);
-  const [selectedSlot, setSelectedSlot] = useState(null);
-  const [loadingTimes, setLoadingTimes] = useState(false);
-  const [motivo, setMotivo] = useState('');
+// **CORRECCIÓN CLAVE:** Inicializa con la fecha de hoy para evitar errores de año 0002.
+const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]); 
+const [availableTimes, setAvailableTimes] = useState([]); const [selectedSlot, setSelectedSlot] = useState(null);
+ const [loadingTimes, setLoadingTimes] = useState(false);
+ const [motivo, setMotivo] = useState('');
 
-  const { user } = useAuth();
-  const navigate = useNavigate();
+ const { user } = useAuth();
+ const navigate = useNavigate();
 
-  const goBack = () => navigate(-1);
+ const goBack = () => navigate(-1);
 
-  const handleDateChange = async (e) => {
-    const date = e.target.value;
-    setSelectedDate(date);
-    setSelectedSlot(null);
-    if (date) {
-      setLoadingTimes(true);
-      const apiUrl = import.meta.env.VITE_API_URL;
-      try {
-        console.log(`[AgendarCita] Fetching times for date: ${date}`); // Log fecha
-        const response = await fetch(`${apiUrl}/api/appointments/available-times/${date}`);
-        console.log(`[AgendarCita] API Response Status: ${response.status}`); // Log status respuesta
-        if (response.ok) {
-          const data = await response.json();
-          console.log('[AgendarCita] Available times received:', data); // Log datos recibidos
-          setAvailableTimes(data);
-        } else {
-          setAvailableTimes([]);
-          Swal.fire('Error', 'No se pudieron cargar los horarios para esta fecha.', 'error');
+ const handleDateChange = async (e) => {
+  const date = e.target.value;
+ setSelectedDate(date);
+  setSelectedSlot(null);
+  if (date) {
+   setLoadingTimes(true);
+   const apiUrl = import.meta.env.VITE_API_URL;
+   try {
+    console.log(`[AgendarCita] Fetching times for date: ${date}`); // Log fecha
+    const response = await fetch(`${apiUrl}/api/appointments/available-times/${date}`);
+    console.log(`[AgendarCita] API Response Status: ${response.status}`); // Log status respuesta
+    if (response.ok) {
+    const data = await response.json();
+     console.log('[AgendarCita] Available times received:', data); // Log datos recibidos
+     setAvailableTimes(data);
+    } else {
+     setAvailableTimes([]);
+     Swal.fire('Error', 'No se pudieron cargar los horarios para esta fecha.', 'error');
         }
       } catch (error) {
         console.error("[AgendarCita] Error al cargar horarios:", error);
@@ -152,7 +151,7 @@ function AgendarCita() {
               <h2>3. Confirma tu cita</h2>
               <div className="confirmation-details">
                 <p><strong>Fecha:</strong> {new Date(selectedSlot.appointment_time).toLocaleDateString()}</p>
-                <p><strong>Hora:</strong> {new Date(selectedSlot.appointment_time).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })}</p>
+                <p><strong>Hora:</strong> {new Date(slot.appointment_time).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true, timeZone: 'UTC' })}</p>
                 <p><strong>Médico:</strong> {selectedSlot.doctor_nombres} {selectedSlot.doctor_apellido}</p>
                 <p><strong>Sede:</strong> {selectedSlot.sede}</p>
                 <p><strong>Motivo:</strong> {motivo}</p>

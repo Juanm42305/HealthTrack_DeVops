@@ -258,7 +258,7 @@ app.put('/api/admin/doctors/:id', async (req, res) => {
     `;
     const values = [nombres, primer_apellido, segundo_apellido, edad, fecha_nacimiento, numero_cedula, especialidad, consultorio, sede, id];
     const updatedProfile = await pool.query(query, values);
-    if (updatedProfile.rows.length === 0) return res.status(404).json({ error: "No se encontró el perfil del médico." });
+    if (updatedProfile.rows.length === 0) return res.status(404).json({ error: "Perfil no encontrado para actualizar." });
     res.json(updatedProfile.rows[0]);
   } catch (err) {
     console.error('Error al actualizar médico:', err.message);
@@ -271,16 +271,11 @@ app.delete('/api/admin/doctors/:id', async (req, res) => {
   const { id } = req.params;
   const client = await pool.connect();
   try {
-    // Intentamos eliminar de la tabla users. ON DELETE CASCADE debería manejar doctor_profiles.
     const result = await client.query('DELETE FROM users WHERE id = $1 AND role = $2 RETURNING id', [id, 'medico']);
 
     if (result.rowCount === 0) {
       return res.status(404).json({ error: "No se encontró el médico para eliminar o no tiene el rol correcto." });
     }
-
-    // Nota: Es posible que necesites limpiar citas relacionadas si ON DELETE CASCADE no está
-    // configurado para la tabla appointments. Por ahora, asumiremos que las citas quedan
-    // con doctor_id = NULL (por el FK en appointments) o se limpian con CASCADE.
     
     res.json({ message: "Médico y perfil asociado eliminados exitosamente." });
   } catch (err) {
@@ -403,6 +398,7 @@ app.get('/api/appointments/available-times/:date', async (req, res) => {
       JOIN users u ON a.doctor_id = u.id
       JOIN doctor_profiles dp ON a.doctor_id = dp.user_id
       WHERE DATE(a.appointment_time) = $1 
+      AND a.appointment_time > NOW() -- <--- AÑADIDO FILTRO DE HORA FUTURA
       ORDER BY a.appointment_time ASC;
     `;
     const result = await pool.query(query, [date]);
@@ -610,7 +606,10 @@ app.post('/api/doctor/patients/:patientId/medical-records', async (req, res) => 
   } = req.body;
   // --- FIN TEMPORAL ---
 
-  if (!doctorId) return res.status(401).json({ error: 'ID de Doctor requerido para registrar el historial.' });
+  // --- VALIDACIÓN CLAVE ---
+  if (!doctorId || !motivo_consulta) {
+      return res.status(400).json({ error: 'El ID del Doctor y el Motivo de Consulta son campos obligatorios.' });
+  }
 
   try {
     const result = await pool.query(
