@@ -8,10 +8,15 @@ import Swal from 'sweetalert2';
 import HistoriaClinicaForm from './HistoriaClinicaForm';
 import './DoctorHistoriales.css'; 
 
+// --- ¡NUEVAS IMPORTACIONES PARA PDF! ---
+import jsPDF from 'jspdf';
+import 'jspdf-autotable';
+// ---
+
 function DoctorHistoriales() {
   const navigate = useNavigate();
-  const { user } = useAuth(); // Doctor ID
-  const { patientId } = useParams(); // ID del paciente de la URL
+  const { user } = useAuth(); 
+  const { patientId } = useParams(); 
   
   const [searchParams] = useSearchParams();
   const appointmentId = searchParams.get('citaId'); 
@@ -62,7 +67,6 @@ function DoctorHistoriales() {
   }, [apiUrl]);
 
   useEffect(() => {
-    // CORRECCIÓN CLAVE: Solo hacer fetch si patientId existe y es válido
     if (patientId && !isNaN(parseInt(patientId))) { 
       setLoading(true);
       Promise.all([
@@ -83,7 +87,6 @@ function DoctorHistoriales() {
       ? `${apiUrl}/api/doctor/patients/${patientId}/medical-records/${recordData.id}`
       : `${apiUrl}/api/doctor/patients/${patientId}/medical-records`;
 
-    // 1. VALIDACIÓN DEL FRONTEND para campos NOT NULL
     if (!user.id) {
         setIsSaving(false);
         return Swal.fire('Error', 'Debe iniciar sesión como médico para guardar.', 'error');
@@ -94,11 +97,10 @@ function DoctorHistoriales() {
     }
 
     try {
-        // 2. Construcción de los datos (Asegura que doctorId se envía correctamente)
         const dataToSend = { 
             ...recordData, 
-            doctorId: user.id, // ID del doctor (para la corrección temporal de auth)
-            ...(appointmentId && { appointment_id: appointmentId }) // Añade citaId solo si existe en la URL
+            doctorId: user.id,
+            ...(appointmentId && { appointment_id: appointmentId }) 
         }; 
 
         const response = await fetch(url, {
@@ -143,7 +145,6 @@ function DoctorHistoriales() {
         idToFinish = manualAppointmentId;
     }
 
-    // Ejecutar la finalización
     if (idToFinish) {
         try {
             const response = await fetch(`${apiUrl}/api/doctor/appointments/${idToFinish}/finish`, {
@@ -166,15 +167,112 @@ function DoctorHistoriales() {
   };
 
 
-  // --- Lógica para Generar PDF (Placeholder) ---
+  // --- ¡NUEVA LÓGICA DE GENERACIÓN DE PDF! ---
   const handleGeneratePDF = () => {
-    Swal.fire({
-      title: 'Generación de PDF',
-      text: 'La funcionalidad de descarga de la Historia Clínica en PDF está en desarrollo.',
-      icon: 'info',
-      confirmButtonText: 'Entendido'
+    if (!selectedRecord || !patientData) {
+        Swal.fire('Error', 'No hay un historial seleccionado o datos del paciente para generar el PDF.', 'error');
+        return;
+    }
+
+    const doc = new jsPDF();
+    const R = selectedRecord; // El historial
+    const P = patientData;  // El paciente
+
+    // 1. Título y Header
+    doc.setFontSize(20);
+    doc.text("Historia Clínica - HealthTrack", 105, 20, { align: 'center' });
+    doc.setFontSize(10);
+    doc.text(`Fecha de Emisión: ${new Date().toLocaleDateString()}`, 200, 28, { align: 'right' });
+    doc.text(`Registro #: ${R.registro || 'N/A'}`, 20, 28);
+    doc.setLineWidth(0.5);
+    doc.line(20, 30, 190, 30); // Línea divisoria
+
+    // 2. Datos del Paciente (Ficha de Identificación)
+    doc.setFontSize(14);
+    doc.text("Ficha de Identificación del Paciente", 20, 40);
+    doc.setFontSize(10);
+    doc.autoTable({
+        startY: 45,
+        theme: 'plain',
+        body: [
+            ['Paciente:', `${P.nombres || ''} ${P.primer_apellido || ''} ${P.segundo_apellido || ''}`],
+            ['Cédula:', P.numero_cedula || 'N/A'],
+            ['Edad:', P.edad || 'N/A'],
+            ['Sexo:', R.sexo || 'N/A'],
+            ['Ocupación:', R.ocupacion || 'N/A'],
+        ],
+        styles: { fontSize: 10, cellPadding: 1.5 },
     });
+
+    // 3. Detalles de la Consulta
+    doc.setFontSize(14);
+    doc.text("Detalles de la Consulta", 20, doc.autoTable.previous.finalY + 10);
+    doc.setFontSize(10);
+    doc.autoTable({
+        startY: doc.autoTable.previous.finalY + 15,
+        theme: 'striped',
+        head: [['Concepto', 'Descripción']],
+        body: [
+            ['Fecha de Atención:', new Date(R.fecha_creacion).toLocaleString()],
+            ['Motivo de Consulta:', R.motivo_consulta || 'N/A'],
+        ],
+        styles: { fontSize: 10 },
+    });
+
+    // 4. Antecedentes Patológicos
+    doc.setFontSize(14);
+    doc.text("Antecedentes Personales Patológicos", 20, doc.autoTable.previous.finalY + 10);
+    doc.autoTable({
+        startY: doc.autoTable.previous.finalY + 15,
+        theme: 'striped',
+        head: [['Tipo', 'Detalles']],
+        body: [
+            ['Cardiovasculares', R.antecedentes_patologicos_cardiovasculares || 'N/A'],
+            ['Pulmonares', R.antecedentes_patologicos_pulmonares || 'N/A'],
+            ['Digestivos', R.antecedentes_patologicos_digestivos || 'N/A'],
+            ['Diabetes', R.antecedentes_patologicos_diabetes || 'N/A'],
+            ['Renales', R.antecedentes_patologicos_renales || 'N/A'],
+            ['Quirúrgicos', R.antecedentes_patologicos_quirurgicos || 'N/A'],
+            ['Alérgicos', R.antecedentes_patologicos_alergicos || 'N/A'],
+            ['Transfusiones', R.antecedentes_patologicos_transfusiones || 'N/A'],
+            ['Medicamentos', R.antecedentes_patologicos_medicamentos || 'N/A'],
+            ['Otros', R.antecedentes_patologicos_especifique || 'N/A'],
+        ],
+    });
+
+    // 5. Antecedentes No Patológicos
+    doc.setFontSize(14);
+    doc.text("Antecedentes Personales No Patológicos", 20, doc.autoTable.previous.finalY + 10);
+    doc.autoTable({
+        startY: doc.autoTable.previous.finalY + 15,
+        theme: 'striped',
+        head: [['Tipo', 'Detalles']],
+        body: [
+            ['Alcohol', R.antecedentes_no_patologicos_alcohol || 'N/A'],
+            ['Tabaquismo', R.antecedentes_no_patologicos_tabaquismo || 'N/A'],
+            ['Drogas', R.antecedentes_no_patologicos_drogas || 'N/A'],
+            ['Inmunizaciones', R.antecedentes_no_patologicos_inmunizaciones || 'N/A'],
+            ['Otros', R.antecedentes_no_patologicos_otros || 'N/A'],
+        ],
+    });
+
+    // 6. Observaciones
+    doc.setFontSize(14);
+    doc.text("Observaciones Generales / Diagnóstico", 20, doc.autoTable.previous.finalY + 10);
+    doc.setFontSize(10);
+    // Usamos text() para párrafos largos con ajuste de línea
+    const observaciones = doc.splitTextToSize(R.observaciones_generales || 'Sin observaciones.', 170);
+    doc.text(observaciones, 20, doc.autoTable.previous.finalY + 18);
+
+    // 7. Firma (Placeholder)
+    const finalY = doc.autoTable.previous.finalY + 20 + (observaciones.length * 5); // Calcula el espacio del texto
+    doc.line(130, finalY + 20, 190, finalY + 20);
+    doc.text(`Firma Dr. ${user.username}`, 130, finalY + 25);
+
+    // 8. Guardar
+    doc.save(`Historial_${P.nombres}_${P.numero_cedula}.pdf`);
   };
+
 
   if (loading) {
     return <div className="loading-container">Cargando datos del paciente...</div>;
@@ -204,7 +302,6 @@ function DoctorHistoriales() {
       
       <div className="historial-header-info">
         <h1>Historia Clínica del Paciente</h1>
-        {/* CORRECCIÓN DE VISUALIZACIÓN DE DATOS DEL PACIENTE */}
         <h2>
           {patientData?.nombres || patientData?.username} {patientData?.primer_apellido} {patientData?.segundo_apellido} 
           ({patientData?.username})
