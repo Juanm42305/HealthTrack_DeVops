@@ -5,7 +5,7 @@ import React, { useState, useEffect } from 'react';
 // Componente auxiliar para un grupo de campos (para limpieza visual)
 const AntecedenteGroup = ({ title, name, formData, handleChange }) => (
   <div className="antecedente-group">
-    <label className="antecedente-title">{title}</label>
+    <span className="antecedente-title">{title}</span>
     <input
       type="text"
       name={name}
@@ -26,6 +26,19 @@ function HistoriaClinicaForm({ patientId, initialData, onSave, isNewRecord, isSa
     setFormData(initialData || {});
   }, [initialData]);
 
+  // --- LÓGICA CLAVE: GENERACIÓN AUTOMÁTICA DE REGISTRO ---
+  useEffect(() => {
+    // Generar un número de registro solo si es un nuevo registro y el campo está vacío
+    if (isNewRecord && !formData.registro) {
+      // Genera un ID basado en el tiempo y un número aleatorio para que sea único
+      const timestamp = Date.now().toString().slice(-6); 
+      const random = Math.floor(Math.random() * 1000);
+      const newRegistro = `HT-${patientId}-${timestamp}-${random}`;
+      
+      setFormData(prev => ({ ...prev, registro: newRegistro }));
+    }
+  }, [isNewRecord, formData.registro, patientId]); // Depende de si es nuevo o no
+
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
     setFormData(prev => ({
@@ -45,8 +58,24 @@ function HistoriaClinicaForm({ patientId, initialData, onSave, isNewRecord, isSa
       {/* --- FICHA DE IDENTIFICACIÓN --- */}
       <h3>Ficha de Identificación</h3>
       <div className="form-grid-2">
-        <div className="form-group"><label>Motivo de Consulta (*)</label><input type="text" name="motivo_consulta" value={formData.motivo_consulta || ''} onChange={handleChange} required /></div>
-        <div className="form-group"><label>Registro #</label><input type="text" name="registro" value={formData.registro || ''} onChange={handleChange} /></div>
+        <div className="form-group">
+            <label>Motivo de Consulta (*)</label>
+            <input type="text" name="motivo_consulta" value={formData.motivo_consulta || ''} onChange={handleChange} required />
+        </div>
+        
+        <div className="form-group">
+            <label>Registro #</label>
+            {/* Campo de registro ahora de SOLO LECTURA */}
+            <input 
+                type="text" 
+                name="registro" 
+                value={formData.registro || ''} 
+                onChange={handleChange} 
+                readOnly 
+                disabled={!isNewRecord} 
+            />
+        </div>
+        
         <div className="form-group">
             <label>Sexo</label>
             <select name="sexo" value={formData.sexo || ''} onChange={handleChange}>

@@ -13,7 +13,6 @@ function DoctorHistoriales() {
   const { user } = useAuth(); // Doctor ID
   const { patientId } = useParams(); // ID del paciente de la URL
   
-  // --- Capturamos el citaId de la URL ---
   const [searchParams] = useSearchParams();
   const appointmentId = searchParams.get('citaId'); 
   
@@ -54,8 +53,7 @@ function DoctorHistoriales() {
       if (response.ok) {
         setPatientData(await response.json());
       } else {
-        // En caso de error (ej. 404), establecemos un objeto vacío en lugar de null
-        setPatientData({}); 
+        setPatientData({});
         Swal.fire('Error', 'No se pudo cargar el perfil del paciente.', 'error');
       }
     } catch (error) {
@@ -64,7 +62,7 @@ function DoctorHistoriales() {
   }, [apiUrl]);
 
   useEffect(() => {
-    // CORRECCIÓN CLAVE: Solo hacer fetch si patientId existe y es un ID válido
+    // CORRECCIÓN CLAVE: Solo hacer fetch si patientId existe y es válido
     if (patientId && !isNaN(parseInt(patientId))) { 
       setLoading(true);
       Promise.all([
@@ -72,7 +70,6 @@ function DoctorHistoriales() {
         fetchHistoriales(patientId)
       ]).finally(() => setLoading(false));
     } else {
-        // Si no hay patientId válido (p.ej., 'undefined' al cargar), solo quitamos el loading.
         setLoading(false);
     }
   }, [patientId, fetchPatientProfile, fetchHistoriales]);
@@ -207,7 +204,7 @@ function DoctorHistoriales() {
       
       <div className="historial-header-info">
         <h1>Historia Clínica del Paciente</h1>
-        {/* CORRECCIÓN: Unir nombres y acceder a los campos correctos (numero_cedula, edad) */}
+        {/* CORRECCIÓN DE VISUALIZACIÓN DE DATOS DEL PACIENTE */}
         <h2>
           {patientData?.nombres || patientData?.username} {patientData?.primer_apellido} {patientData?.segundo_apellido} 
           ({patientData?.username})

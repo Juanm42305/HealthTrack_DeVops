@@ -1,4 +1,4 @@
-// Contenido COMPLETO y ACTUALIZADO para frontend/src/components/MisCitas.jsx
+// Contenido COMPLETO y CORREGIDO FINAL para frontend/src/components/MisCitas.jsx
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -63,7 +63,7 @@ function MisCitas() {
 
         if (response.ok) {
           Swal.fire('¡Cancelada!', 'Tu cita ha sido cancelada exitosamente.', 'success');
-          fetchCitas();
+          fetchCitas(); 
         } else {
           const errorData = await response.json();
           Swal.fire('Error', errorData.error || 'No se pudo cancelar la cita.', 'error');
@@ -73,6 +73,18 @@ function MisCitas() {
         Swal.fire('Error', 'Error de conexión al cancelar la cita.', 'error');
       }
     }
+  };
+
+  // Función para formatear la hora manualmente (reutilizada de AgendarCita)
+  const formatUtcTime = (appointment_time) => {
+    const date = new Date(appointment_time);
+    let hours = date.getUTCHours();
+    const minutes = date.getUTCMinutes();
+    const ampm = hours >= 12 ? 'PM' : 'AM';
+    hours = hours % 12;
+    hours = hours ? hours : 12; 
+    const minStr = minutes < 10 ? '0' + minutes : minutes;
+    return `${hours}:${minStr} ${ampm}`;
   };
 
   if (loading) {
@@ -107,8 +119,8 @@ function MisCitas() {
                 </p>
                 <p>
                   <strong>Hora:</strong>
-                  {/* --- CAMBIO AQUÍ --- */}
-                  {new Date(cita.appointment_time).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })}
+                  {/* USO DE LA FUNCIÓN DE FORMATO UTC MANUAL */}
+                  {formatUtcTime(cita.appointment_time)}
                 </p>
                 <p>
                   <strong>Médico:</strong>
