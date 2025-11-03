@@ -19,6 +19,23 @@ function UserDashboard() {
       confirmButtonText: 'Entendido'
     });
   };
+  <button 
+  style={{
+    backgroundColor: '#e74c3c', /* Rojo */
+    color: 'white', 
+    padding: '1rem', 
+    margin: '2rem',
+    border: 'none',
+    borderRadius: '8px',
+    cursor: 'pointer'
+  }}
+  onClick={() => { 
+    // Esto forzará un error que Sentry debe capturar
+    throw new Error("¡Prueba de Sentry desde Vercel! - " + new Date().toISOString()); 
+  }}
+>
+  FORZAR ERROR DE PRUEBA SENTRY
+</button>
 
   // --- ¡DISEÑO SIMPLIFICADO! ---
   // Se eliminó el <header> y el botón "Volver"
