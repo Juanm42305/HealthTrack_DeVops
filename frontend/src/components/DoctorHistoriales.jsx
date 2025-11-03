@@ -5,12 +5,12 @@ import { FaArrowLeft, FaDownload, FaCheckCircle, FaPlusCircle, FaHistory } from 
 import { useNavigate, useParams, Link, useSearchParams } from 'react-router-dom'; 
 import { useAuth } from '../context/AuthContext';
 import Swal from 'sweetalert2';
-import HistoriaClinicaForm from './HistoriaClinicaForm';
+import HistoriaClinicaForm from './HistoriaClinicaForm'; // Asumiendo que HistoriaClinicaForm.jsx existe
 import './DoctorHistoriales.css'; 
 
 // --- ¡CORRECCIÓN CRÍTICA DE IMPORTACIÓN DE PDF! ---
 import { jsPDF } from "jspdf"; // Importa la clase principal
-import autoTable from 'jspdf-autotable'; // Importa el plugin
+import autoTable from 'jspdf-autotable'; // Importa el plugin como una función
 // --- FIN DE LA CORRECCIÓN ---
 
 function DoctorHistoriales() {
@@ -30,18 +30,25 @@ function DoctorHistoriales() {
   const goBack = () => navigate(-1);
   const apiUrl = import.meta.env.VITE_API_URL;
   
-  // --- Lógica de Carga de Historiales ---
+  // --- Lógica de Carga de Historiales (Actualizada por el backend) ---
   const fetchHistoriales = useCallback(async (pId) => {
     if (!pId) return;
     try {
-      const response = await fetch(`${apiUrl}/api/doctor/patients/${pId}/medical-records`);
+      // Esta ruta ahora solo trae historiales de citas 'finalizadas'
+      const response = await fetch(`${apiUrl}/api/doctor/patients/${pId}/medical-records`); 
       if (response.ok) {
         const data = await response.json();
         setHistoriales(data);
         if (data.length === 0) {
-            setSelectedRecord(null); 
+            // Si no hay historiales finalizados, mostramos el formulario
+            // para la cita actual (si venimos de una).
+            if (appointmentId) {
+                setSelectedRecord(null); // Nuevo Historial
+            } else {
+                setSelectedRecord(undefined); // Estado para "seleccione"
+            }
         } else {
-            setSelectedRecord(data[0]);
+            setSelectedRecord(data[0]); // Selecciona el más reciente por defecto
         }
       } else {
         Swal.fire('Error', 'No se pudieron cargar los historiales.', 'error');
@@ -49,7 +56,7 @@ function DoctorHistoriales() {
     } catch (error) {
       console.error("Error cargando historiales:", error);
     }
-  }, [apiUrl]);
+  }, [apiUrl, appointmentId]); // Depende de appointmentId para saber si debe mostrar "Nuevo"
 
   // --- Lógica de Carga de Perfil ---
   const fetchPatientProfile = useCallback(async (pId) => {
@@ -110,8 +117,11 @@ function DoctorHistoriales() {
         });
 
         if (response.ok) {
+            const savedRecord = await response.json();
             Swal.fire('¡Éxito!', `Historial ${method === 'POST' ? 'creado' : 'actualizado'} correctamente.`, 'success');
-            await fetchHistoriales(patientId); 
+            // NO recargamos la lista (fetchHistoriales) porque la cita aún no está finalizada.
+            // Simplemente seleccionamos el historial que acabamos de guardar.
+            setSelectedRecord(savedRecord);
         } else {
             const errorData = await response.json();
             Swal.fire('Error', errorData.error || 'Error interno del servidor al crear el historial.', 'error');
@@ -129,20 +139,26 @@ function DoctorHistoriales() {
     let idToFinish = appointmentId; 
 
     if (!idToFinish) {
-        const { value: manualAppointmentId } = await Swal.fire({
-            title: 'Finalizar Cita',
-            text: 'No se detectó el ID de la cita. Ingréselo manualmente para cambiar su estado.',
-            input: 'text',
-            inputLabel: 'ID de la Cita (ej. 33)',
-            inputPlaceholder: 'Ingresa el ID de la cita',
-            showCancelButton: true,
-            inputValidator: (value) => {
-                if (!value || isNaN(parseInt(value))) return '¡Necesitas ingresar un número de ID de cita válido!';
-            }
-        });
-        
-        if (!manualAppointmentId) return;
-        idToFinish = manualAppointmentId;
+        // Si no hay ID de cita en la URL, intentamos obtenerlo del historial seleccionado
+        if(selectedRecord && selectedRecord.appointment_id) {
+            idToFinish = selectedRecord.appointment_id;
+        } else {
+            // Si tampoco hay en el historial, pedimos manualmente
+            const { value: manualAppointmentId } = await Swal.fire({
+                title: 'Finalizar Cita',
+                text: 'No se detectó el ID de la cita. Ingréselo manualmente para cambiar su estado.',
+                input: 'text',
+                inputLabel: 'ID de la Cita (ej. 33)',
+                inputPlaceholder: 'Ingresa el ID de la cita',
+                showCancelButton: true,
+                inputValidator: (value) => {
+                    if (!value || isNaN(parseInt(value))) return '¡Necesitas ingresar un número de ID de cita válido!';
+                }
+            });
+            
+            if (!manualAppointmentId) return;
+            idToFinish = manualAppointmentId;
+        }
     }
 
     if (idToFinish) {
@@ -155,7 +171,10 @@ function DoctorHistoriales() {
 
             if (response.ok) {
                 Swal.fire('¡Cita Finalizada!', 'La cita ha sido marcada como finalizada.', 'success');
-                navigate('/doctor/citas'); 
+                // ¡CAMBIO! Ahora recargamos los historiales DESPUÉS de finalizar
+                await fetchHistoriales(patientId);
+                // Opcional: Redirigir a la lista de citas
+                // navigate('/doctor/citas'); 
             } else {
                 const errorData = await response.json();
                 Swal.fire('Error', errorData.error || 'No se pudo finalizar la cita.', 'error');
@@ -191,7 +210,7 @@ function DoctorHistoriales() {
     doc.setFontSize(14);
     doc.text("Ficha de Identificación del Paciente", 20, 40);
     doc.setFontSize(10);
-    // ¡CORRECCIÓN! Usamos autoTable (del plugin importado) en la instancia 'doc'
+    // ¡CORRECCIÓN! Usamos autoTable(doc, ...)
     autoTable(doc, { 
         startY: 45,
         theme: 'plain',
@@ -207,10 +226,12 @@ function DoctorHistoriales() {
 
     // 3. Detalles de la Consulta
     doc.setFontSize(14);
-    doc.text("Detalles de la Consulta", 20, (doc).autoTable.previous.finalY + 10);
+    // ¡CORRECCIÓN! Usamos doc.lastAutoTable.finalY
+    let startY = (doc.lastAutoTable.finalY || 45) + 10;
+    doc.text("Detalles de la Consulta", 20, startY);
     doc.setFontSize(10);
     autoTable(doc, {
-        startY: (doc).autoTable.previous.finalY + 15,
+        startY: startY + 5,
         theme: 'striped',
         head: [['Concepto', 'Descripción']],
         body: [
@@ -221,10 +242,11 @@ function DoctorHistoriales() {
     });
 
     // 4. Antecedentes Patológicos
+    startY = doc.lastAutoTable.finalY + 10;
     doc.setFontSize(14);
-    doc.text("Antecedentes Personales Patológicos", 20, (doc).autoTable.previous.finalY + 10);
+    doc.text("Antecedentes Personales Patológicos", 20, startY);
     autoTable(doc, {
-        startY: (doc).autoTable.previous.finalY + 15,
+        startY: startY + 5,
         theme: 'striped',
         head: [['Tipo', 'Detalles']],
         body: [
@@ -242,10 +264,11 @@ function DoctorHistoriales() {
     });
 
     // 5. Antecedentes No Patológicos
+    startY = doc.lastAutoTable.finalY + 10;
     doc.setFontSize(14);
-    doc.text("Antecedentes Personales No Patológicos", 20, (doc).autoTable.previous.finalY + 10);
+    doc.text("Antecedentes Personales No Patológicos", 20, startY);
     autoTable(doc, {
-        startY: (doc).autoTable.previous.finalY + 15,
+        startY: startY + 5,
         theme: 'striped',
         head: [['Tipo', 'Detalles']],
         body: [
@@ -258,14 +281,15 @@ function DoctorHistoriales() {
     });
 
     // 6. Observaciones
+    startY = doc.lastAutoTable.finalY + 10;
     doc.setFontSize(14);
-    doc.text("Observaciones Generales / Diagnóstico", 20, (doc).autoTable.previous.finalY + 10);
+    doc.text("Observaciones Generales / Diagnóstico", 20, startY);
     doc.setFontSize(10);
     const observaciones = doc.splitTextToSize(R.observaciones_generales || 'Sin observaciones.', 170);
-    doc.text(observaciones, 20, (doc).autoTable.previous.finalY + 18);
+    doc.text(observaciones, 20, startY + 8);
 
     // 7. Firma (Placeholder)
-    const finalY = (doc).autoTable.previous.finalY + 20 + (observaciones.length * 5); 
+    const finalY = startY + 8 + (observaciones.length * 5); 
     doc.line(130, finalY + 20, 190, finalY + 20);
     doc.text(`Firma Dr. ${user.username}`, 130, finalY + 25);
 
@@ -345,7 +369,8 @@ function DoctorHistoriales() {
                 </button>
                 <button 
                   onClick={handleFinishAppointment} 
-                  disabled={!appointmentId && !selectedRecord} 
+                  // El botón se deshabilita si no hay ID de cita O si no hay historial guardado
+                  disabled={!appointmentId || !selectedRecord} 
                   className="btn-finish"
                 >
                     <FaCheckCircle /> Finalizar Cita
