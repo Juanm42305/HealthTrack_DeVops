@@ -31,7 +31,7 @@ function WelcomePage() {
         // 2. CONTENIDO PRINCIPAL (SOLO si estamos en la ruta raíz)
         <main className="welcome-main-content">
           <section className="welcome-text-section">
-            <h1>PRUEBA DE DESPLIEGUE 123 - ¿FUNCIONA?</h1>
+            <h1>Bienvenido a HealthTrack</h1>
             <p>Tu plataforma integral para la gestión de salud. Agenda citas, consulta tu historial y mantente en contacto con tus médicos, todo en un solo lugar.</p>
             <div className="call-to-action-buttons">
               <Link to="/login" className="cta-button secondary">
