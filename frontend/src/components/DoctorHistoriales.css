@@ -1,4 +1,4 @@
-/* Contenido COMPLETO y MEJORADO para frontend/src/components/DoctorHistoriales.css */
+/* frontend/src/components/DoctorHistoriales.css */
 
 .doctor-historiales-page-content {
   background-color: #f4f7fa;
@@ -62,6 +62,11 @@
   margin-top: 1rem;
   border-top: 1px solid #eee;
   padding-top: 1rem;
+}
+.no-records {
+  font-style: italic;
+  color: #7f8c8d;
+  font-size: 0.9rem;
 }
 
 .btn-sidebar {
@@ -170,38 +175,30 @@
 .form-grid-2 {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 1rem;
+    gap: 1.5rem; /* Aumenta el espacio */
     margin-bottom: 1.5rem;
 }
 
 .form-grid-1 {
     display: grid;
     grid-template-columns: 1fr;
-    gap: 1rem;
+    gap: 1.5rem;
     margin-bottom: 1.5rem;
 }
 
-/* ---------------------------------------------------- */
-/* --- CORRECCIÓN CLAVE PARA LOS GRUPOS DE ANTECEDENTES --- */
-/* ---------------------------------------------------- */
-
-/* Estilo para los grupos de campos de antecedentes */
+/* Grupo de campos de Antecedentes */
 .antecedente-group {
-    /* Mantiene el espacio entre grupos en el grid */
     display: flex;
     flex-direction: column; 
 }
 
-/* Título (Etiqueta) del antecedente */
 .antecedente-title {
-    /* Le da espacio y mejor peso visual a la etiqueta */
     display: block;
     font-weight: 500;
     margin-bottom: 0.4rem; /* Espacio entre título y input */
     color: #34495e;
 }
 
-/* Input del antecedente */
 .antecedente-input {
     width: 100%;
     padding: 0.75rem;
@@ -212,7 +209,7 @@
     font-family: inherit;
 }
 
-/* Ajustes generales de formulario para campos normales (Ficha de identificación) */
+/* Ajustes generales de formulario (Ficha de identificación) */
 .form-group label {
     display: block;
     font-weight: 500;
@@ -229,6 +226,13 @@
     box-sizing: border-box;
     font-family: inherit;
 }
+/* Estilo para inputs deshabilitados (Registro #) */
+.form-group input:read-only:disabled {
+    background-color: #f1f1f1;
+    cursor: not-allowed;
+    opacity: 0.7;
+}
+
 
 .form-actions {
     margin-top: 2rem;
