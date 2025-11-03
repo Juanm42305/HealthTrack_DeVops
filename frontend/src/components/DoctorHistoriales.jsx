@@ -34,7 +34,7 @@ function DoctorHistoriales() {
   const fetchHistoriales = useCallback(async (pId) => {
     if (!pId) return;
     try {
-      // Esta ruta ahora solo trae historiales de citas 'finalizadas'
+      // Esta ruta ahora solo trae historiales de citas 'finalizadas' (gracias al backend)
       const response = await fetch(`${apiUrl}/api/doctor/patients/${pId}/medical-records`); 
       if (response.ok) {
         const data = await response.json();
@@ -139,11 +139,9 @@ function DoctorHistoriales() {
     let idToFinish = appointmentId; 
 
     if (!idToFinish) {
-        // Si no hay ID de cita en la URL, intentamos obtenerlo del historial seleccionado
         if(selectedRecord && selectedRecord.appointment_id) {
             idToFinish = selectedRecord.appointment_id;
         } else {
-            // Si tampoco hay en el historial, pedimos manualmente
             const { value: manualAppointmentId } = await Swal.fire({
                 title: 'Finalizar Cita',
                 text: 'No se detectó el ID de la cita. Ingréselo manualmente para cambiar su estado.',
@@ -370,7 +368,7 @@ function DoctorHistoriales() {
                 <button 
                   onClick={handleFinishAppointment} 
                   // El botón se deshabilita si no hay ID de cita O si no hay historial guardado
-                  disabled={!appointmentId || !selectedRecord} 
+                  disabled={!appointmentId && !selectedRecord} 
                   className="btn-finish"
                 >
                     <FaCheckCircle /> Finalizar Cita
