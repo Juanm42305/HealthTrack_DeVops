@@ -15,8 +15,8 @@ import 'jspdf-autotable';
 
 function DoctorHistoriales() {
   const navigate = useNavigate();
-  const { user } = useAuth(); 
-  const { patientId } = useParams(); 
+  const { user } = useAuth(); // Doctor ID
+  const { patientId } = useParams(); // ID del paciente de la URL
   
   const [searchParams] = useSearchParams();
   const appointmentId = searchParams.get('citaId'); 
@@ -67,6 +67,7 @@ function DoctorHistoriales() {
   }, [apiUrl]);
 
   useEffect(() => {
+    // CORRECCIÓN CLAVE: Solo hacer fetch si patientId existe y es válido
     if (patientId && !isNaN(parseInt(patientId))) { 
       setLoading(true);
       Promise.all([
@@ -87,6 +88,7 @@ function DoctorHistoriales() {
       ? `${apiUrl}/api/doctor/patients/${patientId}/medical-records/${recordData.id}`
       : `${apiUrl}/api/doctor/patients/${patientId}/medical-records`;
 
+    // 1. VALIDACIÓN DEL FRONTEND para campos NOT NULL
     if (!user.id) {
         setIsSaving(false);
         return Swal.fire('Error', 'Debe iniciar sesión como médico para guardar.', 'error');
@@ -97,10 +99,11 @@ function DoctorHistoriales() {
     }
 
     try {
+        // 2. Construcción de los datos (Asegura que doctorId se envía correctamente)
         const dataToSend = { 
             ...recordData, 
-            doctorId: user.id,
-            ...(appointmentId && { appointment_id: appointmentId }) 
+            doctorId: user.id, // ID del doctor (para la corrección temporal de auth)
+            ...(appointmentId && { appointment_id: appointmentId }) // Añade citaId solo si existe en la URL
         }; 
 
         const response = await fetch(url, {
@@ -145,6 +148,7 @@ function DoctorHistoriales() {
         idToFinish = manualAppointmentId;
     }
 
+    // Ejecutar la finalización
     if (idToFinish) {
         try {
             const response = await fetch(`${apiUrl}/api/doctor/appointments/${idToFinish}/finish`, {
@@ -265,7 +269,8 @@ function DoctorHistoriales() {
     doc.text(observaciones, 20, doc.autoTable.previous.finalY + 18);
 
     // 7. Firma (Placeholder)
-    const finalY = doc.autoTable.previous.finalY + 20 + (observaciones.length * 5); // Calcula el espacio del texto
+    // Calcula el espacio final Y (finalY) para la firma
+    const finalY = (doc.autoTable.previous.finalY + 20) + (observaciones.length * 5); 
     doc.line(130, finalY + 20, 190, finalY + 20);
     doc.text(`Firma Dr. ${user.username}`, 130, finalY + 25);
 
