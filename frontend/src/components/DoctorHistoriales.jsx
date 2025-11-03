@@ -8,15 +8,15 @@ import Swal from 'sweetalert2';
 import HistoriaClinicaForm from './HistoriaClinicaForm';
 import './DoctorHistoriales.css'; 
 
-// --- ¡NUEVAS IMPORTACIONES PARA PDF! ---
-import jsPDF from 'jspdf';
-import 'jspdf-autotable';
-// ---
+// --- ¡CORRECCIÓN CRÍTICA DE IMPORTACIÓN DE PDF! ---
+import { jsPDF } from "jspdf"; // Importa la clase principal
+import autoTable from 'jspdf-autotable'; // Importa el plugin
+// --- FIN DE LA CORRECCIÓN ---
 
 function DoctorHistoriales() {
   const navigate = useNavigate();
-  const { user } = useAuth(); // Doctor ID
-  const { patientId } = useParams(); // ID del paciente de la URL
+  const { user } = useAuth(); 
+  const { patientId } = useParams(); 
   
   const [searchParams] = useSearchParams();
   const appointmentId = searchParams.get('citaId'); 
@@ -67,7 +67,6 @@ function DoctorHistoriales() {
   }, [apiUrl]);
 
   useEffect(() => {
-    // CORRECCIÓN CLAVE: Solo hacer fetch si patientId existe y es válido
     if (patientId && !isNaN(parseInt(patientId))) { 
       setLoading(true);
       Promise.all([
@@ -88,7 +87,6 @@ function DoctorHistoriales() {
       ? `${apiUrl}/api/doctor/patients/${patientId}/medical-records/${recordData.id}`
       : `${apiUrl}/api/doctor/patients/${patientId}/medical-records`;
 
-    // 1. VALIDACIÓN DEL FRONTEND para campos NOT NULL
     if (!user.id) {
         setIsSaving(false);
         return Swal.fire('Error', 'Debe iniciar sesión como médico para guardar.', 'error');
@@ -99,11 +97,10 @@ function DoctorHistoriales() {
     }
 
     try {
-        // 2. Construcción de los datos (Asegura que doctorId se envía correctamente)
         const dataToSend = { 
             ...recordData, 
-            doctorId: user.id, // ID del doctor (para la corrección temporal de auth)
-            ...(appointmentId && { appointment_id: appointmentId }) // Añade citaId solo si existe en la URL
+            doctorId: user.id,
+            ...(appointmentId && { appointment_id: appointmentId }) 
         }; 
 
         const response = await fetch(url, {
@@ -148,7 +145,6 @@ function DoctorHistoriales() {
         idToFinish = manualAppointmentId;
     }
 
-    // Ejecutar la finalización
     if (idToFinish) {
         try {
             const response = await fetch(`${apiUrl}/api/doctor/appointments/${idToFinish}/finish`, {
@@ -171,16 +167,16 @@ function DoctorHistoriales() {
   };
 
 
-  // --- ¡NUEVA LÓGICA DE GENERACIÓN DE PDF! ---
+  // --- ¡LÓGICA DE GENERACIÓN DE PDF CORREGIDA! ---
   const handleGeneratePDF = () => {
     if (!selectedRecord || !patientData) {
         Swal.fire('Error', 'No hay un historial seleccionado o datos del paciente para generar el PDF.', 'error');
         return;
     }
 
-    const doc = new jsPDF();
-    const R = selectedRecord; // El historial
-    const P = patientData;  // El paciente
+    const doc = new jsPDF(); // Crea una nueva instancia
+    const R = selectedRecord; 
+    const P = patientData;  
 
     // 1. Título y Header
     doc.setFontSize(20);
@@ -189,13 +185,14 @@ function DoctorHistoriales() {
     doc.text(`Fecha de Emisión: ${new Date().toLocaleDateString()}`, 200, 28, { align: 'right' });
     doc.text(`Registro #: ${R.registro || 'N/A'}`, 20, 28);
     doc.setLineWidth(0.5);
-    doc.line(20, 30, 190, 30); // Línea divisoria
+    doc.line(20, 30, 190, 30); 
 
     // 2. Datos del Paciente (Ficha de Identificación)
     doc.setFontSize(14);
     doc.text("Ficha de Identificación del Paciente", 20, 40);
     doc.setFontSize(10);
-    doc.autoTable({
+    // ¡CORRECCIÓN! Usamos autoTable (del plugin importado) en la instancia 'doc'
+    autoTable(doc, { 
         startY: 45,
         theme: 'plain',
         body: [
@@ -210,10 +207,10 @@ function DoctorHistoriales() {
 
     // 3. Detalles de la Consulta
     doc.setFontSize(14);
-    doc.text("Detalles de la Consulta", 20, doc.autoTable.previous.finalY + 10);
+    doc.text("Detalles de la Consulta", 20, (doc).autoTable.previous.finalY + 10);
     doc.setFontSize(10);
-    doc.autoTable({
-        startY: doc.autoTable.previous.finalY + 15,
+    autoTable(doc, {
+        startY: (doc).autoTable.previous.finalY + 15,
         theme: 'striped',
         head: [['Concepto', 'Descripción']],
         body: [
@@ -225,9 +222,9 @@ function DoctorHistoriales() {
 
     // 4. Antecedentes Patológicos
     doc.setFontSize(14);
-    doc.text("Antecedentes Personales Patológicos", 20, doc.autoTable.previous.finalY + 10);
-    doc.autoTable({
-        startY: doc.autoTable.previous.finalY + 15,
+    doc.text("Antecedentes Personales Patológicos", 20, (doc).autoTable.previous.finalY + 10);
+    autoTable(doc, {
+        startY: (doc).autoTable.previous.finalY + 15,
         theme: 'striped',
         head: [['Tipo', 'Detalles']],
         body: [
@@ -246,9 +243,9 @@ function DoctorHistoriales() {
 
     // 5. Antecedentes No Patológicos
     doc.setFontSize(14);
-    doc.text("Antecedentes Personales No Patológicos", 20, doc.autoTable.previous.finalY + 10);
-    doc.autoTable({
-        startY: doc.autoTable.previous.finalY + 15,
+    doc.text("Antecedentes Personales No Patológicos", 20, (doc).autoTable.previous.finalY + 10);
+    autoTable(doc, {
+        startY: (doc).autoTable.previous.finalY + 15,
         theme: 'striped',
         head: [['Tipo', 'Detalles']],
         body: [
@@ -262,15 +259,13 @@ function DoctorHistoriales() {
 
     // 6. Observaciones
     doc.setFontSize(14);
-    doc.text("Observaciones Generales / Diagnóstico", 20, doc.autoTable.previous.finalY + 10);
+    doc.text("Observaciones Generales / Diagnóstico", 20, (doc).autoTable.previous.finalY + 10);
     doc.setFontSize(10);
-    // Usamos text() para párrafos largos con ajuste de línea
     const observaciones = doc.splitTextToSize(R.observaciones_generales || 'Sin observaciones.', 170);
-    doc.text(observaciones, 20, doc.autoTable.previous.finalY + 18);
+    doc.text(observaciones, 20, (doc).autoTable.previous.finalY + 18);
 
     // 7. Firma (Placeholder)
-    // Calcula el espacio final Y (finalY) para la firma
-    const finalY = (doc.autoTable.previous.finalY + 20) + (observaciones.length * 5); 
+    const finalY = (doc).autoTable.previous.finalY + 20 + (observaciones.length * 5); 
     doc.line(130, finalY + 20, 190, finalY + 20);
     doc.text(`Firma Dr. ${user.username}`, 130, finalY + 25);
 
