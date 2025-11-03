@@ -1,8 +1,9 @@
-// Contenido COMPLETO y DEFINITIVO para frontend/src/App.jsx (CON ANALYTICS)
+// Contenido COMPLETO y DEFINITIVO para frontend/src/App.jsx (CON ANALYTICS Y SPEED INSIGHTS)
 
 import React from 'react';
 import { Routes, Route } from 'react-router-dom';
-import { Analytics } from '@vercel/analytics/react'; // <-- 1. AÑADIR ESTA LÍNEA
+import { Analytics } from '@vercel/analytics/react';           // <-- 1. Analytics
+import { SpeedInsights } from '@vercel/speed-insights/react'; // <-- 2. SPEED INSIGHTS (Importación correcta)
 
 // Vistas Públicas
 import WelcomePage from './components/WelcomePage';
@@ -21,7 +22,7 @@ import DoctorLayout from './components/DoctorLayout';
 // --- Páginas de Admin ---
 import GestionMedicos from './components/GestionMedicos';
 import GestionCitas from './components/GestionCitas';
-// import Facturacion from './components/Facturacion'; // Si existe
+// import Facturacion from './components/Facturacion';
 
 // --- Páginas de Usuario ---
 import UserDashboard from './components/UserDashboard';
@@ -40,9 +41,10 @@ import DoctorPatients from './components/DoctorPatients';
 
 function App() {
   return (
-    // Añadimos un Fragment (<>) para poder poner Routes y Analytics
     <>
       <Routes>
+        {/* ... (Todas tus rutas <Route ... /> van aquí) ... */}
+        
         {/* --- RUTA PÚBLICA / LAYOUT DE AUTENTICACIÓN --- */}
         <Route path="/" element={<WelcomePage />}>
           <Route path="login" element={<Login />} />
@@ -84,9 +86,12 @@ function App() {
 
       </Routes>
       
-      <Analytics /> {/* <-- 2. AÑADIR ESTA LÍNEA (al final, dentro del Fragment) */}
+      <Analytics />       {/* <-- Componente de Analytics */}
+      <SpeedInsights /> {/* <-- 3. AÑADE EL COMPONENTE AQUÍ */}
     </>
   );
 }
 
 export default App;
+
+// RE-SYNC ANALYTICS
