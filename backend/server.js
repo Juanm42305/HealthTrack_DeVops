@@ -168,12 +168,13 @@ app.put('/api/profile/doctor/:userId', async (req, res) => {
   try {
     const query = `
       UPDATE doctor_profiles
-      SET nombres = $1, primer_apellido = $2, segundo_apellido = $3, edad = $4, fecha_nacimiento = $5, numero_cedula = $6, 
-          tipo_de_sangre = $7, direccion_residencia = $8, especialidad = $9, consultorio = $10, sede = $11
+      SET nombres = $1, primer_apellido = $2, segundo_apellido = $3, edad = $4, 
+          fecha_nacimiento = $5, numero_cedula = $6, especialidad = $7, consultorio = $8, sede = $9,
+          tipo_de_sangre = $10, direccion_residencia = $11 
       WHERE user_id = $12
       RETURNING *
     `;
-    const values = [nombres, primer_apellido, segundo_apellido, edad, fecha_nacimiento, numero_cedula, tipo_de_sangre, direccion_residencia, especialidad, consultorio, sede, userId];
+    const values = [nombres, primer_apellido, segundo_apellido, edad, fecha_nacimiento, numero_cedula, especialidad, consultorio, sede, tipo_de_sangre, direccion_residencia, userId];
     const updatedProfile = await pool.query(query, values);
     if (updatedProfile.rows.length === 0) return res.status(404).json({ error: "Perfil no encontrado para actualizar." });
     res.json(updatedProfile.rows[0]);
@@ -436,7 +437,6 @@ app.get('/api/my-appointments/:patientId', async (req, res) => {
   }
 });
 
-// --- ¡ESTE ES EL BLOQUE CORREGIDO! ---
 app.put('/api/appointments/book/:id', async (req, res) => {
   const { id } = req.params;
   const { patient_id, description } = req.body;
@@ -466,12 +466,15 @@ app.post('/api/doctor/schedule-procedure', async (req, res) => {
   }
 });
 
+// --- RUTA /api/doctor/my-appointments/:doctorId (CORREGIDA) ---
 app.get('/api/doctor/my-appointments/:doctorId', async (req, res) => {
   const { doctorId } = req.params;
   try {
+    // --- CORRECCIÓN CRÍTICA: AÑADIR a.patient_id ---
     const query = `
       SELECT 
         a.id, 
+        a.patient_id, -- <--- ¡ESTA LÍNEA FALTABA Y CAUSABA EL 'UNDEFINED'!
         a.appointment_time, 
         a.sede, 
         a.status, 
@@ -484,7 +487,11 @@ app.get('/api/doctor/my-appointments/:doctorId', async (req, res) => {
         AND a.status = 'agendada'
       ORDER BY a.appointment_time ASC;
     `;
+    // --- FIN CORRECCIÓN ---
+
+    console.log(`[Backend Debug] Buscando citas agendadas para Dr.${doctorId} (SIN filtro de tiempo)`); // Log de debug
     const result = await pool.query(query, [doctorId]);
+    console.log(`[Backend Debug] Encontradas ${result.rows.length} citas.`); // Log de debug
     res.json(result.rows);
   } catch (err) {
     console.error('[Backend] Error al obtener citas del médico (sin filtro tiempo):', err.message);
@@ -550,7 +557,6 @@ app.get('/api/doctor/patients/search', async (req, res) => {
 // Ruta para obtener el perfil completo de un paciente específico
 app.get('/api/doctor/patients/:patientId/profile', async (req, res) => {
   const { patientId } = req.params;
-  // Rol Paciente: 'usuario'
   try {
     const result = await pool.query(
       `SELECT
@@ -559,7 +565,7 @@ app.get('/api/doctor/patients/:patientId/profile', async (req, res) => {
           pp.* -- Selecciona todas las columnas del perfil del paciente
         FROM users u
         JOIN patient_profiles pp ON u.id = pp.user_id
-        WHERE u.id = $1 AND u.role = 'usuario'`, // <-- CONSULTA LIMPIA
+        WHERE u.id = $1 AND u.role = 'usuario'`, // <-- Rol 'usuario'
       [patientId]
     );
     if (result.rows.length === 0) {
