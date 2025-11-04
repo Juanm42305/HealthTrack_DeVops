@@ -19,23 +19,6 @@ function UserDashboard() {
       confirmButtonText: 'Entendido'
     });
   };
-  <button 
-  style={{
-    backgroundColor: '#e74c3c', /* Rojo */
-    color: 'white', 
-    padding: '1rem', 
-    margin: '2rem',
-    border: 'none',
-    borderRadius: '8px',
-    cursor: 'pointer'
-  }}
-  onClick={() => { 
-    // Esto forzará un error que Sentry debe capturar
-    throw new Error("¡Prueba de Sentry desde Vercel! - " + new Date().toISOString()); 
-  }}
->
-  FORZAR ERROR DE PRUEBA SENTRY
-</button>
 
   // --- ¡DISEÑO SIMPLIFICADO! ---
   // Se eliminó el <header> y el botón "Volver"
@@ -54,9 +37,26 @@ function UserDashboard() {
           <div className="widget user-widget">
             <FaCalendarPlus className="widget-icon" />
             <h3>Agendar Nueva Cita</h3>
+            
             <p>Busca y reserva un horario disponible con nuestros especialistas.</p>
           </div>
         </Link>
+
+        {/* ¡CAMBIO AQUÍ! Convertido a Link */}
+        <Link to="/user/resultados" className="widget-link">
+          <div className="widget user-widget">
+            <FaFileDownload className="widget-icon" />
+            <h3>Descargar Resultados</h3>
+            <p>Accede a los resultados de tus exámenes de laboratorio y estudios.</p>
+          </div>
+        </Link>
+
+        <div className="widget user-widget" onClick={() => handleComingSoon('Mis Facturas')}>
+          <FaFileInvoice className="widget-icon" />
+          <h3>Mis Facturas</h3>
+          <p>Consulta y descarga tus facturas y estados de cuenta.</p>
+          <button className="widget-button-placeholder">Próximamente</button>
+        </div>
 
         <Link to="/user/mis-citas" className="widget-link">
           <div className="widget user-widget">
