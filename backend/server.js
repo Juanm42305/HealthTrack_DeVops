@@ -1,4 +1,5 @@
 // Contenido COMPLETO y CORREGIDO FINAL para backend/server.js
+// (INCLUYE LAS 3 NUEVAS RUTAS DE LABORATORIO)
 
 const express = require('express');
 const cors = require('cors');
@@ -144,6 +145,20 @@ app.post('/api/profile/patient/:userId/avatar', upload.single('avatar'), async (
   }
 });
 
+// --- (NUEVO) RUTA DEL PACIENTE PARA VER SUS RESULTADOS ---
+app.get('/api/patient/:patientId/my-results', async (req, res) => {
+  const { patientId } = req.params;
+  try {
+    const query = "SELECT * FROM lab_results WHERE patient_id = $1 ORDER BY created_at DESC";
+    const results = await pool.query(query, [patientId]);
+    res.json(results.rows);
+  } catch (err) {
+    console.error('Error al obtener mis resultados:', err.message);
+    res.status(500).json({ error: "Error en el servidor." });
+  }
+});
+
+
 // --- RUTAS PARA PERFIL DE MÉDICO ---
 app.get('/api/profile/doctor/:userId', async (req, res) => {
   const { userId } = req.params;
@@ -283,6 +298,70 @@ app.delete('/api/admin/doctors/:id', async (req, res) => {
     res.status(500).json({ error: "Error en el servidor al eliminar al médico." });
   } finally {
     client.release();
+  }
+});
+
+// --- (NUEVO) RUTA ADMIN PARA SUBIR RESULTADOS (ADAPTADA A TU TABLA) ---
+app.post('/api/admin/lab-results', upload.single('file'), async (req, res) => {
+  // 'file' debe coincidir con el nombre del campo en el formulario de React
+  
+  // Obtenemos los datos del formulario
+  const { 
+    patient_id,   // (Requerido) A quién pertenece
+    admin_id,     // (Requerido) Quién lo subió
+    test_name,    // (Requerido) Tu columna (en lugar de 'title')
+    description,  // (Nuevo)
+    doctor_id,    // (Opcional) Tu columna
+    appointment_id // (Opcional) Tu columna
+  } = req.body;
+  
+  if (!req.file) {
+    return res.status(400).json({ error: 'No se subió ningún archivo.' });
+  }
+  if (!patient_id || !admin_id || !test_name) {
+    return res.status(400).json({ error: 'Faltan campos (patient_id, admin_id, test_name).' });
+  }
+
+  // Hacemos opcionales el doctor y la cita
+  const doctorIdOrNull = doctor_id || null;
+  const appointmentIdOrNull = appointment_id || null;
+
+  try {
+    // 1. Subir el archivo a Cloudinary
+    const result = await cloudinary.uploader.upload(req.file.path, {
+      folder: 'healthtrack_lab_results',
+      resource_type: 'auto' // Detecta si es PDF, imagen, etc.
+    });
+
+    const file_url = result.secure_url;
+    const file_name_original = req.file.originalname; // (Nuevo)
+    const file_type = result.format; // 'pdf', 'jpg', etc.
+
+    // 2. Guardar en tu base de datos (con la estructura COMPLETA)
+    // NOTA: Asumimos que tu tabla YA tiene la columna 'created_at' como en la foto
+    const query = `
+      INSERT INTO lab_results 
+        (patient_id, admin_id, test_name, description, file_url, file_name, file_type, doctor_id, appointment_id, created_at)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, NOW())
+      RETURNING *
+    `;
+    const newResult = await pool.query(query, [
+      patient_id, 
+      admin_id, 
+      test_name, 
+      description, 
+      file_url, 
+      file_name_original, // file_name
+      file_type, 
+      doctorIdOrNull,     // doctor_id
+      appointmentIdOrNull // appointment_id
+    ]);
+
+    res.status(201).json(newResult.rows[0]);
+  
+  } catch (err) {
+    console.error('Error al subir resultado de lab:', err.message);
+    res.status(500).json({ error: 'Error en el servidor al subir el archivo.' });
   }
 });
 
@@ -575,6 +654,19 @@ app.get('/api/doctor/patients/:patientId/profile', async (req, res) => {
   } catch (err) {
     console.error(`[Backend] Error al obtener perfil del paciente ${patientId}:`, err.message);
     res.status(500).json({ error: 'Error interno del servidor al obtener el perfil del paciente.' });
+  }
+});
+
+// --- (NUEVO) RUTA DEL MÉDICO PARA VER RESULTADOS DE UN PACIENTE ---
+app.get('/api/doctor/patients/:patientId/lab-results', async (req, res) => {
+  const { patientId } = req.params;
+  try {
+    const query = "SELECT * FROM lab_results WHERE patient_id = $1 ORDER BY created_at DESC";
+    const results = await pool.query(query, [patientId]);
+    res.json(results.rows);
+  } catch (err) {
+    console.error('Error al obtener resultados del paciente (doctor):', err.message);
+    res.status(500).json({ error: "Error en el servidor." });
   }
 });
 
