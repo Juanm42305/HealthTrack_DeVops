@@ -1,10 +1,11 @@
 // Contenido COMPLETO y CORREGIDO para frontend/src/components/MisFacturas.jsx
+// (Esta versión NO usa loadStripe y arregla el error 'match')
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react'; // <--- Añadido useCallback
 import { useAuth } from '../context/AuthContext';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import Swal from 'sweetalert2';
-// ¡YA NO SE IMPORTA loadStripe!
+// ¡loadStripe ha sido ELIMINADO!
 import { FaFileInvoiceDollar, FaCheckCircle, FaExclamationTriangle, FaArrowLeft } from 'react-icons/fa';
 import './MisFacturas.css';
 
@@ -34,6 +35,7 @@ function MisFacturas() {
 
   // Cargar las facturas del paciente
   const fetchInvoices = useCallback(async () => {
+    // ¡Verificación añadida! No hacer nada si el usuario no ha cargado.
     if (!user?.id) return;
 
     setLoading(true);
@@ -50,11 +52,11 @@ function MisFacturas() {
     } finally {
       setLoading(false);
     }
-  }, [user]); // Añadimos 'user' como dependencia
+  }, [user]); // Depende del 'user'
 
   useEffect(() => {
     fetchInvoices();
-  }, [fetchInvoices]); // Usamos el callback aquí
+  }, [fetchInvoices]);
 
   // --- ¡LÓGICA DE PAGO CORREGIDA! ---
   const handlePayment = async (invoiceId) => {
