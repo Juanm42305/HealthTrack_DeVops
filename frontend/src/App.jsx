@@ -1,5 +1,5 @@
-// Contenido COMPLETO y CORREGIDO para frontend/src/App.jsx
-// (Se re-añade la ruta /doctor/resultados)
+// Contenido COMPLETO y DEFINITIVO para frontend/src/App.jsx
+// (Con TODAS las rutas: Laboratorio, Facturación y correcciones)
 
 import React from 'react';
 import { Routes, Route } from 'react-router-dom';
@@ -24,14 +24,15 @@ import DoctorLayout from './components/DoctorLayout';
 import GestionMedicos from './components/GestionMedicos';
 import GestionCitas from './components/GestionCitas';
 import GestionLaboratorio from './components/GestionLaboratorio';
-// import Facturacion from './components/Facturacion';
+import Facturacion from './components/Facturacion'; // ¡Ruta de Facturación Admin!
 
 // --- Páginas de Usuario ---
 import UserDashboard from './components/UserDashboard';
 import Profile from './components/Profile';
 import MisCitas from './components/MisCitas';
 import AgendarCita from './components/AgendarCita';
-import MisResultados from './components/MisResultados'; 
+import MisResultados from './components/MisResultados';
+import MisFacturas from './components/MisFacturas'; // ¡Ruta de Facturación Paciente!
 
 // --- Páginas de Médico ---
 import DoctorDashboard from './components/DoctorDashboard';
@@ -64,7 +65,7 @@ function App() {
           <Route path="gestion-medicos" element={<GestionMedicos />} />
           <Route path="gestion-citas" element={<GestionCitas />} />
           <Route path="laboratorio" element={<GestionLaboratorio />} />
-          {/* <Route path="facturacion" element={<Facturacion />} /> */}
+          <Route path="facturacion" element={<Facturacion />} /> {/* <-- RUTA AÑADIDA */}
         </Route>
 
         {/* Rutas de Usuario */}
@@ -74,6 +75,7 @@ function App() {
           <Route path="mis-citas" element={<MisCitas />} />
           <Route path="agendar-cita" element={<AgendarCita />} />
           <Route path="resultados" element={<MisResultados />} />
+          <Route path="mis-facturas" element={<MisFacturas />} /> {/* <-- RUTA AÑADIDA */}
         </Route>
 
         {/* Rutas de Médico */}
@@ -86,10 +88,8 @@ function App() {
           <Route path="historiales" element={<DoctorHistoriales />} />
           <Route path="diagnosticos" element={<DoctorDiagnosticos />} />
           
-          {/* --- ¡AQUÍ ESTÁ LA CORRECCIÓN! --- */}
-          {/* Ruta de la barra lateral (para buscar) */}
+          {/* Rutas de Resultados Corregidas */}
           <Route path="resultados" element={<DoctorResultados />} />
-          {/* Ruta del modal (para ver directo) */}
           <Route path="pacientes/:patientId/resultados" element={<DoctorResultados />} />
         </Route>
 

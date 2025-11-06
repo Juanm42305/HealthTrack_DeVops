@@ -1,8 +1,9 @@
-// Contenido COMPLETO y FINAL para frontend/src/components/GestionMedicos.jsx
+// Contenido COMPLETO y CORREGIDO para frontend/src/components/GestionMedicos.jsx
+// (Con la función 'handleSaveMedico' AÑADIDA)
 
 import React, { useState, useEffect } from 'react';
 import Swal from 'sweetalert2';
-import { FaUserEdit, FaArrowLeft, FaPlusCircle, FaTrashAlt } from 'react-icons/fa'; // Añadir FaTrashAlt
+import { FaUserEdit, FaArrowLeft, FaPlusCircle, FaTrashAlt } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 import EditMedicoModal from './EditMedicoModal'; 
 import { useMedicos } from '../context/MedicoContext'; 
@@ -24,6 +25,33 @@ function GestionMedicos() {
       setLoading(false);
     }
   }, [fetchMedicos]);
+
+
+  // --- ¡AÑADIDO! ESTA ES LA LÓGICA DE GUARDADO QUE FALTABA ---
+  const handleSaveMedico = async (formData) => {
+    const apiUrl = import.meta.env.VITE_API_URL;
+    // Usamos el 'user_id' del médico para la URL de la API
+    try {
+      const response = await fetch(`${apiUrl}/api/admin/doctors/${formData.user_id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData), // Enviamos todos los datos del formulario
+      });
+
+      if (response.ok) {
+        Swal.fire('¡Éxito!', 'Perfil del médico actualizado.', 'success');
+        setSelectedMedico(null); // Cierra el modal
+        fetchMedicos(); // Refresca la lista de médicos en la tabla
+      } else {
+        const errorData = await response.json();
+        Swal.fire('Error', errorData.error || 'No se pudo actualizar el perfil.', 'error');
+      }
+    } catch (error) {
+      console.error("Error al guardar médico:", error);
+      Swal.fire('Error de Red', 'No se pudo conectar con el servidor.', 'error');
+    }
+  };
+  // --- FIN DE LA LÓGICA AÑADIDA ---
 
 
   // --- LÓGICA PARA ELIMINAR MÉDICO ---
@@ -135,8 +163,7 @@ function GestionMedicos() {
         <EditMedicoModal
           medico={selectedMedico}
           onClose={() => setSelectedMedico(null)}
-          onSave={handleSaveMedico}
-          // Revisa si necesitas pasar onSave aquí o manejar la lógica de guardado directamente en GestionMedicos
+          onSave={handleSaveMedico} // <-- ¡AHORA ESTO FUNCIONA!
         />
       )}
     </div>

@@ -1,30 +1,29 @@
-// Contenido COMPLETO para frontend/src/components/UserLayout.jsx
-
+// Contenido COMPLETO y ACTUALIZADO para frontend/src/components/UserLayout.jsx
 import React from 'react';
 import { Link, Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { FaTachometerAlt, FaUser, FaCalendarCheck, FaSignOutAlt } from 'react-icons/fa';
-import './UserLayout.css'; // Crearemos este archivo CSS
+// --- ¡Añade FaFileInvoiceDollar! ---
+import { FaTachometerAlt, FaUser, FaCalendarCheck, FaSignOutAlt, FaFileInvoiceDollar } from 'react-icons/fa';
+import './UserLayout.css'; 
 
 function UserLayout() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
-  const location = useLocation(); // Para saber qué enlace está activo
+  const location = useLocation(); 
 
   const handleLogout = () => {
     logout();
     navigate('/');
   };
 
-  // Función para ver si el enlace está activo
   const isLinkActive = (path) => {
     return location.pathname === path;
   };
 
   return (
     <div className="user-layout-container">
-      {/* --- ESTA ES LA ÚNICA BARRA LATERAL --- */}
       <aside className="user-sidebar">
+        {/* ... (header y profile info) ... */}
         <div className="sidebar-header">
           <h3>💙 HealthTrack</h3>
         </div>
@@ -56,9 +55,17 @@ function UserLayout() {
           >
             <FaCalendarCheck /> <span>Mis Citas</span>
           </Link>
-          {/* Puedes añadir más enlaces aquí, como "Agendar Cita" */}
+          
+          {/* --- ¡AÑADE ESTE LINK! --- */}
+          <Link 
+            to="/user/mis-facturas" 
+            className={`nav-link ${isLinkActive('/user/mis-facturas') ? 'active' : ''}`}
+          >
+            <FaFileInvoiceDollar /> <span>Mis Facturas</span>
+          </Link>
         </nav>
 
+        {/* ... (sidebar footer) ... */}
         <div className="sidebar-footer">
           <button onClick={handleLogout} className="logout-button">
             <FaSignOutAlt /> <span>Cerrar Sesión</span>
@@ -66,9 +73,7 @@ function UserLayout() {
         </div>
       </aside>
 
-      {/* --- ÁREA DE CONTENIDO PRINCIPAL --- */}
       <main className="user-main-content">
-        {/* Aquí es donde se cargarán Profile.jsx, MisCitas.jsx, etc. */}
         <Outlet />
       </main>
     </div>

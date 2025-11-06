@@ -1,0 +1,89 @@
+/* Contenido COMPLETO para frontend/src/components/MisFacturas.css */
+.mis-facturas-page {
+  background-color: #f4f7fa;
+  min-height: 100vh;
+}
+.mis-facturas-container {
+  padding: 2.5rem;
+  max-width: 900px;
+  margin: 0 auto;
+}
+.mis-facturas-container h1 {
+  font-size: 2rem;
+  color: #2c3e50;
+  border-bottom: 2px solid #4f46e5;
+  padding-bottom: 0.5rem;
+  margin-bottom: 1.5rem;
+}
+.no-facturas-text {
+  font-size: 1.1rem;
+  color: #7f8c8d;
+}
+
+.facturas-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+.factura-card {
+  background: #fff;
+  border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  display: flex;
+  align-items: center;
+  padding: 1.5rem;
+  gap: 1.5rem;
+  border-left: 5px solid #ccc;
+}
+/* Colores de estado */
+.factura-card.pending { border-left-color: #f39c12; }
+.factura-card.paid { border-left-color: #28a745; }
+
+.factura-icon {
+  font-size: 2rem;
+}
+.factura-card.pending .factura-icon { color: #f39c12; }
+.factura-card.paid .factura-icon { color: #28a745; }
+
+.factura-details {
+  flex-grow: 1;
+}
+.factura-details h4 {
+  margin: 0 0 0.25rem 0;
+  font-size: 1.2rem;
+  color: #333;
+}
+.factura-details p {
+  margin: 0;
+  font-size: 1rem;
+  color: #555;
+}
+.factura-date {
+  font-size: 0.8rem;
+  color: #7f8c8d;
+  margin-top: 0.25rem;
+  display: block;
+}
+
+.factura-action {
+  flex-shrink: 0;
+}
+.btn-pagar {
+  background: #e74c3c;
+  color: white;
+  border: none;
+  padding: 0.7rem 1.3rem;
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.btn-pagar:hover { background: #c0392b; }
+.btn-pagar:disabled { background: #95a5a6; }
+
+.status-paid {
+  font-weight: 600;
+  color: #28a745;
+  font-size: 1rem;
+}

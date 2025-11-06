@@ -1,5 +1,5 @@
-// Contenido COMPLETO y CORREGIDO FINAL para backend/server.js
-// (INCLUYE LAS 3 NUEVAS RUTAS DE LABORATORIO)
+// Contenido COMPLETO y DEFINITIVO para backend/server.js
+// (INCLUYE Laboratorio + Facturación + Stripe + Webhooks)
 
 const express = require('express');
 const cors = require('cors');
@@ -7,6 +7,8 @@ const { Pool } = require('pg');
 const bcrypt = require('bcrypt');
 const multer = require('multer'); 
 const cloudinary = require('cloudinary').v2; 
+// --- ¡NUEVO! IMPORTAR STRIPE ---
+const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -30,6 +32,48 @@ const pool = new Pool({
 });
 
 app.use(cors());
+
+// --- ¡IMPORTANTE! RUTA DE WEBHOOK DE STRIPE ---
+// Esta ruta debe ir ANTES de express.json()
+app.post('/api/billing/webhook', express.raw({type: 'application/json'}), async (req, res) => {
+  const sig = req.headers['stripe-signature'];
+  const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET;
+  let event;
+
+  try {
+    event = stripe.webhooks.constructEvent(req.body, sig, endpointSecret);
+  } catch (err) {
+    console.log(`❌ Webhook Error: ${err.message}`);
+    return res.status(400).send(`Webhook Error: ${err.message}`);
+  }
+
+  // Handle the event
+  if (event.type === 'checkout.session.completed') {
+    const session = event.data.object;
+    
+    // El ID de nuestra factura lo pasamos en 'client_reference_id'
+    const invoiceId = session.client_reference_id;
+    const stripePaymentIntentId = session.payment_intent;
+
+    if (invoiceId) {
+      try {
+        // Actualizar la factura en nuestra base de datos
+        await pool.query(
+          "UPDATE invoices SET status = 'paid', stripe_payment_intent_id = $1 WHERE id = $2",
+          [stripePaymentIntentId, invoiceId]
+        );
+        console.log(`✅ Factura ${invoiceId} marcada como pagada.`);
+      } catch (err) {
+        console.error(`Error al actualizar factura ${invoiceId}:`, err.message);
+      }
+    }
+  }
+
+  // Return a 200 response to acknowledge receipt of the event
+  res.json({received: true});
+});
+
+
 app.use(express.json());
 
 // --- RUTA DE PRUEBA ---
@@ -145,7 +189,7 @@ app.post('/api/profile/patient/:userId/avatar', upload.single('avatar'), async (
   }
 });
 
-// --- (NUEVO) RUTA DEL PACIENTE PARA VER SUS RESULTADOS ---
+// (PACIENTE) Obtiene solo SUS resultados de laboratorio
 app.get('/api/patient/:patientId/my-results', async (req, res) => {
   const { patientId } = req.params;
   try {
@@ -157,6 +201,19 @@ app.get('/api/patient/:patientId/my-results', async (req, res) => {
     res.status(500).json({ error: "Error en el servidor." });
   }
 });
+
+// (PACIENTE) Obtiene solo SUS facturas
+app.get('/api/patient/:patientId/my-invoices', async (req, res) => {
+    const { patientId } = req.params;
+    try {
+      const query = "SELECT * FROM invoices WHERE user_id = $1 ORDER BY id DESC";
+      const result = await pool.query(query, [patientId]);
+      res.json(result.rows);
+    } catch (err) {
+      console.error('Error al obtener mis facturas:', err.message);
+      res.status(500).json({ error: 'Error en el servidor.' });
+    }
+  });
 
 
 // --- RUTAS PARA PERFIL DE MÉDICO ---
@@ -301,18 +358,10 @@ app.delete('/api/admin/doctors/:id', async (req, res) => {
   }
 });
 
-// --- (NUEVO) RUTA ADMIN PARA SUBIR RESULTADOS (ADAPTADA A TU TABLA) ---
+// (ADMIN) Ruta para subir resultados de laboratorio
 app.post('/api/admin/lab-results', upload.single('file'), async (req, res) => {
-  // 'file' debe coincidir con el nombre del campo en el formulario de React
-  
-  // Obtenemos los datos del formulario
   const { 
-    patient_id,   // (Requerido) A quién pertenece
-    admin_id,     // (Requerido) Quién lo subió
-    test_name,    // (Requerido) Tu columna (en lugar de 'title')
-    description,  // (Nuevo)
-    doctor_id,    // (Opcional) Tu columna
-    appointment_id // (Opcional) Tu columna
+    patient_id, admin_id, test_name, description, doctor_id, appointment_id
   } = req.body;
   
   if (!req.file) {
@@ -322,23 +371,19 @@ app.post('/api/admin/lab-results', upload.single('file'), async (req, res) => {
     return res.status(400).json({ error: 'Faltan campos (patient_id, admin_id, test_name).' });
   }
 
-  // Hacemos opcionales el doctor y la cita
   const doctorIdOrNull = doctor_id || null;
   const appointmentIdOrNull = appointment_id || null;
 
   try {
-    // 1. Subir el archivo a Cloudinary
     const result = await cloudinary.uploader.upload(req.file.path, {
       folder: 'healthtrack_lab_results',
-      resource_type: 'auto' // Detecta si es PDF, imagen, etc.
+      resource_type: 'auto'
     });
 
     const file_url = result.secure_url;
-    const file_name_original = req.file.originalname; // (Nuevo)
-    const file_type = result.format; // 'pdf', 'jpg', etc.
+    const file_name_original = req.file.originalname;
+    const file_type = result.format; 
 
-    // 2. Guardar en tu base de datos (con la estructura COMPLETA)
-    // NOTA: Asumimos que tu tabla YA tiene la columna 'created_at' como en la foto
     const query = `
       INSERT INTO lab_results 
         (patient_id, admin_id, test_name, description, file_url, file_name, file_type, doctor_id, appointment_id, created_at)
@@ -346,15 +391,9 @@ app.post('/api/admin/lab-results', upload.single('file'), async (req, res) => {
       RETURNING *
     `;
     const newResult = await pool.query(query, [
-      patient_id, 
-      admin_id, 
-      test_name, 
-      description, 
-      file_url, 
-      file_name_original, // file_name
-      file_type, 
-      doctorIdOrNull,     // doctor_id
-      appointmentIdOrNull // appointment_id
+      patient_id, admin_id, test_name, description, 
+      file_url, file_name_original, file_type, 
+      doctorIdOrNull, appointmentIdOrNull
     ]);
 
     res.status(201).json(newResult.rows[0]);
@@ -364,6 +403,47 @@ app.post('/api/admin/lab-results', upload.single('file'), async (req, res) => {
     res.status(500).json({ error: 'Error en el servidor al subir el archivo.' });
   }
 });
+
+// (ADMIN) Crea una factura PENDIENTE en la base de datos
+app.post('/api/admin/create-invoice', async (req, res) => {
+    const { user_id, amount, description, appointment_id } = req.body;
+    // El monto debe venir en CENTAVOS desde el frontend (ej: 10990000)
+    const amountInCents = parseInt(amount, 10); 
+    
+    if (!user_id || !amountInCents || !description) {
+      return res.status(400).json({ error: 'user_id, amount (en centavos) y description son requeridos.' });
+    }
+  
+    try {
+      const query = `
+        INSERT INTO invoices (user_id, amount, description, status, appointment_id)
+        VALUES ($1, $2, $3, 'pending', $4)
+        RETURNING *
+      `;
+      const newInvoice = await pool.query(query, [user_id, amountInCents, description, appointment_id || null]);
+      res.status(201).json(newInvoice.rows[0]);
+    } catch (err) {
+      console.error('Error al crear factura:', err.message);
+      res.status(500).json({ error: 'Error en el servidor.' });
+    }
+  });
+  
+  // (ADMIN) Obtiene TODAS las facturas para el reporte
+  app.get('/api/admin/all-invoices', async (req, res) => {
+      try {
+          const query = `
+              SELECT i.*, pp.nombres, pp.primer_apellido
+              FROM invoices i
+              LEFT JOIN patient_profiles pp ON i.user_id = pp.user_id
+              ORDER BY i.id DESC
+          `;
+          const result = await pool.query(query);
+          res.json(result.rows);
+      } catch (err) {
+          console.error('Error al obtener todas las facturas:', err.message);
+          res.status(500).json({ error: 'Error en el servidor.' });
+      }
+  });
 
 
 // --- RUTAS DE GESTIÓN DE CITAS ---
@@ -396,7 +476,6 @@ app.post('/api/admin/schedule/batch', async (req, res) => {
 
   const client = await pool.connect();
   try {
-    // --- ¡VERIFICACIÓN DE DUPLICIDAD AÑADIDA! ---
     const existingSlotsQuery = `
       SELECT COUNT(*) 
       FROM appointments 
@@ -410,7 +489,6 @@ app.post('/api/admin/schedule/batch', async (req, res) => {
     if (count > 0) {
       return res.status(409).json({ error: 'Ya existen horarios disponibles para este médico en esta fecha. Elimine los existentes primero.' });
     }
-    // --- FIN VERIFICACIÓN DE DUPLICIDAD ---
 
     await client.query('BEGIN');
     
@@ -423,19 +501,14 @@ app.post('/api/admin/schedule/batch', async (req, res) => {
          return res.status(400).json({ error: 'La hora de fin debe ser posterior a la hora de inicio.' });
     }
 
-    console.log(`[Backend] Generando slots para Dr.${doctor_id} en ${selectedDateStr} de ${startTime} a ${endTime} cada ${intervalMinutes} min.`);
-
     for (let currentTime = new Date(startDateTime); currentTime < endDateTime; currentTime.setUTCMinutes(currentTime.getUTCMinutes() + intervalMinutes)) {
       
       const appointment_time_iso = currentTime.toISOString(); 
-      
       const currentHour = currentTime.getUTCHours();
       if (currentHour < parseInt(startTime.split(':')[0]) || currentHour >= parseInt(endTime.split(':')[0])) {
-          console.warn(`[Backend] Omitiendo slot fuera de rango: ${appointment_time_iso}`);
           continue; 
       }
 
-      console.log(`[Backend] Insertando slot: ${appointment_time_iso}`);
       const query = "INSERT INTO appointments (doctor_id, appointment_time, sede, status, appointment_type) VALUES ($1, $2, $3, 'disponible', 'general')";
       await client.query(query, [parseInt(doctor_id, 10), appointment_time_iso, sede]);
     }
@@ -485,7 +558,7 @@ app.get('/api/appointments/available-times/:date', async (req, res) => {
       JOIN users u ON a.doctor_id = u.id
       JOIN doctor_profiles dp ON a.doctor_id = dp.user_id
       WHERE DATE(a.appointment_time) = $1 
-      AND a.appointment_time > NOW() -- FILTRO DE HORA FUTURA
+      AND a.appointment_time > NOW()
       ORDER BY a.appointment_time ASC;
     `;
     const result = await pool.query(query, [date]);
@@ -545,15 +618,13 @@ app.post('/api/doctor/schedule-procedure', async (req, res) => {
   }
 });
 
-// --- RUTA /api/doctor/my-appointments/:doctorId (CORREGIDA) ---
 app.get('/api/doctor/my-appointments/:doctorId', async (req, res) => {
   const { doctorId } = req.params;
   try {
-    // --- CORRECCIÓN CRÍTICA: AÑADIR a.patient_id ---
     const query = `
       SELECT 
         a.id, 
-        a.patient_id, -- <--- ¡ESTA LÍNEA FALTABA Y CAUSABA EL 'UNDEFINED'!
+        a.patient_id,
         a.appointment_time, 
         a.sede, 
         a.status, 
@@ -566,11 +637,7 @@ app.get('/api/doctor/my-appointments/:doctorId', async (req, res) => {
         AND a.status = 'agendada'
       ORDER BY a.appointment_time ASC;
     `;
-    // --- FIN CORRECCIÓN ---
-
-    console.log(`[Backend Debug] Buscando citas agendadas para Dr.${doctorId} (SIN filtro de tiempo)`); // Log de debug
     const result = await pool.query(query, [doctorId]);
-    console.log(`[Backend Debug] Encontradas ${result.rows.length} citas.`); // Log de debug
     res.json(result.rows);
   } catch (err) {
     console.error('[Backend] Error al obtener citas del médico (sin filtro tiempo):', err.message);
@@ -596,9 +663,8 @@ app.put('/api/appointments/cancel/:id', async (req, res) => {
   }
 });
 
-// --- Rutas del Módulo de Pacientes del Doctor ---
 
-// Ruta para buscar pacientes por nombre/cédula
+// --- Rutas del Módulo de Pacientes del Doctor ---
 app.get('/api/doctor/patients/search', async (req, res) => {
   const { query } = req.query;
   if (!query) {
@@ -616,7 +682,7 @@ app.get('/api/doctor/patients/search', async (req, res) => {
           pp.numero_cedula
         FROM users u
         JOIN patient_profiles pp ON u.id = pp.user_id
-        WHERE u.role = 'usuario' AND ( -- Rol corregido a 'usuario'
+        WHERE u.role = 'usuario' AND (
             LOWER(pp.nombres) LIKE $1 OR
             LOWER(pp.primer_apellido) LIKE $1 OR
             LOWER(pp.segundo_apellido) LIKE $1 OR
@@ -633,7 +699,6 @@ app.get('/api/doctor/patients/search', async (req, res) => {
   }
 });
 
-// Ruta para obtener el perfil completo de un paciente específico
 app.get('/api/doctor/patients/:patientId/profile', async (req, res) => {
   const { patientId } = req.params;
   try {
@@ -641,10 +706,10 @@ app.get('/api/doctor/patients/:patientId/profile', async (req, res) => {
       `SELECT
           u.id AS user_id,
           u.username,
-          pp.* -- Selecciona todas las columnas del perfil del paciente
+          pp.*
         FROM users u
         JOIN patient_profiles pp ON u.id = pp.user_id
-        WHERE u.id = $1 AND u.role = 'usuario'`, // <-- Rol 'usuario'
+        WHERE u.id = $1 AND u.role = 'usuario'`,
       [patientId]
     );
     if (result.rows.length === 0) {
@@ -657,7 +722,7 @@ app.get('/api/doctor/patients/:patientId/profile', async (req, res) => {
   }
 });
 
-// --- (NUEVO) RUTA DEL MÉDICO PARA VER RESULTADOS DE UN PACIENTE ---
+// (MÉDICO) Obtiene resultados de laboratorio de un paciente
 app.get('/api/doctor/patients/:patientId/lab-results', async (req, res) => {
   const { patientId } = req.params;
   try {
@@ -672,8 +737,6 @@ app.get('/api/doctor/patients/:patientId/lab-results', async (req, res) => {
 
 
 // --- Rutas del Módulo de Historiales Clínicos ---
-
-// Ruta para obtener todos los historiales de un paciente
 app.get('/api/doctor/patients/:patientId/medical-records', async (req, res) => {
   const { patientId } = req.params;
   try {
@@ -690,10 +753,8 @@ app.get('/api/doctor/patients/:patientId/medical-records', async (req, res) => {
   }
 });
 
-// Ruta para crear un nuevo historial clínico
 app.post('/api/doctor/patients/:patientId/medical-records', async (req, res) => {
   const { patientId } = req.params;
-  // --- TEMPORAL: OBTENEMOS DOCTOR ID DEL BODY HASTA IMPLEMENTAR JWT ---
   const { doctorId, appointment_id, motivo_consulta, registro, sexo, edad, habitacion, ocupacion,
     antecedentes_patologicos_cardiovasculares, antecedentes_patologicos_pulmonares,
     antecedentes_patologicos_digestivos, antecedentes_patologicos_diabetes,
@@ -704,9 +765,7 @@ app.post('/api/doctor/patients/:patientId/medical-records', async (req, res) => 
     antecedentes_no_patologicos_drogas, antecedentes_no_patologicos_inmunizaciones,
     antecedentes_no_patologicos_otros, observaciones_generales
   } = req.body;
-  // --- FIN TEMPORAL ---
 
-  // --- VALIDACIÓN CLAVE ---
   if (!doctorId || !motivo_consulta) {
       return res.status(400).json({ error: 'El ID del Doctor y el Motivo de Consulta son campos obligatorios.' });
   }
@@ -744,10 +803,8 @@ app.post('/api/doctor/patients/:patientId/medical-records', async (req, res) => 
   }
 });
 
-// Ruta para actualizar un historial clínico existente
 app.put('/api/doctor/patients/:patientId/medical-records/:recordId', async (req, res) => {
   const { patientId, recordId } = req.params;
-  // --- TEMPORAL: OBTENEMOS DOCTOR ID DEL BODY HASTA IMPLEMENTAR JWT ---
   const { doctorId, motivo_consulta, registro, sexo, edad, habitacion, ocupacion,
     antecedentes_patologicos_cardiovasculares, antecedentes_patologicos_pulmonares,
     antecedentes_patologicos_digestivos, antecedentes_patologicos_diabetes,
@@ -758,7 +815,6 @@ app.put('/api/doctor/patients/:patientId/medical-records/:recordId', async (req,
     antecedentes_no_patologicos_drogas, antecedentes_no_patologicos_inmunizaciones,
     antecedentes_no_patologicos_otros, observaciones_generales
   } = req.body;
-  // --- FIN TEMPORAL ---
 
   if (!doctorId) return res.status(401).json({ error: 'ID de Doctor requerido para actualizar el historial.' });
 
@@ -799,13 +855,9 @@ app.put('/api/doctor/patients/:patientId/medical-records/:recordId', async (req,
   }
 });
 
-
-// --- Ruta para Finalizar Cita ---
 app.put('/api/doctor/appointments/:appointmentId/finish', async (req, res) => {
   const { appointmentId } = req.params;
-  // --- TEMPORAL: OBTENEMOS DOCTOR ID DEL BODY HASTA IMPLEMENTAR JWT ---
   const { doctorId } = req.body; 
-  // --- FIN TEMPORAL ---
 
   if (!doctorId) return res.status(401).json({ error: 'ID de Doctor requerido para finalizar la cita.' });
 
@@ -828,6 +880,56 @@ app.put('/api/doctor/appointments/:appointmentId/finish', async (req, res) => {
     res.status(500).json({ error: 'Error interno del servidor al finalizar la cita.' });
   }
 });
+
+// (PACIENTE) Crea una sesión de pago de Stripe para una factura PENDIENTE
+app.post('/api/billing/create-checkout-session/:invoiceId', async (req, res) => {
+    const { invoiceId } = req.params;
+  
+    try {
+      // 1. Buscar la factura en nuestra BD
+      const invoiceResult = await pool.query("SELECT * FROM invoices WHERE id = $1", [invoiceId]);
+      if (invoiceResult.rows.length === 0) {
+        return res.status(404).json({ error: 'Factura no encontrada.' });
+      }
+      const invoice = invoiceResult.rows[0];
+  
+      // 2. No dejar pagar si ya está pagada
+      if (invoice.status === 'paid') {
+        return res.status(400).json({ error: 'Esta factura ya ha sido pagada.' });
+      }
+  
+      // 3. Crear la sesión de pago en Stripe
+      const session = await stripe.checkout.sessions.create({
+        payment_method_types: ['card'],
+        line_items: [
+          {
+            price_data: {
+              currency: 'cop', // Pesos Colombianos
+              product_data: {
+                name: invoice.description,
+              },
+              unit_amount: invoice.amount, // El monto YA debe estar en centavos
+            },
+            quantity: 1,
+          },
+        ],
+        mode: 'payment',
+        // ¡MUY IMPORTANTE! Pasamos el ID de nuestra factura
+        client_reference_id: invoice.id, 
+        // URLs a las que Stripe redirige
+        // ¡IMPORTANTE! Asegúrate de tener FRONTEND_URL en tus variables de entorno de Render
+        success_url: `${process.env.FRONTEND_URL}/user/mis-facturas?payment=success`, 
+        cancel_url: `${process.env.FRONTEND_URL}/user/mis-facturas?payment=cancelled`, 
+      });
+  
+      // 4. Devolvemos el ID de la sesión al frontend
+      res.json({ id: session.id }); // ¡Cambiado a 'id' para que stripe.js v3 funcione!
+  
+    } catch (err) {
+      console.error('Error al crear sesión de checkout:', err.message);
+      res.status(500).json({ error: 'Error en el servidor.' });
+    }
+  });
 
 
 // --- INICIAR SERVIDOR ---

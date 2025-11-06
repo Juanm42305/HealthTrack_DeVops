@@ -1,0 +1,97 @@
+/* Contenido COMPLETO y ACTUALIZADO para frontend/src/components/Facturacion.css */
+.facturacion-page {
+  padding: 2.5rem;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+.facturacion-page h1 {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #2c3e50;
+  border-bottom: 2px solid #3498db;
+  padding-bottom: 0.5rem;
+  margin-bottom: 2rem;
+}
+
+/* Grid de 2 columnas */
+.facturacion-grid {
+  display: grid;
+  grid-template-columns: 350px 1fr;
+  gap: 2rem;
+}
+
+/* Columna 1: Formulario */
+.form-container {
+  background: #fff;
+  padding: 2rem;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  height: fit-content;
+}
+.form-container h2 {
+  font-size: 1.3rem;
+  color: #34495e;
+  margin-top: 0;
+  margin-bottom: 1.5rem;
+}
+.form-group { margin-bottom: 1rem; }
+.form-group label { display: block; margin-bottom: 0.5rem; font-weight: 500; }
+.form-group input {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  box-sizing: border-box;
+}
+.btn-save {
+  width: 100%;
+  padding: 0.8rem;
+  background: #3498db;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: 1rem;
+}
+.btn-save:disabled { background: #95a5a6; }
+
+/* Columna 2: Tabla de Reporte */
+.report-container {
+  background: #fff;
+  padding: 2rem;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+.report-container h2 {
+  font-size: 1.3rem;
+  color: #34495e;
+  margin-top: 0;
+  margin-bottom: 1.5rem;
+}
+
+.facturacion-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.facturacion-table th, .facturacion-table td {
+  padding: 0.8rem 1rem;
+  text-align: left;
+  border-bottom: 1px solid #f0f0f0;
+}
+.facturacion-table th {
+  background: #f9f9f9;
+  font-size: 0.9rem;
+  color: #555;
+}
+.facturacion-table td { color: #333; }
+.invoice-status {
+  padding: 0.25rem 0.75rem;
+  border-radius: 15px;
+  font-weight: 600;
+  font-size: 0.85rem;
+  color: #fff;
+}
+.status-pending { background-color: #f39c12; }
+.status-paid { background-color: #28a745; }
