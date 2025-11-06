@@ -1,4 +1,5 @@
 // frontend/src/components/DoctorHistoriales.jsx
+// (Con la lógica de redirección CORREGIDA)
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { FaArrowLeft, FaDownload, FaCheckCircle, FaPlusCircle, FaHistory } from 'react-icons/fa';
@@ -134,7 +135,7 @@ function DoctorHistoriales() {
     }
   };
 
-  // --- Lógica de Finalizar Cita ---
+  // --- Lógica de Finalizar Cita (MODIFICADA) ---
   const handleFinishAppointment = async () => {
     let idToFinish = appointmentId; 
 
@@ -168,11 +169,14 @@ function DoctorHistoriales() {
             });
 
             if (response.ok) {
-                Swal.fire('¡Cita Finalizada!', 'La cita ha sido marcada como finalizada.', 'success');
-                // ¡CAMBIO! Ahora recargamos los historiales DESPUÉS de finalizar
-                await fetchHistoriales(patientId);
-                // Opcional: Redirigir a la lista de citas
-                // navigate('/doctor/citas'); 
+                // --- ¡CAMBIO AQUÍ! ---
+                // 1. Espera a que el usuario presione "OK"
+                await Swal.fire('¡Cita Finalizada!', 'La cita ha sido marcada como finalizada.', 'success');
+                
+                // 2. Redirige a la página de búsqueda de pacientes
+                navigate('/doctor/pacientes'); 
+                // Ya no es necesario llamar a fetchHistoriales() porque nos vamos de la página.
+                // --- FIN DEL CAMBIO ---
             } else {
                 const errorData = await response.json();
                 Swal.fire('Error', errorData.error || 'No se pudo finalizar la cita.', 'error');

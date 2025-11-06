@@ -1,4 +1,4 @@
-/* Contenido COMPLETO para frontend/src/components/MisCitas.css */
+/* Contenido COMPLETO y ACTUALIZADO para frontend/src/components/MisCitas.css */
 
 .mis-citas-container {
   padding: 2.5rem; /* Más espacio */
@@ -101,4 +101,31 @@
 
 .btn-cancelar:hover {
   background-color: #c0392b; /* Rojo más oscuro */
+}
+
+/* --- ¡NUEVO ESTILO AÑADIDO! --- */
+/* Este es el nuevo estilo para el botón "Iniciar Atención" */
+.btn-atender-cita {
+  display: flex; /* Para alinear el ícono y el texto */
+  justify-content: center; /* Centra el contenido (ícono + texto) */
+  align-items: center;
+  gap: 0.5rem;
+  
+  width: 100%; /* Ocupa todo el ancho de la tarjeta */
+  margin-top: 1rem; /* Espacio arriba */
+  
+  background-color: #3498db; /* Color azul primario */
+  color: white;
+  border: none;
+  padding: 0.8rem 1rem; /* Más cómodo para hacer clic */
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 1rem; /* Más legible */
+  font-weight: 600;
+  text-decoration: none; 
+  transition: background-color 0.2s ease;
+}
+
+.btn-atender-cita:hover {
+  background-color: #2980b9; /* Azul más oscuro */
 }
