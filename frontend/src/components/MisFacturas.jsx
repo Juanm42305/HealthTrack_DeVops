@@ -1,7 +1,7 @@
 // Contenido COMPLETO y CORREGIDO para frontend/src/components/MisFacturas.jsx
 // (Esta versión NO usa loadStripe y arregla el error 'match')
 
-import React, { useState, useEffect, useCallback } from 'react'; // <--- Añadido useCallback
+import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import Swal from 'sweetalert2';

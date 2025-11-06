@@ -33,6 +33,7 @@ const pool = new Pool({
 app.use(cors());
 
 // --- ¡IMPORTANTE! RUTA DE WEBHOOK DE STRIPE ---
+// Esta ruta debe ir ANTES de express.json()
 app.post('/api/billing/webhook', express.raw({type: 'application/json'}), async (req, res) => {
   const sig = req.headers['stripe-signature'];
   const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET;
@@ -45,13 +46,17 @@ app.post('/api/billing/webhook', express.raw({type: 'application/json'}), async 
     return res.status(400).send(`Webhook Error: ${err.message}`);
   }
 
+  // Handle the event
   if (event.type === 'checkout.session.completed') {
     const session = event.data.object;
+    
+    // El ID de nuestra factura lo pasamos en 'client_reference_id'
     const invoiceId = session.client_reference_id;
     const stripePaymentIntentId = session.payment_intent;
 
     if (invoiceId) {
       try {
+        // Actualizar la factura en nuestra base de datos
         await pool.query(
           "UPDATE invoices SET status = 'paid', stripe_payment_intent_id = $1 WHERE id = $2",
           [stripePaymentIntentId, invoiceId]
@@ -62,6 +67,8 @@ app.post('/api/billing/webhook', express.raw({type: 'application/json'}), async 
       }
     }
   }
+
+  // Return a 200 response to acknowledge receipt of the event
   res.json({received: true});
 });
 
@@ -181,6 +188,7 @@ app.post('/api/profile/patient/:userId/avatar', upload.single('avatar'), async (
   }
 });
 
+// (PACIENTE) Obtiene solo SUS resultados de laboratorio
 app.get('/api/patient/:patientId/my-results', async (req, res) => {
   const { patientId } = req.params;
   try {
@@ -193,6 +201,7 @@ app.get('/api/patient/:patientId/my-results', async (req, res) => {
   }
 });
 
+// (PACIENTE) Obtiene solo SUS facturas
 app.get('/api/patient/:patientId/my-invoices', async (req, res) => {
     const { patientId } = req.params;
     try {
@@ -348,6 +357,7 @@ app.delete('/api/admin/doctors/:id', async (req, res) => {
   }
 });
 
+// (ADMIN) Ruta para subir resultados de laboratorio
 app.post('/api/admin/lab-results', upload.single('file'), async (req, res) => {
   const { 
     patient_id, admin_id, test_name, description, doctor_id, appointment_id
@@ -393,8 +403,10 @@ app.post('/api/admin/lab-results', upload.single('file'), async (req, res) => {
   }
 });
 
+// (ADMIN) Crea una factura PENDIENTE en la base de datos
 app.post('/api/admin/create-invoice', async (req, res) => {
     const { user_id, amount, description, appointment_id } = req.body;
+    // El monto debe venir en CENTAVOS desde el frontend (ej: 10990000)
     const amountInCents = parseInt(amount, 10); 
     
     if (!user_id || !amountInCents || !description) {
@@ -415,21 +427,22 @@ app.post('/api/admin/create-invoice', async (req, res) => {
     }
   });
   
-  app.get('/api/admin/all-invoices', async (req, res) => {
-      try {
-          const query = `
-              SELECT i.*, pp.nombres, pp.primer_apellido
-              FROM invoices i
-              LEFT JOIN patient_profiles pp ON i.user_id = pp.user_id
-              ORDER BY i.id DESC
-          `;
-          const result = await pool.query(query);
-          res.json(result.rows);
-      } catch (err) {
-          console.error('Error al obtener todas las facturas:', err.message);
-          res.status(500).json({ error: 'Error en el servidor.' });
-      }
-  });
+// (ADMIN) Obtiene TODAS las facturas para el reporte
+app.get('/api/admin/all-invoices', async (req, res) => {
+    try {
+        const query = `
+            SELECT i.*, pp.nombres, pp.primer_apellido
+            FROM invoices i
+            LEFT JOIN patient_profiles pp ON i.user_id = pp.user_id
+            ORDER BY i.id DESC
+        `;
+        const result = await pool.query(query);
+        res.json(result.rows);
+    } catch (err) {
+        console.error('Error al obtener todas las facturas:', err.message);
+        res.status(500).json({ error: 'Error en el servidor.' });
+    }
+});
 
 
 // --- RUTAS DE GESTIÓN DE CITAS ---
@@ -881,6 +894,10 @@ app.post('/api/billing/create-checkout-session/:invoiceId', async (req, res) => 
         return res.status(400).json({ error: 'Esta factura ya ha sido pagada.' });
       }
   
+      // ¡Asegúrate de tener FRONTEND_URL en tus variables de entorno de Render!
+      const successUrl = `${process.env.FRONTEND_URL}/user/mis-facturas?payment=success`;
+      const cancelUrl = `${process.env.FRONTEND_URL}/user/mis-facturas?payment=cancelled`;
+
       const session = await stripe.checkout.sessions.create({
         payment_method_types: ['card'],
         line_items: [
@@ -897,8 +914,8 @@ app.post('/api/billing/create-checkout-session/:invoiceId', async (req, res) => 
         ],
         mode: 'payment',
         client_reference_id: invoice.id, 
-        success_url: `${process.env.FRONTEND_URL}/user/mis-facturas?payment=success`, 
-        cancel_url: `${process.env.FRONTEND_URL}/user/mis-facturas?payment=cancelled`, 
+        success_url: successUrl, 
+        cancel_url: cancelUrl, 
       });
   
       // --- ¡ESTE ES EL CAMBIO CLAVE! ---
@@ -907,6 +924,11 @@ app.post('/api/billing/create-checkout-session/:invoiceId', async (req, res) => 
   
     } catch (err) {
       console.error('Error al crear sesión de checkout:', err.message);
+      // Devuelve un error más detallado si faltan las URLs
+      if (err.message.includes('undefined')) {
+          console.error("¡ERROR CRÍTICO! La variable FRONTEND_URL no está definida en Render.");
+          return res.status(500).json({ error: 'Error de configuración del servidor (URL_UNDEFINED)' });
+      }
       res.status(500).json({ error: 'Error en el servidor.' });
     }
   });
