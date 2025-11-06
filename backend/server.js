@@ -1,5 +1,5 @@
 // Contenido COMPLETO y DEFINITIVO para backend/server.js
-// (INCLUYE Laboratorio + Facturación + Stripe + Webhooks)
+// (CORREGIDO para enviar session.url en lugar de session.id)
 
 const express = require('express');
 const cors = require('cors');
@@ -7,7 +7,6 @@ const { Pool } = require('pg');
 const bcrypt = require('bcrypt');
 const multer = require('multer'); 
 const cloudinary = require('cloudinary').v2; 
-// --- ¡NUEVO! IMPORTAR STRIPE ---
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 
 const app = express();
@@ -34,7 +33,6 @@ const pool = new Pool({
 app.use(cors());
 
 // --- ¡IMPORTANTE! RUTA DE WEBHOOK DE STRIPE ---
-// Esta ruta debe ir ANTES de express.json()
 app.post('/api/billing/webhook', express.raw({type: 'application/json'}), async (req, res) => {
   const sig = req.headers['stripe-signature'];
   const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET;
@@ -47,17 +45,13 @@ app.post('/api/billing/webhook', express.raw({type: 'application/json'}), async 
     return res.status(400).send(`Webhook Error: ${err.message}`);
   }
 
-  // Handle the event
   if (event.type === 'checkout.session.completed') {
     const session = event.data.object;
-    
-    // El ID de nuestra factura lo pasamos en 'client_reference_id'
     const invoiceId = session.client_reference_id;
     const stripePaymentIntentId = session.payment_intent;
 
     if (invoiceId) {
       try {
-        // Actualizar la factura en nuestra base de datos
         await pool.query(
           "UPDATE invoices SET status = 'paid', stripe_payment_intent_id = $1 WHERE id = $2",
           [stripePaymentIntentId, invoiceId]
@@ -68,8 +62,6 @@ app.post('/api/billing/webhook', express.raw({type: 'application/json'}), async 
       }
     }
   }
-
-  // Return a 200 response to acknowledge receipt of the event
   res.json({received: true});
 });
 
@@ -189,7 +181,6 @@ app.post('/api/profile/patient/:userId/avatar', upload.single('avatar'), async (
   }
 });
 
-// (PACIENTE) Obtiene solo SUS resultados de laboratorio
 app.get('/api/patient/:patientId/my-results', async (req, res) => {
   const { patientId } = req.params;
   try {
@@ -202,7 +193,6 @@ app.get('/api/patient/:patientId/my-results', async (req, res) => {
   }
 });
 
-// (PACIENTE) Obtiene solo SUS facturas
 app.get('/api/patient/:patientId/my-invoices', async (req, res) => {
     const { patientId } = req.params;
     try {
@@ -358,7 +348,6 @@ app.delete('/api/admin/doctors/:id', async (req, res) => {
   }
 });
 
-// (ADMIN) Ruta para subir resultados de laboratorio
 app.post('/api/admin/lab-results', upload.single('file'), async (req, res) => {
   const { 
     patient_id, admin_id, test_name, description, doctor_id, appointment_id
@@ -404,10 +393,8 @@ app.post('/api/admin/lab-results', upload.single('file'), async (req, res) => {
   }
 });
 
-// (ADMIN) Crea una factura PENDIENTE en la base de datos
 app.post('/api/admin/create-invoice', async (req, res) => {
     const { user_id, amount, description, appointment_id } = req.body;
-    // El monto debe venir en CENTAVOS desde el frontend (ej: 10990000)
     const amountInCents = parseInt(amount, 10); 
     
     if (!user_id || !amountInCents || !description) {
@@ -428,7 +415,6 @@ app.post('/api/admin/create-invoice', async (req, res) => {
     }
   });
   
-  // (ADMIN) Obtiene TODAS las facturas para el reporte
   app.get('/api/admin/all-invoices', async (req, res) => {
       try {
           const query = `
@@ -722,7 +708,6 @@ app.get('/api/doctor/patients/:patientId/profile', async (req, res) => {
   }
 });
 
-// (MÉDICO) Obtiene resultados de laboratorio de un paciente
 app.get('/api/doctor/patients/:patientId/lab-results', async (req, res) => {
   const { patientId } = req.params;
   try {
@@ -886,44 +871,39 @@ app.post('/api/billing/create-checkout-session/:invoiceId', async (req, res) => 
     const { invoiceId } = req.params;
   
     try {
-      // 1. Buscar la factura en nuestra BD
       const invoiceResult = await pool.query("SELECT * FROM invoices WHERE id = $1", [invoiceId]);
       if (invoiceResult.rows.length === 0) {
         return res.status(404).json({ error: 'Factura no encontrada.' });
       }
       const invoice = invoiceResult.rows[0];
   
-      // 2. No dejar pagar si ya está pagada
       if (invoice.status === 'paid') {
         return res.status(400).json({ error: 'Esta factura ya ha sido pagada.' });
       }
   
-      // 3. Crear la sesión de pago en Stripe
       const session = await stripe.checkout.sessions.create({
         payment_method_types: ['card'],
         line_items: [
           {
             price_data: {
-              currency: 'cop', // Pesos Colombianos
+              currency: 'cop',
               product_data: {
                 name: invoice.description,
               },
-              unit_amount: invoice.amount, // El monto YA debe estar en centavos
+              unit_amount: invoice.amount,
             },
             quantity: 1,
           },
         ],
         mode: 'payment',
-        // ¡MUY IMPORTANTE! Pasamos el ID de nuestra factura
         client_reference_id: invoice.id, 
-        // URLs a las que Stripe redirige
-        // ¡IMPORTANTE! Asegúrate de tener FRONTEND_URL en tus variables de entorno de Render
         success_url: `${process.env.FRONTEND_URL}/user/mis-facturas?payment=success`, 
         cancel_url: `${process.env.FRONTEND_URL}/user/mis-facturas?payment=cancelled`, 
       });
   
-      // 4. Devolvemos el ID de la sesión al frontend
-      res.json({ id: session.id }); // ¡Cambiado a 'id' para que stripe.js v3 funcione!
+      // --- ¡ESTE ES EL CAMBIO CLAVE! ---
+      // Devolvemos la 'url' completa, no solo el 'id'
+      res.json({ url: session.url }); 
   
     } catch (err) {
       console.error('Error al crear sesión de checkout:', err.message);
