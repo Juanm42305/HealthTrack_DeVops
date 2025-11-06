@@ -1,14 +1,12 @@
-// Contenido COMPLETO para frontend/src/components/MisFacturas.jsx
+// Contenido COMPLETO y CORREGIDO para frontend/src/components/MisFacturas.jsx
+
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import Swal from 'sweetalert2';
-import { loadStripe } from '@stripe/stripe-js';
+// ¡YA NO NECESITAMOS loadStripe!
 import { FaFileInvoiceDollar, FaCheckCircle, FaExclamationTriangle, FaArrowLeft } from 'react-icons/fa';
-import './MisFacturas.css'; // Crearemos este archivo
-
-// Carga Stripe con tu clave pública (¡Asegúrate de ponerla en Vercel!)
-const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY);
+import './MisFacturas.css';
 
 function MisFacturas() {
   const { user } = useAuth();
@@ -57,7 +55,7 @@ function MisFacturas() {
     fetchInvoices();
   }, [user]);
 
-  // Función para redirigir a Stripe
+  // --- ¡LÓGICA DE PAGO CORREGIDA! ---
   const handlePayment = async (invoiceId) => {
     setLoadingPayment(true);
     const apiUrl = import.meta.env.VITE_API_URL;
@@ -67,20 +65,17 @@ function MisFacturas() {
         method: 'POST',
       });
       
+      const session = await response.json();
+
       if (!response.ok) {
-        throw new Error('No se pudo iniciar el pago.');
+        throw new Error(session.error || 'No se pudo iniciar el pago.');
       }
       
-      const session = await response.json();
-      
-      // 2. Redirigir al checkout de Stripe
-      const stripe = await stripePromise;
-      const { error } = await stripe.redirectToCheckout({
-        sessionId: session.id, // ¡Error común! Stripe v3 usa sessionId, no la URL
-      });
-
-      if(error) {
-         throw new Error(error.message);
+      // 2. Redirigir al checkout de Stripe (¡Sin usar stripe.js!)
+      if (session.url) {
+        window.location.href = session.url;
+      } else {
+        throw new Error("No se recibió URL de pago.");
       }
 
     } catch (error) {
