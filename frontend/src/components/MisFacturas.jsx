@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import Swal from 'sweetalert2';
-// ¡YA NO NECESITAMOS loadStripe!
+// ¡YA NO SE IMPORTA loadStripe!
 import { FaFileInvoiceDollar, FaCheckCircle, FaExclamationTriangle, FaArrowLeft } from 'react-icons/fa';
 import './MisFacturas.css';
 
@@ -33,27 +33,28 @@ function MisFacturas() {
   }, [searchParams, setSearchParams]);
 
   // Cargar las facturas del paciente
-  useEffect(() => {
+  const fetchInvoices = useCallback(async () => {
     if (!user?.id) return;
 
-    const fetchInvoices = async () => {
-      setLoading(true);
-      const apiUrl = import.meta.env.VITE_API_URL;
-      try {
-        const response = await fetch(`${apiUrl}/api/patient/${user.id}/my-invoices`);
-        if (response.ok) {
-          setInvoices(await response.json());
-        } else {
-          Swal.fire('Error', 'No se pudieron cargar tus facturas.', 'error');
-        }
-      } catch (error) {
-        Swal.fire('Error', 'Error de conexión al cargar facturas.', 'error');
-      } finally {
-        setLoading(false);
+    setLoading(true);
+    const apiUrl = import.meta.env.VITE_API_URL;
+    try {
+      const response = await fetch(`${apiUrl}/api/patient/${user.id}/my-invoices`);
+      if (response.ok) {
+        setInvoices(await response.json());
+      } else {
+        Swal.fire('Error', 'No se pudieron cargar tus facturas.', 'error');
       }
-    };
+    } catch (error) {
+      Swal.fire('Error', 'Error de conexión al cargar facturas.', 'error');
+    } finally {
+      setLoading(false);
+    }
+  }, [user]); // Añadimos 'user' como dependencia
+
+  useEffect(() => {
     fetchInvoices();
-  }, [user]);
+  }, [fetchInvoices]); // Usamos el callback aquí
 
   // --- ¡LÓGICA DE PAGO CORREGIDA! ---
   const handlePayment = async (invoiceId) => {
@@ -73,7 +74,7 @@ function MisFacturas() {
       
       // 2. Redirigir al checkout de Stripe (¡Sin usar stripe.js!)
       if (session.url) {
-        window.location.href = session.url;
+        window.location.href = session.url; // Redirección simple
       } else {
         throw new Error("No se recibió URL de pago.");
       }
