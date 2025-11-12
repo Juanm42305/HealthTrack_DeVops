@@ -1,4 +1,5 @@
-// Contenido COMPLETO y CORREGIDO para frontend/src/components/Login.jsx
+// Contenido COMPLETO y MODIFICADO para frontend/src/components/Login.jsx
+// (Con el console.log para Vercel Logs)
 
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
@@ -27,6 +28,9 @@ function Login() {
       if (response.ok) {
         login(data.user); 
         navigate('/dashboard'); 
+        
+        console.log(`[HealthTrack LOG] Usuario ${username} inició sesión exitosamente.`);
+        
       } else {
         alert(`Error: ${data.error || 'Usuario o contraseña incorrectos'}`);
       }
@@ -35,8 +39,6 @@ function Login() {
     }
   };
 
-  // --- ¡CAMBIO CLAVE EN EL JSX! ---
-  // Usamos el contenedor de superposición para que flote sobre el fondo de WelcomePage
   return (
     <div className="login-overlay"> 
       <div className="login-container"> 
