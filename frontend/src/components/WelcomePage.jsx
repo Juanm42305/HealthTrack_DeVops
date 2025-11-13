@@ -4,12 +4,14 @@ import './WelcomePage.css';
 
 function WelcomePage() {
   const location = useLocation();
+  // Si estamos en la raíz ('/'), mostramos el contenido de bienvenida.
+  // Si estamos en '/login' o '/register', mostramos el Outlet (el formulario).
   const isHomePage = location.pathname === '/';
 
   return (
     <div className="modern-welcome-layout">
       
-      {/* --- NAV SUPERIOR (Como en la imagen) --- */}
+      {/* --- NAV SUPERIOR --- */}
       <nav className="modern-navbar">
         <div className="nav-links">
           <Link to="/">Home</Link>
@@ -29,14 +31,16 @@ function WelcomePage() {
       {/* --- CONTENIDO CENTRAL (El cuadro blanco) --- */}
       <div className="central-card-container">
         
+        {/* Texto grande a la izquierda */}
         <div className="hero-text-side">
-          {/* Texto flotante al lado (Opcional, como dice "Hospital Portal" en tu imagen) */}
           <h1>Hospital<br/>Portal</h1>
           <p>Tu salud, gestionada de forma inteligente.</p>
         </div>
 
+        {/* Tarjeta Blanca Derecha */}
         <div className="white-glass-card">
           {isHomePage ? (
+            // Contenido de la Home (cuando no estás logueándote)
             <div className="home-content">
               <div className="avatar-circle">
                 👤
@@ -44,16 +48,11 @@ function WelcomePage() {
               <h2>Bienvenido</h2>
               <p>Accede a tu portal de salud</p>
               <Link to="/login" className="orange-action-btn">
-                Ingresar
+                Ingresar / Registrarse
               </Link>
-              <div style={{marginTop: '10px'}}>
-                <Link to="/register" style={{color: '#888', fontSize: '0.9rem', textDecoration: 'none'}}>
-                  ¿No tienes cuenta? Regístrate
-                </Link>
-              </div>
             </div>
           ) : (
-            /* Aquí se carga el Login o Register dentro de la tarjeta blanca */
+            // Aquí se carga el Login.jsx cuando la ruta es /login
             <Outlet />
           )}
         </div>

@@ -4,9 +4,8 @@
 .modern-welcome-layout {
   height: 100vh;
   width: 100%;
-  /* Fondo: Usamos un degradado similar al cielo de la imagen o puedes poner tu imagen en url() */
+  /* FONDO: Cambia esta URL por la de tu imagen preferida si quieres */
   background: url('https://www.revistaequipar.com/admin/img/secciones/intro-hospitalario-Agosto2022.jpg') no-repeat center center fixed; 
-  /* NOTA: Cambia la URL de arriba por la imagen que subiste si la tienes localmente */
   background-size: cover;
   font-family: 'Poppins', sans-serif;
   display: flex;
@@ -14,12 +13,12 @@
   position: relative;
 }
 
-/* Capa para oscurecer un poco si la imagen es muy brillante (opcional) */
+/* Capa sutil para mejorar lectura si el fondo es muy claro */
 .modern-welcome-layout::before {
   content: '';
   position: absolute;
   top: 0; left: 0; width: 100%; height: 100%;
-  background: linear-gradient(to bottom, rgba(79, 195, 247, 0.2), rgba(255, 255, 255, 0.1));
+  background: linear-gradient(to bottom, rgba(255,255,255,0.1), rgba(255,255,255,0.3));
   pointer-events: none;
 }
 
@@ -75,29 +74,31 @@
   display: flex;
   justify-content: center; /* Centra horizontalmente */
   align-items: center;     /* Centra verticalmente */
-  gap: 4rem;               /* Espacio entre texto y tarjeta */
+  gap: 5rem;               /* Espacio entre texto y tarjeta */
   z-index: 10;
-  padding-bottom: 5rem;    /* Un poco de aire abajo */
+  padding-bottom: 3rem;
 }
 
 .hero-text-side h1 {
-  font-size: 3.5rem;
+  font-size: 4rem;
   line-height: 1.1;
   color: #2c3e50;
   margin-bottom: 0.5rem;
+  text-shadow: 2px 2px 0px rgba(255,255,255,0.5);
 }
 .hero-text-side p {
-  color: #555;
-  font-size: 1.1rem;
+  color: #444;
+  font-size: 1.2rem;
+  font-weight: 500;
 }
 
-/* --- LA TARJETA BLANCA (Donde va el login) --- */
+/* --- LA TARJETA BLANCA --- */
 .white-glass-card {
   background: rgba(255, 255, 255, 0.95); /* Blanco casi sólido */
   padding: 3rem;
-  border-radius: 30px; /* Bordes muy redondos como en la imagen */
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
-  width: 380px;
+  border-radius: 30px; /* Bordes muy redondos */
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+  width: 380px; /* Ancho fijo para el login */
   text-align: center;
   position: relative;
   animation: floatUp 0.8s ease-out;
@@ -114,7 +115,8 @@
   align-items: center;
   font-size: 2rem;
   margin: -60px auto 1rem auto; /* Lo sube para que quede mitad afuera */
-  border: 5px solid #fff; /* Borde blanco para separar */
+  border: 5px solid #fff;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
 }
 
 .home-content h2 {
@@ -125,10 +127,10 @@
 .orange-action-btn {
   display: block;
   width: 100%;
-  background-color: #E67E22; /* Naranja de la imagen */
+  background-color: #E67E22; /* Naranja */
   color: white;
   padding: 1rem;
-  border-radius: 50px; /* Botón redondo */
+  border-radius: 50px;
   text-decoration: none;
   font-weight: 700;
   margin-top: 1.5rem;
@@ -141,39 +143,21 @@
   background-color: #d35400;
 }
 
-/* --- AJUSTES PARA CUANDO SE MUESTRA EL LOGIN/REGISTER (OUTLET) --- */
-/* Hacemos que los inputs dentro de Login.jsx se vean modernos también */
-.white-glass-card input {
-  background: #f0f2f5;
-  border: none;
-  border-radius: 10px;
-  padding: 1rem;
-  margin-bottom: 1rem;
-  width: 100%;
-  outline: none;
-}
-
-.white-glass-card button {
-  width: 100%;
-  border-radius: 50px;
-  padding: 1rem;
-  font-weight: bold;
-}
-
 @keyframes floatUp {
-  from { opacity: 0; transform: translateY(20px); }
+  from { opacity: 0; transform: translateY(30px); }
   to { opacity: 1; transform: translateY(0); }
 }
 
-/* Responsividad para móviles */
-@media (max-width: 768px) {
+/* Responsividad */
+@media (max-width: 900px) {
   .central-card-container {
     flex-direction: column;
     gap: 2rem;
   }
   .hero-text-side {
     text-align: center;
-    display: none; /* Ocultamos el texto grande en móvil para priorizar login */
+    display: none; /* Ocultamos el texto grande en tablets/móviles */
   }
-  .nav-links { display: none; } /* Ocultamos menú en móvil */
+  .nav-links { display: none; } 
+  .white-glass-card { width: 90%; max-width: 350px; }
 }
