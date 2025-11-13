@@ -1,10 +1,10 @@
-// Contenido COMPLETO y MODIFICADO para frontend/src/components/Login.jsx
-// (Con el console.log para Vercel Logs)
+// Contenido MODERNO para frontend/src/components/Login.jsx
 
 import React, { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom"; // Link ya no es necesario aquí
 import { useAuth } from "../context/AuthContext";
-import "./Login.css";
+// El CSS de Login ya no es necesario porque WelcomePage.css maneja los estilos
+// import "./Login.css"; 
 
 function Login() {
   const [username, setUsername] = useState("");
@@ -29,6 +29,7 @@ function Login() {
         login(data.user); 
         navigate('/dashboard'); 
         
+        // Log para Vercel Observability
         console.log(`[HealthTrack LOG] Usuario ${username} inició sesión exitosamente.`);
         
       } else {
@@ -40,35 +41,69 @@ function Login() {
   };
 
   return (
-    <div className="login-overlay"> 
-      <div className="login-container"> 
-        <div className="login-logo">
-          <span>💙</span> HealthTrack
-        </div>
-        <h2 className="login-title">Iniciar Sesión</h2>
-        <form onSubmit={handleLogin}>
+    <div className="login-form-content">
+      {/* El título y el avatar ya están en WelcomePage, aquí solo va el form */}
+      <h2 style={{marginBottom: '1.5rem', color: '#333'}}>Iniciar Sesión</h2>
+      
+      <form onSubmit={handleLogin} style={{width: '100%'}}>
+        <div style={{marginBottom: '1rem'}}>
           <input
             type="text"
             value={username}
             onChange={(e) => setUsername(e.target.value)}
             placeholder="Usuario"
             required
+            style={{
+              width: '100%',
+              padding: '12px',
+              borderRadius: '50px',
+              border: '1px solid #ddd',
+              backgroundColor: '#f9f9f9',
+              outline: 'none',
+              boxSizing: 'border-box'
+            }}
           />
+        </div>
+        
+        <div style={{marginBottom: '1.5rem'}}>
           <input
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             placeholder="Contraseña"
             required
+            style={{
+              width: '100%',
+              padding: '12px',
+              borderRadius: '50px',
+              border: '1px solid #ddd',
+              backgroundColor: '#f9f9f9',
+              outline: 'none',
+              boxSizing: 'border-box'
+            }}
           />
-          <button type="submit">Entrar</button>
-        </form>
-        <div className="login-footer">
-          <p>
-            ¿No tienes cuenta? <Link to="/register">Regístrate</Link>
-          </p>
         </div>
-      </div>
+
+        <button 
+          type="submit"
+          style={{
+            width: '100%',
+            padding: '12px',
+            borderRadius: '50px',
+            border: 'none',
+            backgroundColor: '#E67E22', /* Naranja moderno */
+            color: 'white',
+            fontWeight: 'bold',
+            cursor: 'pointer',
+            boxShadow: '0 4px 6px rgba(230, 126, 34, 0.3)',
+            transition: 'transform 0.2s'
+          }}
+          onMouseOver={(e) => e.target.style.transform = 'scale(1.02)'}
+          onMouseOut={(e) => e.target.style.transform = 'scale(1)'}
+        >
+          ENTRAR
+        </button>
+      </form>
     </div>
   );
 }
