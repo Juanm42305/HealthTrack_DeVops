@@ -7,6 +7,7 @@ import { FaTachometerAlt, FaUserMd, FaCalendarAlt, FaFileInvoiceDollar, FaFlask,
 import { useMedicos } from '../context/MedicoContext'; 
 import Swal from 'sweetalert2'; // ¡IMPORTADO!
 import './AdminDashboard.css';
+import { FaChartLine } from 'react-icons/fa';
 
 // --- Componente para la página principal del dashboard ---
 function AdminHome() {
@@ -131,6 +132,9 @@ function AdminDashboard() {
           <Link to="/admin/gestion-citas" className={`nav-link ${isLinkActive('/admin/gestion-citas') ? 'active' : ''}`}><FaCalendarAlt /> <span>Gestión de Citas</span></Link>
           <Link to="/admin/facturacion" className={`nav-link ${isLinkActive('/admin/facturacion') ? 'active' : ''}`}><FaFileInvoiceDollar /> <span>Facturación</span></Link>
           <Link to="/admin/laboratorio" className={`nav-link ${isLinkActive('/admin/laboratorio') ? 'active' : ''}`}><FaFlask /> <span>Laboratorio</span></Link>
+          <Link to="/admin/reportes" className={`nav-link ${isLinkActive('/admin/reportes') ? 'active' : ''}`}>
+          <FaChartLine /> <span>Analíticas</span>
+</Link>
         </nav>
 
         <div className="sidebar-footer">

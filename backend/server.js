@@ -1,5 +1,5 @@
 // Contenido COMPLETO y DEFINITIVO para backend/server.js
-// (CORREGIDO para enviar session.url e incluye logs de depuración)
+// (INCLUYE: Laboratorio, Facturación, Stripe, Webhooks y ANALÍTICAS)
 
 const express = require('express');
 const cors = require('cors');
@@ -33,7 +33,6 @@ const pool = new Pool({
 app.use(cors());
 
 // --- ¡IMPORTANTE! RUTA DE WEBHOOK DE STRIPE ---
-// Esta ruta debe ir ANTES de express.json()
 app.post('/api/billing/webhook', express.raw({type: 'application/json'}), async (req, res) => {
   const sig = req.headers['stripe-signature'];
   const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET;
@@ -46,17 +45,13 @@ app.post('/api/billing/webhook', express.raw({type: 'application/json'}), async 
     return res.status(400).send(`Webhook Error: ${err.message}`);
   }
 
-  // Handle the event
   if (event.type === 'checkout.session.completed') {
     const session = event.data.object;
-    
-    // El ID de nuestra factura lo pasamos en 'client_reference_id'
     const invoiceId = session.client_reference_id;
     const stripePaymentIntentId = session.payment_intent;
 
     if (invoiceId) {
       try {
-        // Actualizar la factura en nuestra base de datos
         await pool.query(
           "UPDATE invoices SET status = 'paid', stripe_payment_intent_id = $1 WHERE id = $2",
           [stripePaymentIntentId, invoiceId]
@@ -67,8 +62,6 @@ app.post('/api/billing/webhook', express.raw({type: 'application/json'}), async 
       }
     }
   }
-
-  // Return a 200 response to acknowledge receipt of the event
   res.json({received: true});
 });
 
@@ -168,9 +161,7 @@ app.put('/api/profile/patient/:userId', async (req, res) => {
 
 app.post('/api/profile/patient/:userId/avatar', upload.single('avatar'), async (req, res) => {
   const { userId } = req.params;
-  if (!req.file) {
-    return res.status(400).json({ error: 'No se subió ningún archivo.' });
-  }
+  if (!req.file) return res.status(400).json({ error: 'No se subió ningún archivo.' });
   try {
     const result = await cloudinary.uploader.upload(req.file.path, {
       folder: 'healthtrack_avatars',
@@ -188,7 +179,6 @@ app.post('/api/profile/patient/:userId/avatar', upload.single('avatar'), async (
   }
 });
 
-// (PACIENTE) Obtiene solo SUS resultados de laboratorio
 app.get('/api/patient/:patientId/my-results', async (req, res) => {
   const { patientId } = req.params;
   try {
@@ -201,7 +191,6 @@ app.get('/api/patient/:patientId/my-results', async (req, res) => {
   }
 });
 
-// (PACIENTE) Obtiene solo SUS facturas
 app.get('/api/patient/:patientId/my-invoices', async (req, res) => {
     const { patientId } = req.params;
     try {
@@ -212,7 +201,7 @@ app.get('/api/patient/:patientId/my-invoices', async (req, res) => {
       console.error('Error al obtener mis facturas:', err.message);
       res.status(500).json({ error: 'Error en el servidor.' });
     }
-  });
+});
 
 
 // --- RUTAS PARA PERFIL DE MÉDICO ---
@@ -233,19 +222,51 @@ app.get('/api/profile/doctor/:userId', async (req, res) => {
   }
 });
 
+app.post('/api/doctor/diagnoses', async (req, res) => {
+  const { patient_id, doctor_id, diagnosis_title, diagnosis_type, description, prescription, recommendations } = req.body;
+
+  if (!patient_id || !doctor_id || !diagnosis_title) {
+    return res.status(400).json({ error: 'Faltan campos obligatorios.' });
+  }
+
+  try {
+    const query = `
+      INSERT INTO diagnoses (patient_id, doctor_id, diagnosis_title, diagnosis_type, description, prescription, recommendations)
+      VALUES ($1, $2, $3, $4, $5, $6, $7)
+      RETURNING *
+    `;
+    const newDiagnosis = await pool.query(query, [patient_id, doctor_id, diagnosis_title, diagnosis_type, description, prescription, recommendations]);
+    res.status(201).json(newDiagnosis.rows[0]);
+  } catch (err) {
+    console.error('Error al crear diagnóstico:', err.message);
+    res.status(500).json({ error: 'Error en el servidor.' });
+  }
+});
+
+app.get('/api/doctor/patients/:patientId/diagnoses', async (req, res) => {
+  const { patientId } = req.params;
+  try {
+    const query = "SELECT * FROM diagnoses WHERE patient_id = $1 ORDER BY created_at DESC";
+    const result = await pool.query(query, [patientId]);
+    res.json(result.rows);
+  } catch (err) {
+    console.error('Error al obtener diagnósticos:', err.message);
+    res.status(500).json({ error: 'Error en el servidor.' });
+  }
+});
+
 app.put('/api/profile/doctor/:userId', async (req, res) => {
   const { userId } = req.params;
-  const { nombres, primer_apellido, segundo_apellido, edad, fecha_nacimiento, numero_cedula, tipo_de_sangre, direccion_residencia, especialidad, consultorio, sede } = req.body;
+  const { nombres, primer_apellido, segundo_apellido, edad, fecha_nacimiento, numero_cedula, especialidad, consultorio, sede } = req.body;
   try {
     const query = `
       UPDATE doctor_profiles
       SET nombres = $1, primer_apellido = $2, segundo_apellido = $3, edad = $4, 
-          fecha_nacimiento = $5, numero_cedula = $6, especialidad = $7, consultorio = $8, sede = $9,
-          tipo_de_sangre = $10, direccion_residencia = $11 
-      WHERE user_id = $12
+          fecha_nacimiento = $5, numero_cedula = $6, especialidad = $7, consultorio = $8, sede = $9
+      WHERE user_id = $10
       RETURNING *
     `;
-    const values = [nombres, primer_apellido, segundo_apellido, edad, fecha_nacimiento, numero_cedula, especialidad, consultorio, sede, tipo_de_sangre, direccion_residencia, userId];
+    const values = [nombres, primer_apellido, segundo_apellido, edad, fecha_nacimiento, numero_cedula, especialidad, consultorio, sede, userId];
     const updatedProfile = await pool.query(query, values);
     if (updatedProfile.rows.length === 0) return res.status(404).json({ error: "Perfil no encontrado para actualizar." });
     res.json(updatedProfile.rows[0]);
@@ -357,15 +378,12 @@ app.delete('/api/admin/doctors/:id', async (req, res) => {
   }
 });
 
-// (ADMIN) Ruta para subir resultados de laboratorio
 app.post('/api/admin/lab-results', upload.single('file'), async (req, res) => {
   const { 
     patient_id, admin_id, test_name, description, doctor_id, appointment_id
   } = req.body;
   
-  if (!req.file) {
-    return res.status(400).json({ error: 'No se subió ningún archivo.' });
-  }
+  if (!req.file) return res.status(400).json({ error: 'No se subió ningún archivo.' });
   if (!patient_id || !admin_id || !test_name) {
     return res.status(400).json({ error: 'Faltan campos (patient_id, admin_id, test_name).' });
   }
@@ -403,10 +421,8 @@ app.post('/api/admin/lab-results', upload.single('file'), async (req, res) => {
   }
 });
 
-// (ADMIN) Crea una factura PENDIENTE en la base de datos
 app.post('/api/admin/create-invoice', async (req, res) => {
     const { user_id, amount, description, appointment_id } = req.body;
-    // El monto debe venir en CENTAVOS desde el frontend (ej: 10990000)
     const amountInCents = parseInt(amount, 10); 
     
     if (!user_id || !amountInCents || !description) {
@@ -427,22 +443,21 @@ app.post('/api/admin/create-invoice', async (req, res) => {
     }
   });
   
-  // (ADMIN) Obtiene TODAS las facturas para el reporte
-  app.get('/api/admin/all-invoices', async (req, res) => {
-      try {
-          const query = `
-              SELECT i.*, pp.nombres, pp.primer_apellido
-              FROM invoices i
-              LEFT JOIN patient_profiles pp ON i.user_id = pp.user_id
-              ORDER BY i.id DESC
-          `;
-          const result = await pool.query(query);
-          res.json(result.rows);
-      } catch (err) {
-          console.error('Error al obtener todas las facturas:', err.message);
-          res.status(500).json({ error: 'Error en el servidor.' });
-      }
-  });
+app.get('/api/admin/all-invoices', async (req, res) => {
+    try {
+        const query = `
+            SELECT i.*, pp.nombres, pp.primer_apellido
+            FROM invoices i
+            LEFT JOIN patient_profiles pp ON i.user_id = pp.user_id
+            ORDER BY i.id DESC
+        `;
+        const result = await pool.query(query);
+        res.json(result.rows);
+    } catch (err) {
+        console.error('Error al obtener todas las facturas:', err.message);
+        res.status(500).json({ error: 'Error en el servidor.' });
+    }
+});
 
 
 // --- RUTAS DE GESTIÓN DE CITAS ---
@@ -501,7 +516,6 @@ app.post('/api/admin/schedule/batch', async (req, res) => {
     }
 
     for (let currentTime = new Date(startDateTime); currentTime < endDateTime; currentTime.setUTCMinutes(currentTime.getUTCMinutes() + intervalMinutes)) {
-      
       const appointment_time_iso = currentTime.toISOString(); 
       const currentHour = currentTime.getUTCHours();
       if (currentHour < parseInt(startTime.split(':')[0]) || currentHour >= parseInt(endTime.split(':')[0])) {
@@ -880,7 +894,6 @@ app.put('/api/doctor/appointments/:appointmentId/finish', async (req, res) => {
 });
 
 // (PACIENTE) Crea una sesión de pago de Stripe para una factura PENDIENTE
-// --- ¡ESTA ES LA RUTA CORREGIDA! ---
 app.post('/api/billing/create-checkout-session/:invoiceId', async (req, res) => {
     const { invoiceId } = req.params;
   
@@ -937,6 +950,46 @@ app.post('/api/billing/create-checkout-session/:invoiceId', async (req, res) => 
       res.status(500).json({ error: 'Error en el servidor.' });
     }
   });
+
+// --- ¡NUEVO! ANALÍTICAS PARA ADMIN ---
+app.get('/api/admin/analytics', async (req, res) => {
+    try {
+        // 1. Citas por Estado
+        const appointmentsStats = await pool.query(`
+            SELECT status, COUNT(*) as count 
+            FROM appointments 
+            GROUP BY status
+        `);
+
+        // 2. Facturas (Dinero) por Estado
+        const financialStats = await pool.query(`
+            SELECT status, COUNT(*) as count, SUM(amount) as total_amount
+            FROM invoices 
+            GROUP BY status
+        `);
+
+        // 3. Top Médicos con más citas finalizadas
+        const topDoctors = await pool.query(`
+            SELECT dp.nombres, dp.primer_apellido, COUNT(a.id) as total_citas
+            FROM appointments a
+            JOIN doctor_profiles dp ON a.doctor_id = dp.user_id
+            WHERE a.status = 'finalizada'
+            GROUP BY dp.nombres, dp.primer_apellido
+            ORDER BY total_citas DESC
+            LIMIT 5
+        `);
+
+        res.json({
+            appointments: appointmentsStats.rows,
+            finances: financialStats.rows,
+            topDoctors: topDoctors.rows
+        });
+
+    } catch (err) {
+        console.error('Error en analíticas:', err.message);
+        res.status(500).json({ error: 'Error al generar reporte.' });
+    }
+});
 
 
 // --- INICIAR SERVIDOR ---

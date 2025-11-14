@@ -27,7 +27,7 @@ import GestionMedicos from './components/GestionMedicos';
 import GestionCitas from './components/GestionCitas';
 import GestionLaboratorio from './components/GestionLaboratorio';
 import Facturacion from './components/Facturacion';
-
+import AdminReportes from './components/AdminReportes';
 // --- Páginas de Usuario ---
 import UserDashboard from './components/UserDashboard';
 import Profile from './components/Profile';
@@ -74,6 +74,7 @@ function App() {
           <Route path="gestion-citas" element={<GestionCitas />} />
           <Route path="laboratorio" element={<GestionLaboratorio />} />
           <Route path="facturacion" element={<Facturacion />} />
+          <Route path="reportes" element={<AdminReportes />} />
         </Route>
 
         {/* Rutas de Usuario */}
