@@ -20,7 +20,7 @@
   color: #2c3e50;
   border-bottom: 2px solid #3498db;
   padding-bottom: 0.5rem;
-  margin-bottom: 1rem;
+  margin-bottom: 0.5rem;
 }
 
 .agendar-container p {
@@ -32,7 +32,7 @@
 .scheduler-steps { 
   margin-top: 1rem; 
   display: grid;
-  gap: 2rem; /* Espacio uniforme entre pasos */
+  gap: 2rem;
 }
 
 .step h2 { 
@@ -43,21 +43,65 @@
   border-left: 3px solid #3498db;
 }
 
-.step input[type="date"] {
+/* --- NUEVO: FILTROS EN FILA --- */
+.filters-row {
+  display: flex;
+  gap: 2rem;
+  flex-wrap: wrap; /* Para móviles */
+  align-items: flex-end;
+}
+
+.filter-group {
+  flex: 1;
+  min-width: 200px;
+}
+
+.filter-group label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  color: #555;
+}
+
+.step input[type="date"], 
+.step select {
   padding: 0.75rem 1rem;
   border: 1px solid #ccc;
   border-radius: 8px;
   font-size: 1rem;
   cursor: pointer;
   width: 100%;
-  max-width: 300px; /* Limita el ancho del input de fecha */
   background-color: #f9f9f9;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.step select {
+  appearance: none; /* Quita la flecha por defecto */
+}
+
+.step input[type="date"]:focus, 
+.step select:focus {
+  border-color: #3498db;
+}
+
+.select-wrapper {
+  position: relative;
+}
+
+.filter-icon {
+  position: absolute;
+  right: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #7f8c8d;
+  pointer-events: none;
 }
 
 
 /* --- Motivo de Cita --- */
 .motivo-cita {
-  background: #ecf0f1; /* Fondo gris claro */
+  background: #ecf0f1;
   padding: 1.5rem;
   border-radius: 8px;
   margin-bottom: 1rem;
@@ -78,7 +122,7 @@
 /* --- Time Slots (Mejor Grid) --- */
 .time-slots { 
   display: grid; 
-  grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); /* Grid responsivo */
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); /* Un poco más ancho */
   gap: 1rem; 
   margin-top: 1rem;
 }
@@ -87,12 +131,14 @@
   background: #f1f1f1; 
   border: 1px solid #ddd; 
   padding: 0.8rem 0.5rem; 
-  border-radius: 6px; 
+  border-radius: 8px; 
   cursor: pointer; 
-  font-weight: 600;
-  font-size: 0.9rem;
   transition: all 0.2s ease;
   min-width: 100px;
+  display: flex;
+  flex-direction: column; /* Apilar hora y doctor */
+  align-items: center;
+  text-align: center;
 }
 
 .time-slot:hover:not(:disabled) {
@@ -116,10 +162,26 @@
   opacity: 0.7;
 }
 
-.time-slot.unavailable span {
-    font-weight: normal;
-    display: block;
-    font-size: 0.7rem;
+/* Estilos internos del slot */
+.slot-time {
+  font-weight: 700;
+  font-size: 1rem;
+}
+.slot-doctor {
+  font-size: 0.8rem;
+  margin-top: 0.2rem;
+  font-weight: 500;
+}
+.slot-spec {
+  font-size: 0.7rem;
+  font-style: italic;
+  opacity: 0.8;
+}
+
+.no-slots-message {
+  font-style: italic;
+  color: #e67e22;
+  margin-top: 1rem;
 }
 
 /* --- Confirmación --- */

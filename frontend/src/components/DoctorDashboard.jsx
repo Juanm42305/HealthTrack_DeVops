@@ -1,4 +1,5 @@
 // Contenido CORREGIDO FINAL para frontend/src/components/DoctorDashboard.jsx
+// (Ahora filtra notificaciones pasadas)
 
 import React, { useState, useEffect } from 'react'; 
 import { Link } from 'react-router-dom';
@@ -6,7 +7,6 @@ import { useAuth } from '../context/AuthContext';
 import {
   FaCalendarAlt, FaUsers, FaBookMedical, FaStethoscope, FaBell 
 } from 'react-icons/fa';
-import Swal from 'sweetalert2';
 import './UserDashboard.css'; 
 
 function DoctorDashboard() {
@@ -16,8 +16,7 @@ function DoctorDashboard() {
 
   useEffect(() => {
     const fetchNotifications = async () => {
-      if (!user?.id || user.role !== 'medico' || loadingNotifications || notifications.length > 0) {
-         if(loadingNotifications) setLoadingNotifications(false);
+      if (!user?.id || user.role !== 'medico') {
          return;
       }
 
@@ -30,7 +29,17 @@ function DoctorDashboard() {
           const citas = await response.json();
 
           if (citas && citas.length > 0) {
-            const newNotifications = citas.slice(0, 5).map(cita => {
+            // --- CAMBIO CLAVE: FILTRAR CITAS PASADAS ---
+            const now = new Date();
+            
+            // Filtramos las citas que sean MAYORES (futuras) a la fecha y hora actual
+            const futureCitas = citas.filter(cita => {
+                const citaDate = new Date(cita.appointment_time);
+                return citaDate > now;
+            });
+
+            // Tomamos solo las próximas 5 citas futuras
+            const newNotifications = futureCitas.slice(0, 5).map(cita => {
                 // Lógica de hora UTC
                 const date = new Date(cita.appointment_time);
                 let hours = date.getUTCHours();
@@ -75,7 +84,7 @@ function DoctorDashboard() {
       </div>
 
       <section className="notifications-dashboard-section">
-        <h2><FaBell /> Notificaciones Recientes</h2>
+        <h2><FaBell /> Notificaciones Recientes (Próximas Citas)</h2>
         {loadingNotifications ? (
           <p className="loading-notifications">Cargando notificaciones...</p>
         ) : notifications.length > 0 ? (
@@ -88,7 +97,7 @@ function DoctorDashboard() {
             ))}
           </div>
         ) : (
-          <p className="no-notifications-dashboard">No hay notificaciones de citas nuevas.</p>
+          <p className="no-notifications-dashboard">No tienes citas próximas pendientes.</p>
         )}
       </section>
 

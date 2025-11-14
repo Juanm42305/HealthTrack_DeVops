@@ -1,19 +1,22 @@
-// Contenido COMPLETO y CORREGIDO FINAL para frontend/src/components/AgendarCita.jsx
+// Contenido COMPLETO y ACTUALIZADO para frontend/src/components/AgendarCita.jsx
+// (Con filtro por Especialidad)
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { FaArrowLeft } from 'react-icons/fa';
+import { FaArrowLeft, FaFilter } from 'react-icons/fa';
 import Swal from 'sweetalert2';
 import './AgendarCita.css';
 
 function AgendarCita() {
-  // CORRECCIÓN 1: Inicializar con la fecha de hoy
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]); 
   const [availableTimes, setAvailableTimes] = useState([]);
   const [selectedSlot, setSelectedSlot] = useState(null);
   const [loadingTimes, setLoadingTimes] = useState(false);
   const [motivo, setMotivo] = useState('');
+  
+  // --- NUEVO ESTADO PARA EL FILTRO ---
+  const [selectedSpecialty, setSelectedSpecialty] = useState('');
 
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -24,6 +27,8 @@ function AgendarCita() {
     const date = e.target.value;
     setSelectedDate(date);
     setSelectedSlot(null);
+    setSelectedSpecialty(''); // Reseteamos el filtro al cambiar de fecha
+    
     if (date) {
       setLoadingTimes(true);
       const apiUrl = import.meta.env.VITE_API_URL;
@@ -47,6 +52,21 @@ function AgendarCita() {
       setAvailableTimes([]);
     }
   };
+
+  // --- LÓGICA PARA EXTRAER ESPECIALIDADES ÚNICAS ---
+  const uniqueSpecialties = useMemo(() => {
+    const specialties = availableTimes
+      .map(slot => slot.especialidad || 'General') // Si es null, ponemos 'General'
+      .filter((value, index, self) => self.indexOf(value) === index); // Eliminar duplicados
+    return specialties;
+  }, [availableTimes]);
+
+  // --- LÓGICA PARA FILTRAR LOS SLOTS VISIBLES ---
+  const filteredSlots = useMemo(() => {
+    if (!selectedSpecialty) return availableTimes;
+    return availableTimes.filter(slot => (slot.especialidad || 'General') === selectedSpecialty);
+  }, [availableTimes, selectedSpecialty]);
+
 
   const handleAgendar = async () => {
     if (!selectedSlot || selectedSlot.status !== 'disponible' || !motivo) {
@@ -80,9 +100,7 @@ function AgendarCita() {
     }
   };
 
-  // Se añade useEffect para cargar horarios iniciales al montar
   useEffect(() => {
-    // Esto asegura que al cargar la página, se carguen los slots para el día de hoy
     handleDateChange({ target: { value: selectedDate } });
   }, []); 
 
@@ -96,18 +114,48 @@ function AgendarCita() {
       </header>
 
       <div className="agendar-container">
-        <h1>Agendar Cita General</h1>
-        <p>Selecciona una fecha para ver los horarios disponibles.</p>
+        <h1>Agendar Cita Médica</h1>
+        <p>Filtra por fecha y especialidad para encontrar tu cita ideal.</p>
 
         <div className="scheduler-steps">
+          
+          {/* --- PASO 1: FILTROS (FECHA Y ESPECIALIDAD) --- */}
           <div className="step">
-            <h2>1. Elige una fecha</h2>
-            <input 
-              type="date" 
-              value={selectedDate} 
-              onChange={handleDateChange} 
-              min={new Date().toISOString().split('T')[0]} 
-            />
+            <h2>1. Busca disponibilidad</h2>
+            
+            <div className="filters-row">
+              <div className="filter-group">
+                <label>Fecha:</label>
+                <input 
+                  type="date" 
+                  value={selectedDate} 
+                  onChange={handleDateChange} 
+                  min={new Date().toISOString().split('T')[0]} 
+                />
+              </div>
+
+              {/* Solo mostramos el filtro de especialidad si hay horarios cargados */}
+              {availableTimes.length > 0 && (
+                <div className="filter-group">
+                  <label>Especialidad:</label>
+                  <div className="select-wrapper">
+                    <select 
+                      value={selectedSpecialty} 
+                      onChange={(e) => {
+                        setSelectedSpecialty(e.target.value);
+                        setSelectedSlot(null); // Limpiar selección al cambiar filtro
+                      }}
+                    >
+                      <option value="">Todas las especialidades</option>
+                      {uniqueSpecialties.map(spec => (
+                        <option key={spec} value={spec}>{spec}</option>
+                      ))}
+                    </select>
+                    <FaFilter className="filter-icon"/>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
 
           <div className="motivo-cita">
@@ -122,10 +170,11 @@ function AgendarCita() {
 
           {selectedDate && (
             <div className="step">
-              <h2>2. Elige un horario</h2>
+              <h2>2. Elige un horario {selectedSpecialty && `(${selectedSpecialty})`}</h2>
+              
               {loadingTimes ? <p>Buscando horarios...</p> : (
                 <div className="time-slots">
-                  {availableTimes.length > 0 ? availableTimes.map(slot => {
+                  {filteredSlots.length > 0 ? filteredSlots.map(slot => {
                       return ( 
                         <button
                           key={slot.id}
@@ -133,12 +182,24 @@ function AgendarCita() {
                           onClick={() => setSelectedSlot(slot)}
                           disabled={slot.status !== 'disponible'}
                         >
-                          {/* CORRECCIÓN 2: Mostrar hora como UTC para eliminar el desfase horario (3 AM) */}
-                          {new Date(slot.appointment_time).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true, timeZone: 'UTC' })}
-                          {slot.status !== 'disponible' && <span> (Ocupado)</span>}
+                          <span className="slot-time">
+                            {new Date(slot.appointment_time).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true, timeZone: 'UTC' })}
+                          </span>
+                          <span className="slot-doctor">
+                            Dr. {slot.doctor_apellido}
+                          </span>
+                          <span className="slot-spec">
+                            {slot.especialidad || 'General'}
+                          </span>
                         </button>
                       );
-                   }) : <p>No hay horarios programados para este día o ya pasaron.</p>}
+                   }) : (
+                     <p className="no-slots-message">
+                       {availableTimes.length > 0 
+                         ? `No hay citas disponibles para ${selectedSpecialty} en esta fecha.` 
+                         : "No hay horarios programados para este día."}
+                     </p>
+                   )}
                 </div>
               )}
             </div>
@@ -149,9 +210,9 @@ function AgendarCita() {
               <h2>3. Confirma tu cita</h2>
               <div className="confirmation-details">
                 <p><strong>Fecha:</strong> {new Date(selectedSlot.appointment_time).toLocaleDateString()}</p>
-                {/* Usamos UTC para mostrar la hora de inicio (8:00 AM) */}
                 <p><strong>Hora:</strong> {new Date(selectedSlot.appointment_time).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true, timeZone: 'UTC' })}</p>
                 <p><strong>Médico:</strong> {selectedSlot.doctor_nombres} {selectedSlot.doctor_apellido}</p>
+                <p><strong>Especialidad:</strong> {selectedSlot.especialidad || 'Medicina General'}</p>
                 <p><strong>Sede:</strong> {selectedSlot.sede}</p>
                 <p><strong>Motivo:</strong> {motivo}</p>
               </div>
