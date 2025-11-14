@@ -1,18 +1,12 @@
-// Contenido COMPLETO y CORREGIDO para frontend/src/components/GestionCitas.jsx
-
 import React, { useState, useEffect } from 'react';
 import Swal from 'sweetalert2';
 import './GestionCitas.css'; 
 
-const promoImages = [
-  'https://static.ferrovial.com/wp-content/uploads/2019/11/13131006/hospital-central-muprespa-madrid-ferconsa-2.jpg',
-  'https://hic.fcv.org/co/images/institutos/instituto-de-cancer/unidad-de-trasplante-de-medula-osea/instalaciones-trasplante-medula-osea-46.jpg',
-  'https://comisionfilmicacolombia.com/wp-content/uploads/2023/10/Santander-Piedecuesta-Hospital-Internacional-baja-19-1.jpg'
-];
-
 function GestionCitas() {
   const [medicos, setMedicos] = useState([]);
-  const [selectedMedico, setSelectedMedico] = useState(null); 
+  // Ahora guardamos un array de IDs
+  const [selectedDoctors, setSelectedDoctors] = useState([]); 
+  
   const [formData, setFormData] = useState({
     date: new Date().toISOString().split('T')[0], 
     startTime: '08:00',
@@ -21,17 +15,6 @@ function GestionCitas() {
     sede: ''
   });
   const [loading, setLoading] = useState(true);
-  const [currentImageIndex, setCurrentImageIndex] = useState(0);
-
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setCurrentImageIndex((prevIndex) =>
-        prevIndex === promoImages.length - 1 ? 0 : prevIndex + 1
-      );
-    }, 2000); 
-
-    return () => clearInterval(timer); 
-  }, []);
 
   useEffect(() => {
     const fetchMedicos = async () => {
@@ -51,12 +34,37 @@ function GestionCitas() {
     fetchMedicos();
   }, []);
 
+  // Manejo de selección individual
+  const toggleDoctor = (id) => {
+    if (selectedDoctors.includes(id)) {
+      setSelectedDoctors(selectedDoctors.filter(docId => docId !== id));
+    } else {
+      setSelectedDoctors([...selectedDoctors, id]);
+    }
+  };
+
+  // Manejo de "Seleccionar Todos"
+  const toggleSelectAll = () => {
+    if (selectedDoctors.length === medicos.length) {
+      setSelectedDoctors([]); // Deseleccionar todo
+    } else {
+      setSelectedDoctors(medicos.map(doc => doc.user_id)); // Seleccionar todo
+    }
+  };
+
   const handleFormChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleFormSubmit = async (e) => {
+  // Enviar formulario MASIVO
+  const handleBulkSubmit = async (e) => {
     e.preventDefault();
+    
+    if (selectedDoctors.length === 0) {
+        Swal.fire('Atención', 'Debes seleccionar al menos un médico.', 'warning');
+        return;
+    }
+
     if (new Date(`${formData.date}T${formData.endTime}`) <= new Date(`${formData.date}T${formData.startTime}`)) {
       Swal.fire('Error de Lógica', 'La hora de fin debe ser posterior a la hora de inicio.', 'warning');
       return;
@@ -64,15 +72,17 @@ function GestionCitas() {
 
     const apiUrl = import.meta.env.VITE_API_URL;
     try {
-      const response = await fetch(`${apiUrl}/api/admin/schedule/batch`, {
+      // Usamos la nueva ruta BULK
+      const response = await fetch(`${apiUrl}/api/admin/schedule/bulk`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...formData, doctor_id: selectedMedico.user_id }),
+        body: JSON.stringify({ ...formData, doctor_ids: selectedDoctors }),
       });
 
       if (response.ok) {
-        await Swal.fire('¡Éxito!', `Agenda para Dr. ${selectedMedico.primer_apellido || selectedMedico.username} generada.`, 'success');
-        setSelectedMedico(null); 
+        const result = await response.json();
+        await Swal.fire('¡Éxito!', result.message, 'success');
+        setSelectedDoctors([]); // Limpiar selección
       } else {
         Swal.fire('Error', 'Error al generar los horarios.', 'error');
       }
@@ -81,94 +91,82 @@ function GestionCitas() {
     }
   };
 
-  if (loading) {
-    return <div className="loading-container">Cargando médicos...</div>;
-  }
+  if (loading) return <div className="loading-container">Cargando médicos...</div>;
 
-  // --- ¡ESTRUCTURA CORREGIDA! ---
   return (
     <div className="gestion-citas-page">
       
-      {/* --- Contenedor Principal (Izquierda) --- */}
-      {/* ¡CAMBIO! Se usa <div> en lugar de <main> */}
+      {/* Columna Izquierda: Lista de Médicos */}
       <div className="citas-main-content"> 
-        <h1>Gestión de Agenda de Citas</h1>
-        <p>Selecciona un médico de la lista para configurar su agenda del día.</p>
+        <h1>Programación Masiva de Agenda</h1>
+        <p>Selecciona uno o varios médicos para asignarles el mismo horario.</p>
         
+        <div className="actions-bar">
+            <button className="btn-select-all" onClick={toggleSelectAll}>
+                {selectedDoctors.length === medicos.length ? 'Deseleccionar Todos' : 'Seleccionar Todos'}
+            </button>
+            <span>{selectedDoctors.length} médicos seleccionados</span>
+        </div>
+
         <div className="medicos-list-container">
           {medicos.map(medico => (
-            <div key={medico.user_id} className="medico-card">
-              <div className="medico-info">
-                <h4>{medico.nombres || 'Dr.'} {medico.primer_apellido || medico.username}</h4>
-                <p>{medico.especialidad || 'Sin especialidad asignada'}</p>
+            <div 
+                key={medico.user_id} 
+                className={`medico-card-selectable ${selectedDoctors.includes(medico.user_id) ? 'selected' : ''}`}
+                onClick={() => toggleDoctor(medico.user_id)}
+            >
+              <div className="checkbox-indicator">
+                  {selectedDoctors.includes(medico.user_id) && "✔"}
               </div>
-              <button className="btn-asignar" onClick={() => setSelectedMedico(medico)}>
-                Añadir Horario
-              </button>
+              <div className="medico-info">
+                <h4>{medico.nombres} {medico.primer_apellido}</h4>
+                <p>{medico.especialidad || 'General'}</p>
+              </div>
             </div>
           ))}
         </div>
       </div>
 
-      {/* --- Contenedor Lateral (Derecha) --- */}
-      {/* ¡CAMBIO! Se usa <div> en lugar de <aside> */}
-      <div className="citas-sidebar-promo"> 
-        <h3>Tu Salud, Nuestra Prioridad</h3>
-        <p>Equipos de última generación y los mejores especialistas.</p>
-        <div className="image-carousel-container">
-          {promoImages.map((src, index) => (
-            <img
-              key={src}
-              src={src}
-              alt="Instalaciones de HealthTrack"
-              className={`carousel-image ${index === currentImageIndex ? 'active' : ''}`}
-            />
-          ))}
-        </div>
+      {/* Columna Derecha: Formulario de Configuración */}
+      <div className="citas-sidebar-form"> 
+        <h3>Configuración de Horario</h3>
+        <p>Se aplicará a los {selectedDoctors.length} seleccionados.</p>
+        
+        <form onSubmit={handleBulkSubmit}>
+            <div className="form-group">
+            <label>Día de Trabajo</label>
+            <input type="date" name="date" value={formData.date} min={new Date().toISOString().split('T')[0]} onChange={handleFormChange} required />
+            </div>
+            <div className="form-group">
+            <label>Sede</label>
+            <input type="text" name="sede" placeholder="Ej: Sede Principal" onChange={handleFormChange} value={formData.sede} required />
+            </div>
+            <div className="form-row">
+            <div className="form-group">
+                <label>Inicio</label>
+                <input type="time" name="startTime" value={formData.startTime} onChange={handleFormChange} min="06:00" max="22:00" required />
+            </div>
+            <div className="form-group">
+                <label>Fin</label>
+                <input type="time" name="endTime" value={formData.endTime} onChange={handleFormChange} min="06:00" max="22:00" required />
+            </div>
+            </div>
+            <div className="form-group">
+            <label>Intervalo (minutos)</label>
+            <select name="interval" value={formData.interval} onChange={handleFormChange}>
+                <option value="15">15</option>
+                <option value="20">20</option>
+                <option value="30">30</option>
+                <option value="45">45</option>
+                <option value="60">60</option>
+            </select>
+            </div>
+            
+            <button type="submit" className="btn-save-bulk" disabled={selectedDoctors.length === 0}>
+                Generar Agenda ({selectedDoctors.length})
+            </button>
+        </form>
       </div>
-
-      {/* --- Formulario Modal (no cambia) --- */}
-      {selectedMedico && (
-        <div className="modal-overlay" onClick={() => setSelectedMedico(null)}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-            <h2>Generar Agenda para Dr. {selectedMedico.primer_apellido || selectedMedico.username}</h2>
-            <form onSubmit={handleFormSubmit}>
-              {/* (Tu formulario sigue aquí igual que antes) */}
-              <div className="form-group">
-                <label>Día de Trabajo</label>
-                <input type="date" name="date" value={formData.date} min={new Date().toISOString().split('T')[0]} onChange={handleFormChange} required />
-              </div>
-              <div className="form-group">
-                <label>Sede</label>
-                <input type="text" name="sede" placeholder="Ej: Sede Principal" onChange={handleFormChange} value={formData.sede} required />
-              </div>
-              <div className="form-row">
-                <div className="form-group">
-                  <label>Hora de Inicio</label>
-                  <input type="time" name="startTime" value={formData.startTime} onChange={handleFormChange} min="08:00" max="18:00" required />
-                </div>
-                <div className="form-group">
-                  <label>Hora de Fin</label>
-                  <input type="time" name="endTime" value={formData.endTime} onChange={handleFormChange} min="08:00" max="18:00" required />
-                </div>
-              </div>
-              <div className="form-group">
-                <label>Duración de cada cita (minutos)</label>
-                <select name="interval" value={formData.interval} onChange={handleFormChange}>
-                  <option value="15">15</option>
-                  <option value="30">30</option>
-                  <option value="45">45</option>
-                  <option value="60">60</option>
-                </select>
-              </div>
-              <div className="modal-actions">
-                <button type="button" className="btn-cancel" onClick={() => setSelectedMedico(null)}>Cancelar</button>
-                <button type="submit" className="btn-save">Generar Horarios</button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

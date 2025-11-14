@@ -5,6 +5,7 @@ import { useAuth } from '../context/AuthContext';
 // --- ¡Añade FaFileInvoiceDollar! ---
 import { FaTachometerAlt, FaUser, FaCalendarCheck, FaSignOutAlt, FaFileInvoiceDollar } from 'react-icons/fa';
 import './UserLayout.css'; 
+import { FaNotesMedical } from 'react-icons/fa';
 
 function UserLayout() {
   const { user, logout } = useAuth();
@@ -63,6 +64,10 @@ function UserLayout() {
           >
             <FaFileInvoiceDollar /> <span>Mis Facturas</span>
           </Link>
+
+          <Link to="/user/mis-diagnosticos" className={`nav-link ${isLinkActive('/user/mis-diagnosticos') ? 'active' : ''}`}>
+               <FaNotesMedical /> <span>Mis Diagnósticos</span>
+         </Link>
         </nav>
 
         {/* ... (sidebar footer) ... */}

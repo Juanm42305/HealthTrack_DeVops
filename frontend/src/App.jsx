@@ -24,15 +24,15 @@ import DoctorLayout from './components/DoctorLayout';
 import GestionMedicos from './components/GestionMedicos';
 import GestionCitas from './components/GestionCitas';
 import GestionLaboratorio from './components/GestionLaboratorio';
-import Facturacion from './components/Facturacion'; // ¡Ruta de Facturación Admin!
-
+import Facturacion from './components/Facturacion'; 
 // --- Páginas de Usuario ---
 import UserDashboard from './components/UserDashboard';
 import Profile from './components/Profile';
 import MisCitas from './components/MisCitas';
 import AgendarCita from './components/AgendarCita';
 import MisResultados from './components/MisResultados';
-import MisFacturas from './components/MisFacturas'; // ¡Ruta de Facturación Paciente!
+import MisFacturas from './components/MisFacturas'; 
+import MisDiagnosticos from './components/MisDiagnosticos';
 
 // --- Páginas de Médico ---
 import DoctorDashboard from './components/DoctorDashboard';
@@ -76,6 +76,7 @@ function App() {
           <Route path="agendar-cita" element={<AgendarCita />} />
           <Route path="resultados" element={<MisResultados />} />
           <Route path="mis-facturas" element={<MisFacturas />} /> {/* <-- RUTA AÑADIDA */}
+          <Route path="mis-diagnosticos" element={<MisDiagnosticos />} />
         </Route>
 
         {/* Rutas de Médico */}

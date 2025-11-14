@@ -1,5 +1,5 @@
 // Contenido COMPLETO y DEFINITIVO para backend/server.js
-// (CORREGIDO para enviar session.url en lugar de session.id)
+// (CORREGIDO para enviar session.url e incluye logs de depuración)
 
 const express = require('express');
 const cors = require('cors');
@@ -232,39 +232,6 @@ app.get('/api/profile/doctor/:userId', async (req, res) => {
     res.status(500).json({ error: "Error en el servidor." });
   }
 });
-app.post('/api/doctor/diagnoses', async (req, res) => {
-  const { patient_id, doctor_id, diagnosis_title, diagnosis_type, description, prescription, recommendations } = req.body;
-
-  if (!patient_id || !doctor_id || !diagnosis_title) {
-    return res.status(400).json({ error: 'Faltan campos obligatorios.' });
-  }
-
-  try {
-    const query = `
-      INSERT INTO diagnoses (patient_id, doctor_id, diagnosis_title, diagnosis_type, description, prescription, recommendations)
-      VALUES ($1, $2, $3, $4, $5, $6, $7)
-      RETURNING *
-    `;
-    const newDiagnosis = await pool.query(query, [patient_id, doctor_id, diagnosis_title, diagnosis_type, description, prescription, recommendations]);
-    res.status(201).json(newDiagnosis.rows[0]);
-  } catch (err) {
-    console.error('Error al crear diagnóstico:', err.message);
-    res.status(500).json({ error: 'Error en el servidor.' });
-  }
-});
-
-// (MÉDICO) Obtener diagnósticos de un paciente
-app.get('/api/doctor/patients/:patientId/diagnoses', async (req, res) => {
-  const { patientId } = req.params;
-  try {
-    const query = "SELECT * FROM diagnoses WHERE patient_id = $1 ORDER BY created_at DESC";
-    const result = await pool.query(query, [patientId]);
-    res.json(result.rows);
-  } catch (err) {
-    console.error('Error al obtener diagnósticos:', err.message);
-    res.status(500).json({ error: 'Error en el servidor.' });
-  }
-});
 
 app.put('/api/profile/doctor/:userId', async (req, res) => {
   const { userId } = req.params;
@@ -460,22 +427,22 @@ app.post('/api/admin/create-invoice', async (req, res) => {
     }
   });
   
-// (ADMIN) Obtiene TODAS las facturas para el reporte
-app.get('/api/admin/all-invoices', async (req, res) => {
-    try {
-        const query = `
-            SELECT i.*, pp.nombres, pp.primer_apellido
-            FROM invoices i
-            LEFT JOIN patient_profiles pp ON i.user_id = pp.user_id
-            ORDER BY i.id DESC
-        `;
-        const result = await pool.query(query);
-        res.json(result.rows);
-    } catch (err) {
-        console.error('Error al obtener todas las facturas:', err.message);
-        res.status(500).json({ error: 'Error en el servidor.' });
-    }
-});
+  // (ADMIN) Obtiene TODAS las facturas para el reporte
+  app.get('/api/admin/all-invoices', async (req, res) => {
+      try {
+          const query = `
+              SELECT i.*, pp.nombres, pp.primer_apellido
+              FROM invoices i
+              LEFT JOIN patient_profiles pp ON i.user_id = pp.user_id
+              ORDER BY i.id DESC
+          `;
+          const result = await pool.query(query);
+          res.json(result.rows);
+      } catch (err) {
+          console.error('Error al obtener todas las facturas:', err.message);
+          res.status(500).json({ error: 'Error en el servidor.' });
+      }
+  });
 
 
 // --- RUTAS DE GESTIÓN DE CITAS ---
@@ -913,6 +880,7 @@ app.put('/api/doctor/appointments/:appointmentId/finish', async (req, res) => {
 });
 
 // (PACIENTE) Crea una sesión de pago de Stripe para una factura PENDIENTE
+// --- ¡ESTA ES LA RUTA CORREGIDA! ---
 app.post('/api/billing/create-checkout-session/:invoiceId', async (req, res) => {
     const { invoiceId } = req.params;
   
@@ -927,9 +895,13 @@ app.post('/api/billing/create-checkout-session/:invoiceId', async (req, res) => 
         return res.status(400).json({ error: 'Esta factura ya ha sido pagada.' });
       }
   
-      // ¡Asegúrate de tener FRONTEND_URL en tus variables de entorno de Render!
+      // Usamos process.env.FRONTEND_URL para asegurar que Stripe sepa a dónde redirigir
       const successUrl = `${process.env.FRONTEND_URL}/user/mis-facturas?payment=success`;
       const cancelUrl = `${process.env.FRONTEND_URL}/user/mis-facturas?payment=cancelled`;
+
+      // Log de depuración para ver si la URL está llegando bien
+      console.log(`[Stripe Checkout] Creando sesión para factura ${invoiceId}`);
+      console.log(`[Stripe Checkout] Success URL: ${successUrl}`);
 
       const session = await stripe.checkout.sessions.create({
         payment_method_types: ['card'],
