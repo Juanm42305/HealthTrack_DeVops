@@ -64,7 +64,7 @@
 }
 
 .nav-pill-btn.login {
-  background-color: #E67E22; /* Naranja */
+  background-color: #3085d6; /* Naranja */
   color: white;
 }
 
@@ -127,7 +127,7 @@
 .orange-action-btn {
   display: block;
   width: 100%;
-  background-color: #E67E22; /* Naranja */
+  background-color: #3085d6; /* Naranja */
   color: white;
   padding: 1rem;
   border-radius: 50px;
@@ -140,7 +140,7 @@
 
 .orange-action-btn:hover {
   transform: translateY(-2px);
-  background-color: #d35400;
+  background-color: #3085d6;
 }
 
 @keyframes floatUp {

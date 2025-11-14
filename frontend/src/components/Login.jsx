@@ -135,7 +135,7 @@ const loginButtonStyle = {
   padding: '12px',
   borderRadius: '50px',
   border: 'none',
-  backgroundColor: '#E67E22', /* Naranja */
+  backgroundColor: '#3085d6', /* Naranja */
   color: 'white',
   fontWeight: 'bold',
   cursor: 'pointer',

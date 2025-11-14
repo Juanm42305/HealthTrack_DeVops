@@ -1,0 +1,313 @@
+/* Contenido para frontend/src/components/SobreNosotros.css */
+
+.sobre-nosotros-page {
+  font-family: 'Poppins', sans-serif;
+  color: #333;
+  background-color: #f8fbfd; /* Un fondo ligeramente azulado */
+  line-height: 1.6;
+}
+
+.content-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2.5rem 2rem;
+}
+
+.section-heading {
+  font-size: 2.2rem;
+  color: #2c3e50;
+  text-align: center;
+  margin-bottom: 2rem;
+  font-weight: 700;
+  position: relative;
+  padding-bottom: 0.8rem;
+}
+
+.section-heading::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  transform: translateX(-50%);
+  width: 80px;
+  height: 4px;
+  background-color: #3498db;
+  border-radius: 2px;
+}
+
+/* --- 1. Banner Principal "¿Quiénes Somos?" --- */
+.quienes-somos-banner {
+  position: relative;
+  width: 100%;
+  height: 400px; /* Altura fija para el banner */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden; /* Asegura que la imagen no se desborde */
+}
+
+.banner-image {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover; /* Cubre el área manteniendo el aspecto */
+  z-index: 1;
+}
+
+.banner-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.4); /* Capa oscura semitransparente */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2;
+}
+
+.banner-content {
+  text-align: center;
+  color: white;
+  padding: 1rem;
+  max-width: 800px;
+}
+
+.banner-title {
+  font-size: 3.5rem;
+  font-weight: 800;
+  margin-bottom: 0.5rem;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+.banner-subtitle {
+  font-size: 1.5rem;
+  font-weight: 400;
+  text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.4);
+}
+
+/* --- 2. Introducción detallada --- */
+.intro-section p {
+  font-size: 1.1rem;
+  margin-bottom: 1rem;
+  color: #555;
+  text-align: justify;
+}
+
+.intro-section .inline-link {
+  color: #3498db;
+  text-decoration: none;
+  font-weight: 600;
+  transition: color 0.2s ease-in-out;
+}
+
+.intro-section .inline-link:hover {
+  color: #2980b9;
+  text-decoration: underline;
+}
+
+/* --- 3. Misión, Visión, Valores (con imágenes al lado) --- */
+.mision-vision-valores {
+  padding-top: 4rem;
+  padding-bottom: 4rem;
+}
+
+.mision-vision-valores .section-heading {
+  margin-bottom: 1.5rem;
+  font-size: 1.8rem;
+  text-align: left;
+}
+.mision-vision-valores .section-heading::after {
+  left: 0;
+  transform: translateX(0);
+}
+
+
+.mision-item, .vision-item, .valores-item {
+  display: flex;
+  align-items: center;
+  margin-bottom: 4rem;
+  gap: 2rem;
+}
+
+.mision-item:last-of-type, .vision-item:last-of-type, .valores-item:last-of-type {
+  margin-bottom: 0;
+}
+
+.item-text {
+  flex: 1;
+  padding: 1rem;
+}
+
+.item-image-wrapper {
+  flex: 1;
+  border-radius: 15px;
+  overflow: hidden;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+  aspect-ratio: 16 / 9; /* Mantiene la proporción de la imagen */
+}
+
+.item-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* Alineación de ítems */
+.item-left {
+  flex-direction: row; /* Texto izquierda, imagen derecha */
+}
+
+.item-right {
+  flex-direction: row-reverse; /* Imagen izquierda, texto derecha */
+}
+
+.mision-item p, .vision-item p {
+  font-size: 1.05rem;
+  color: #555;
+}
+
+.valores-item ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.valores-item li {
+  font-size: 1.05rem;
+  margin-bottom: 0.8rem;
+  color: #444;
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+}
+
+.valores-item li i {
+  color: #3498db;
+  font-size: 1.2rem;
+}
+
+
+/* --- 4. Llamada a la Acción de Contacto --- */
+.call-to-action-section {
+  position: relative;
+  width: 100%;
+  height: 300px; /* Altura para el CTA */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  margin-top: 3rem;
+  margin-bottom: 0; /* Quita el margen inferior si es el último elemento */
+}
+
+.cta-image {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: 1;
+}
+
+.cta-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(44, 62, 80, 0.7); /* Azul oscuro semitransparente */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2;
+}
+
+.cta-content {
+  text-align: center;
+  color: white;
+  padding: 1rem;
+  max-width: 700px;
+}
+
+.cta-title {
+  font-size: 2.5rem;
+  font-weight: 700;
+  margin-bottom: 0.8rem;
+  text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.4);
+}
+
+.cta-description {
+  font-size: 1.2rem;
+  margin-bottom: 2rem;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.cta-button {
+  background-color: #27ae60; /* Verde vibrante */
+  color: white;
+  border: none;
+  padding: 1rem 2rem;
+  border-radius: 8px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+}
+
+.cta-button:hover {
+  background-color: #219150;
+  transform: translateY(-2px);
+}
+
+/* --- Responsividad --- */
+@media (max-width: 992px) {
+  .banner-title { font-size: 2.8rem; }
+  .banner-subtitle { font-size: 1.2rem; }
+  .section-heading { font-size: 1.8rem; }
+  .intro-section p { font-size: 1rem; }
+  .cta-title { font-size: 2rem; }
+  .cta-description { font-size: 1rem; }
+  .cta-button { padding: 0.8rem 1.5rem; font-size: 1rem; }
+
+  .mision-item, .vision-item, .valores-item {
+    flex-direction: column; /* Apilar en pantallas más pequeñas */
+    text-align: center;
+    margin-bottom: 3rem;
+  }
+  .item-text, .item-image-wrapper {
+    flex: none; /* Deshacer el flex de 1 */
+    width: 100%;
+  }
+  .mision-vision-valores .section-heading::after {
+    left: 50%; /* Centrar la línea en móvil */
+    transform: translateX(-50%);
+  }
+  .mision-vision-valores .section-heading {
+    text-align: center;
+  }
+
+  .valores-item ul {
+    text-align: left; /* Mantener la lista de valores alineada a la izquierda */
+    max-width: 300px;
+    margin: 0 auto;
+  }
+}
+
+@media (max-width: 576px) {
+  .quienes-somos-banner { height: 300px; }
+  .banner-title { font-size: 2.2rem; }
+  .banner-subtitle { font-size: 1rem; }
+  .content-container { padding: 1.5rem 1rem; }
+  .section-heading { font-size: 1.6rem; }
+  .cta-title { font-size: 1.8rem; }
+  .cta-description { font-size: 0.9rem; }
+  .cta-button { padding: 0.7rem 1.2rem; font-size: 0.9rem; }
+  .item-image-wrapper { border-radius: 10px; }
+}

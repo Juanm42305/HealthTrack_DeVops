@@ -4,8 +4,6 @@ import './WelcomePage.css';
 
 function WelcomePage() {
   const location = useLocation();
-  // Si estamos en la raíz ('/'), mostramos el contenido de bienvenida.
-  // Si estamos en '/login' o '/register', mostramos el Outlet (el formulario).
   const isHomePage = location.pathname === '/';
 
   return (
@@ -14,33 +12,29 @@ function WelcomePage() {
       {/* --- NAV SUPERIOR --- */}
       <nav className="modern-navbar">
         <div className="nav-links">
-          <Link to="/">Inicio</Link>
-          <Link to="#">Sobre Nosotros</Link>
-          <Link to="#">Sedes</Link>
-          <Link to="#">Contacto</Link>
+          <Link to="/">INICIO</Link>
+          <Link to="/sobre-nosotros">SOBRE NOSOTROS</Link>
+          <Link to="/sedes">SEDES</Link>
+          <Link to="/contacto">CONTACTO</Link> {/* <-- ENLACE ACTUALIZADO */}
         </div>
         <div className="nav-actions">
-          <button className="nav-pill-btn help">HELP</button>
-          {/* Si estamos en home, mostramos botón Login que lleva a la ruta */}
+          <button className="nav-pill-btn help">AYUDA</button>
           {isHomePage && (
              <Link to="/login" className="nav-pill-btn login">LOGIN</Link>
           )}
         </div>
       </nav>
 
-      {/* --- CONTENIDO CENTRAL (El cuadro blanco) --- */}
+      {/* --- CONTENIDO CENTRAL --- */}
       <div className="central-card-container">
         
-        {/* Texto grande a la izquierda */}
         <div className="hero-text-side">
           <h1>Hospital<br/>Portal</h1>
           <p>Tu salud, gestionada de forma inteligente.</p>
         </div>
 
-        {/* Tarjeta Blanca Derecha */}
         <div className="white-glass-card">
           {isHomePage ? (
-            // Contenido de la Home (cuando no estás logueándote)
             <div className="home-content">
               <div className="avatar-circle">
                 👤
@@ -52,7 +46,6 @@ function WelcomePage() {
               </Link>
             </div>
           ) : (
-            // Aquí se carga el Login.jsx cuando la ruta es /login
             <Outlet />
           )}
         </div>

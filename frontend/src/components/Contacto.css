@@ -1,0 +1,208 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap');
+
+.contacto-page {
+  font-family: 'Poppins', sans-serif;
+  /* Fondo azul oscuro profundo como en la imagen */
+  background: linear-gradient(135deg, #0a1535 0%, #122555 100%);
+  min-height: 100vh;
+  color: white;
+  position: relative;
+  padding-bottom: 3rem;
+}
+
+/* Navbar personalizada para fondo oscuro */
+.contact-navbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.5rem 3rem;
+  background-color: rgba(0, 0, 0, 0.2); /* Ligeramente transparente */
+  backdrop-filter: blur(5px);
+}
+
+.contact-navbar .nav-links a {
+  color: rgba(255, 255, 255, 0.8);
+  text-decoration: none;
+  margin-right: 2rem;
+  font-weight: 600;
+  font-size: 0.9rem;
+  transition: color 0.2s;
+}
+
+.contact-navbar .nav-links a:hover, 
+.contact-navbar .nav-links a.active {
+  color: #ffffff;
+  border-bottom: 2px solid #fff;
+  padding-bottom: 2px;
+}
+
+/* Botones del navbar */
+.nav-actions { display: flex; gap: 1rem; }
+.nav-pill-btn { border: none; padding: 0.5rem 1.5rem; border-radius: 50px; font-weight: 700; cursor: pointer; font-size: 0.85rem; text-decoration: none; display: flex; align-items: center; }
+.nav-pill-btn.help { background-color: rgba(255,255,255,0.1); color: white; border: 1px solid rgba(255,255,255,0.3); }
+.nav-pill-btn.login { background-color: #E67E22; color: white; }
+
+/* Contenedor Principal */
+.contacto-container {
+  max-width: 900px;
+  margin: 3rem auto;
+  padding: 0 2rem;
+}
+
+.contacto-title {
+  text-align: center;
+  font-size: 2.5rem;
+  font-weight: 700;
+  margin-bottom: 3rem;
+  letter-spacing: 1px;
+}
+
+/* Grid de Información */
+.info-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 3rem;
+  margin-bottom: 3rem;
+}
+
+.section-subtitle {
+  font-size: 1.2rem;
+  margin-bottom: 1rem;
+  font-weight: 600;
+  color: #e0e0e0;
+}
+
+.info-text {
+  margin-bottom: 1.5rem;
+  line-height: 1.6;
+  font-size: 1rem;
+  color: #d1d5db;
+}
+
+.highlight-number {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: #fff;
+  display: block;
+  margin-top: 0.2rem;
+}
+
+.small-note {
+  font-size: 0.85rem;
+  color: #a0aec0;
+  line-height: 1.5;
+}
+
+.divider-line {
+  border: 0;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.2);
+  margin: 2rem 0;
+}
+
+/* Sección Administrativa */
+.admin-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.icon-circle {
+  width: 40px;
+  height: 40px;
+  border: 2px solid white;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 1.2rem;
+}
+
+.admin-details {
+  margin-left: 3.5rem; /* Alinear con el texto del header */
+}
+
+.detail-item {
+  margin-bottom: 1.5rem;
+}
+
+.detail-item h4 {
+  font-size: 1rem;
+  margin: 0 0 0.3rem 0;
+  font-weight: 600;
+}
+
+.detail-item p {
+  margin: 0;
+  color: #d1d5db;
+}
+
+.link-sedes {
+  margin-left: 3.5rem;
+  color: #fff;
+  text-decoration: underline;
+  font-size: 0.95rem;
+}
+
+/* Botón Contáctanos */
+.cta-container {
+  margin-top: 3rem;
+  text-align: left;
+  margin-left: 3.5rem;
+}
+
+.btn-contactanos {
+  background-color: white;
+  color: #0a1535;
+  border: none;
+  padding: 0.8rem 2rem;
+  border-radius: 8px;
+  font-size: 1.1rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.8rem;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+  transition: transform 0.2s;
+}
+
+.btn-contactanos:hover {
+  transform: scale(1.05);
+  background-color: #f0f0f0;
+}
+
+.v-icon {
+  color: #E63946; /* Rojo para el corazón/logo */
+  font-size: 1.2rem;
+}
+
+/* Responsividad */
+@media (max-width: 768px) {
+  .info-grid {
+    grid-template-columns: 1fr;
+    gap: 2rem;
+  }
+  .contact-navbar {
+    flex-direction: column;
+    gap: 1rem;
+    padding: 1rem;
+  }
+  .nav-links {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 1rem;
+  }
+  .cta-container, .admin-details, .link-sedes {
+    margin-left: 0;
+    text-align: center;
+  }
+  .admin-header {
+    justify-content: center;
+  }
+  .contacto-title {
+    font-size: 2rem;
+  }
+}

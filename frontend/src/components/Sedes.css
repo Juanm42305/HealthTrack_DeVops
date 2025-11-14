@@ -1,0 +1,198 @@
+/* Estilos para la página de Sedes */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap');
+
+.sedes-page {
+  font-family: 'Poppins', sans-serif;
+  background-color: white;
+  min-height: 100vh;
+  position: relative;
+}
+
+/* Reutilizamos la Navbar Oscura de SobreNosotros si ya la tenías, si no, aquí está */
+.modern-navbar-dark {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 3rem;
+  background-color: white;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.nav-links a {
+  color: #555;
+  text-decoration: none;
+  margin-right: 2rem;
+  font-weight: 600;
+  font-size: 0.9rem;
+  transition: color 0.2s;
+}
+.nav-links a:hover, .nav-links a.active { color: #3498db; border-bottom: 2px solid #3498db; padding-bottom: 2px; }
+
+/* Header con Imagen de Fondo (Edificio) */
+.sedes-header {
+  background: url('https://img.freepik.com/free-photo/modern-business-building-exterior_1122-2066.jpg') center/cover no-repeat;
+  height: 350px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start; /* Alineado a la izquierda */
+  position: relative;
+  padding-left: 10%; /* Espacio desde la izquierda */
+}
+
+/* Capa sutil oscura sobre la imagen */
+.sedes-header::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; width: 100%; height: 100%;
+  background: rgba(0, 0, 0, 0.15);
+}
+
+.sedes-header-content {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  max-width: 1200px;
+}
+
+/* Tarjeta Flotante del Título (Estilo de la imagen) */
+.header-card {
+  background: rgba(255, 255, 255, 0.9);
+  padding: 1.5rem 3rem;
+  border-radius: 50px; /* Bordes muy redondos */
+  display: inline-block;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+  backdrop-filter: blur(5px);
+}
+
+.header-card h1 {
+  color: #2c3e50;
+  font-size: 2rem;
+  margin: 0;
+  font-weight: 700;
+}
+
+.main-content-wrapper {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 3rem 2rem;
+}
+
+.sedes-intro-title {
+  font-size: 1.4rem;
+  color: #2c3e50;
+  margin-bottom: 2rem;
+  font-weight: 500;
+  border-left: 4px solid #3498db;
+  padding-left: 1rem;
+}
+
+/* --- ACORDEONES --- */
+.accordion-container {
+  border-top: 1px solid #e0e0e0;
+}
+
+.accordion-item {
+  border-bottom: 1px solid #e0e0e0;
+  background-color: white;
+  overflow: hidden;
+  transition: all 0.3s;
+}
+
+.accordion-header {
+  padding: 1.2rem 1rem;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: background-color 0.2s;
+}
+
+.accordion-header:hover {
+  background-color: #f9f9f9;
+}
+
+.accordion-header h3 {
+  margin: 0;
+  font-size: 1.1rem;
+  color: #444;
+  font-weight: 500;
+}
+
+.accordion-icon {
+  font-size: 1.5rem;
+  color: #3498db;
+  font-weight: bold;
+}
+
+.accordion-body {
+  padding: 1rem 2rem 2rem 2rem;
+  background-color: #fbfbfb;
+  animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.sede-details p {
+  margin: 0.5rem 0;
+  color: #666;
+  font-size: 0.95rem;
+}
+
+.btn-mapa {
+  margin-top: 1rem;
+  background-color: white;
+  color: #3498db;
+  border: 1px solid #3498db;
+  padding: 0.5rem 1.2rem;
+  border-radius: 20px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.2s;
+}
+
+.btn-mapa:hover {
+  background-color: #3498db;
+  color: white;
+}
+
+/* Botón Flotante de Ayuda */
+.floating-help-btn {
+  position: fixed;
+  bottom: 30px;
+  right: 30px;
+  background-color: white;
+  border-radius: 50px;
+  padding: 0.8rem 1.2rem;
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+  cursor: pointer;
+  z-index: 1000;
+  border: 1px solid #eee;
+}
+
+.help-icon {
+  font-size: 1.5rem;
+}
+
+.floating-help-btn span {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #2c3e50;
+  line-height: 1.1;
+}
+
+/* Responsividad */
+@media (max-width: 768px) {
+  .sedes-header { height: 250px; justify-content: center; padding-left: 0; }
+  .header-card h1 { font-size: 1.5rem; }
+  .modern-navbar-dark { padding: 1rem; flex-direction: column; gap: 1rem; }
+  .nav-links { display: flex; gap: 1rem; flex-wrap: wrap; justify-content: center; }
+}

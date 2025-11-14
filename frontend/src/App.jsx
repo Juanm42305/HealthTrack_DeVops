@@ -1,5 +1,4 @@
 // Contenido COMPLETO y DEFINITIVO para frontend/src/App.jsx
-// (Con TODAS las rutas: Laboratorio, Facturación y correcciones)
 
 import React from 'react';
 import { Routes, Route } from 'react-router-dom';
@@ -10,6 +9,9 @@ import { SpeedInsights } from '@vercel/speed-insights/react';
 import WelcomePage from './components/WelcomePage';
 import Login from './components/Login';
 import Register from './components/Register';
+import SobreNosotros from './components/SobreNosotros';
+import Sedes from './components/Sedes';
+import Contacto from './components/Contacto'; // <-- IMPORTAR AQUÍ
 
 // Vistas Protegidas y Layouts
 import ProtectedRoute from './context/ProtectedRoute';
@@ -24,14 +26,15 @@ import DoctorLayout from './components/DoctorLayout';
 import GestionMedicos from './components/GestionMedicos';
 import GestionCitas from './components/GestionCitas';
 import GestionLaboratorio from './components/GestionLaboratorio';
-import Facturacion from './components/Facturacion'; 
+import Facturacion from './components/Facturacion';
+
 // --- Páginas de Usuario ---
 import UserDashboard from './components/UserDashboard';
 import Profile from './components/Profile';
 import MisCitas from './components/MisCitas';
 import AgendarCita from './components/AgendarCita';
 import MisResultados from './components/MisResultados';
-import MisFacturas from './components/MisFacturas'; 
+import MisFacturas from './components/MisFacturas';
 import MisDiagnosticos from './components/MisDiagnosticos';
 
 // --- Páginas de Médico ---
@@ -54,6 +57,11 @@ function App() {
           <Route path="register" element={<Register />} />
         </Route>
 
+        {/* --- NUEVAS RUTAS PÚBLICAS --- */}
+        <Route path="/sobre-nosotros" element={<SobreNosotros />} />
+        <Route path="/sedes" element={<Sedes />} />
+        <Route path="/contacto" element={<Contacto />} /> {/* <-- NUEVA RUTA */}
+
         {/* Ruta del Dispatcher */}
         <Route
           path="/dashboard"
@@ -65,7 +73,7 @@ function App() {
           <Route path="gestion-medicos" element={<GestionMedicos />} />
           <Route path="gestion-citas" element={<GestionCitas />} />
           <Route path="laboratorio" element={<GestionLaboratorio />} />
-          <Route path="facturacion" element={<Facturacion />} /> {/* <-- RUTA AÑADIDA */}
+          <Route path="facturacion" element={<Facturacion />} />
         </Route>
 
         {/* Rutas de Usuario */}
@@ -75,7 +83,7 @@ function App() {
           <Route path="mis-citas" element={<MisCitas />} />
           <Route path="agendar-cita" element={<AgendarCita />} />
           <Route path="resultados" element={<MisResultados />} />
-          <Route path="mis-facturas" element={<MisFacturas />} /> {/* <-- RUTA AÑADIDA */}
+          <Route path="mis-facturas" element={<MisFacturas />} />
           <Route path="mis-diagnosticos" element={<MisDiagnosticos />} />
         </Route>
 
@@ -88,8 +96,6 @@ function App() {
           <Route path="pacientes/:patientId/historiales" element={<DoctorHistoriales />} />
           <Route path="historiales" element={<DoctorHistoriales />} />
           <Route path="diagnosticos" element={<DoctorDiagnosticos />} />
-          
-          {/* Rutas de Resultados Corregidas */}
           <Route path="resultados" element={<DoctorResultados />} />
           <Route path="pacientes/:patientId/resultados" element={<DoctorResultados />} />
         </Route>
