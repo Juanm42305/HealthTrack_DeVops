@@ -1,0 +1,115 @@
+/* frontend/src/components/DoctorDiagnosticos.css */
+
+.diagnosticos-page {
+  background-color: #f4f7fa;
+  min-height: 100vh;
+}
+
+.diagnosticos-container {
+  padding: 2.5rem;
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.diagnosticos-container h1 {
+  font-size: 2rem;
+  color: #2c3e50;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+/* Búsqueda */
+.search-section {
+    margin-top: 2rem;
+}
+.patient-result-card {
+    background: white;
+    padding: 1rem 1.5rem;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 1rem;
+}
+.patient-result-card h3 { margin: 0; color: #333; font-size: 1.1rem; }
+.patient-result-card span { color: #777; font-size: 0.9rem; }
+.btn-select {
+    background: #3498db;
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+/* Formulario */
+.diagnosis-form-container {
+    background: white;
+    padding: 2rem;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+    margin-top: 2rem;
+}
+
+.patient-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 2px solid #f0f0f0;
+    padding-bottom: 1rem;
+    margin-bottom: 1.5rem;
+}
+.patient-header h3 { margin: 0; color: #2c3e50; }
+.btn-change {
+    background: none; border: none; color: #e74c3c; 
+    cursor: pointer; text-decoration: underline;
+}
+
+.diagnosis-form .form-group { margin-bottom: 1.5rem; }
+.diagnosis-form label {
+    display: block; font-weight: 600; margin-bottom: 0.5rem; color: #444;
+    display: flex; align-items: center; gap: 0.5rem;
+}
+.diagnosis-form input, 
+.diagnosis-form select, 
+.diagnosis-form textarea {
+    width: 100%; padding: 0.8rem; border: 1px solid #ddd; border-radius: 8px;
+    font-family: inherit; font-size: 0.95rem;
+    background-color: #fcfcfc;
+}
+.diagnosis-form textarea { resize: vertical; }
+
+.diagnosis-form .form-row {
+    display: flex; gap: 1.5rem;
+}
+.diagnosis-form .half { flex: 1; }
+
+/* Estilo especial para la receta */
+.prescription-input {
+    background-color: #f4fbff; /* Un azul muy clarito */
+    border-color: #bce0fd;
+}
+
+.btn-save-diagnosis {
+    width: 100%;
+    padding: 1rem;
+    background-color: #27ae60;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 1.1rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.2s;
+    margin-top: 1rem;
+}
+.btn-save-diagnosis:hover {
+    background-color: #219150;
+}
+
+@media (max-width: 768px) {
+    .diagnosis-form .form-row { flex-direction: column; gap: 0; }
+}

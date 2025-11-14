@@ -14,10 +14,10 @@ function WelcomePage() {
       {/* --- NAV SUPERIOR --- */}
       <nav className="modern-navbar">
         <div className="nav-links">
-          <Link to="/">Home</Link>
-          <Link to="#">About</Link>
-          <Link to="#">Communities</Link>
-          <Link to="#">Contacts</Link>
+          <Link to="/">Inicio</Link>
+          <Link to="#">Sobre Nosotros</Link>
+          <Link to="#">Sedes</Link>
+          <Link to="#">Contacto</Link>
         </div>
         <div className="nav-actions">
           <button className="nav-pill-btn help">HELP</button>

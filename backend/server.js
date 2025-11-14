@@ -232,6 +232,39 @@ app.get('/api/profile/doctor/:userId', async (req, res) => {
     res.status(500).json({ error: "Error en el servidor." });
   }
 });
+app.post('/api/doctor/diagnoses', async (req, res) => {
+  const { patient_id, doctor_id, diagnosis_title, diagnosis_type, description, prescription, recommendations } = req.body;
+
+  if (!patient_id || !doctor_id || !diagnosis_title) {
+    return res.status(400).json({ error: 'Faltan campos obligatorios.' });
+  }
+
+  try {
+    const query = `
+      INSERT INTO diagnoses (patient_id, doctor_id, diagnosis_title, diagnosis_type, description, prescription, recommendations)
+      VALUES ($1, $2, $3, $4, $5, $6, $7)
+      RETURNING *
+    `;
+    const newDiagnosis = await pool.query(query, [patient_id, doctor_id, diagnosis_title, diagnosis_type, description, prescription, recommendations]);
+    res.status(201).json(newDiagnosis.rows[0]);
+  } catch (err) {
+    console.error('Error al crear diagnóstico:', err.message);
+    res.status(500).json({ error: 'Error en el servidor.' });
+  }
+});
+
+// (MÉDICO) Obtener diagnósticos de un paciente
+app.get('/api/doctor/patients/:patientId/diagnoses', async (req, res) => {
+  const { patientId } = req.params;
+  try {
+    const query = "SELECT * FROM diagnoses WHERE patient_id = $1 ORDER BY created_at DESC";
+    const result = await pool.query(query, [patientId]);
+    res.json(result.rows);
+  } catch (err) {
+    console.error('Error al obtener diagnósticos:', err.message);
+    res.status(500).json({ error: 'Error en el servidor.' });
+  }
+});
 
 app.put('/api/profile/doctor/:userId', async (req, res) => {
   const { userId } = req.params;
