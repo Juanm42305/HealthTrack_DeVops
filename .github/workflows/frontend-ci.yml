@@ -1,47 +1,39 @@
-name: Frontend CI Check
+name: CI/CD Programado (Viernes 3PM)
 
 on:
+  # Mantenemos el 'push' para que puedas probar cambios manualmente si quieres
   push:
     branches: [ "main" ]
-    # La acción solo se ejecutará si hay cambios en la carpeta frontend
-    paths:
-      - 'frontend/**'
-  pull_request:
-    branches: [ "main" ]
-    paths:
-      - 'frontend/**'
+  
+  # --- AQUÍ ESTÁ LA MAGIA ---
+  schedule:
+    # Minuto (0) Hora (20) DíaMes (*) Mes (*) DíaSemana (5=Viernes)
+    # 20:00 UTC = 15:00 Colombia (3 PM)
+    - cron: '0 20 * * 5'
 
 jobs:
   build-and-test:
     runs-on: ubuntu-latest
     
-    # MUY IMPORTANTE: Le decimos que todos los comandos se ejecuten dentro de la carpeta 'frontend'
     defaults:
       run:
         working-directory: ./frontend
 
     steps:
-      # 1. Descarga el código
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      - name: Checkout del código
+        uses: actions/checkout@v3
 
-      # 2. Configura Node.js
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - name: Configurar Node.js
+        uses: actions/setup-node@v3
         with:
-          node-version: 20
-          cache: 'npm'
-          # Especificamos la ruta al package-lock.json del frontend para la caché
-          cache-dependency-path: frontend/package-lock.json
+          node-version: 18
 
-      # 3. Instala las dependencias (¡El paso que faltaba!)
-      - name: Install dependencies
-        run: npm ci
+      - name: Instalar dependencias
+        run: npm install
 
-      # 4. Construye el proyecto para verificar que no hay errores
-      - name: Build project
-        run: npm run build
+      # Ejecutamos las pruebas para asegurar calidad antes de desplegar
+      - name: Correr Pruebas (Jest)
+        run: npm test
 
-      # 5. Ejecuta las pruebas
-      - name: Run tests
-        run: npm run test
+      # Si las pruebas pasan, Vercel desplegará automáticamente 
+      # gracias a su integración, o puedes añadir el paso de deploy aquí si usas Vercel CLI.
