@@ -32,8 +32,10 @@ const pool = new Pool({
     rejectUnauthorized: false
   }
 });
-
-app.use(cors());
+app.use(cors({
+  origin: 'https://health-track-de-vops-vil3.vercel.app/', // <-- Reemplaza con la URL real de tu frontend en Vercel
+  credentials: true
+}));
 
 // --- 1. WEBHOOK DE STRIPE (Debe ir ANTES de express.json) ---
 app.post('/api/billing/webhook', express.raw({type: 'application/json'}), async (req, res) => {
