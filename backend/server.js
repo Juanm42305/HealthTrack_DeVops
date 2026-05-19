@@ -1,5 +1,5 @@
 // Contenido COMPLETO, REPARADO y DEFINITIVO para backend/server.js
-// (Incluye: Inicialización automática de Base de Datos, Webhooks, Auth, Citas, Historia Clínica, Facturación, Laboratorio y Analíticas)
+// (Incluye: Inicialización robusta de Tablas, Webhooks, Auth, Citas, Historia Clínica, Facturación, Laboratorio y Analíticas)
 
 const express = require('express');
 const cors = require('cors');
@@ -29,168 +29,179 @@ const pool = new Pool({
   }
 });
 
-// CORRECCIÓN DE CORS: Se remueve la barra '/' del final de la URL
+// CORRECCIÓN DE CORS: Sin la barra '/' al final para evitar bloqueos del navegador
 app.use(cors({
   origin: 'https://health-track-de-vops-vil3.vercel.app', 
   credentials: true
 }));
 
-// --- AUTOMATIZACIÓN DE TABLAS (POSTGRESQL NUEVO EN RENDER) ---
+// --- AUTOMATIZACIÓN DE TABLAS (POSTGRESQL SEGURO) ---
 const inicializarBaseDeDatos = async () => {
   try {
     console.log("🔄 Verificando e inicializando tablas en PostgreSQL...");
 
-    // 1. Tabla de Usuarios
-    await pool.query(`
-      CREATE TABLE IF NOT EXISTS users (
-        id SERIAL PRIMARY KEY,
-        username VARCHAR(100) UNIQUE NOT NULL,
-        password VARCHAR(255) NOT NULL,
-        role VARCHAR(50) DEFAULT 'usuario'
-      );
-    `);
+    const tablas = [
+      {
+        nombre: "users",
+        query: `CREATE TABLE IF NOT EXISTS users (
+          id SERIAL PRIMARY KEY,
+          username VARCHAR(100) UNIQUE NOT NULL,
+          password VARCHAR(255) NOT NULL,
+          role VARCHAR(50) DEFAULT 'usuario'
+        );`
+      },
+      {
+        nombre: "patient_profiles",
+        query: `CREATE TABLE IF NOT EXISTS patient_profiles (
+          id SERIAL PRIMARY KEY,
+          user_id INT,
+          nombres VARCHAR(100),
+          primer_apellido VARCHAR(100),
+          segundo_apellido VARCHAR(100),
+          edad INT,
+          fecha_nacimiento DATE,
+          numero_cedula VARCHAR(50),
+          tipo_de_sangre VARCHAR(10),
+          direccion_residencia VARCHAR(255),
+          avatar_url VARCHAR(255)
+        );`
+      },
+      {
+        nombre: "doctor_profiles",
+        query: `CREATE TABLE IF NOT EXISTS doctor_profiles (
+          id SERIAL PRIMARY KEY,
+          user_id INT,
+          nombres VARCHAR(100),
+          primer_apellido VARCHAR(100),
+          segundo_apellido VARCHAR(100),
+          edad INT,
+          fecha_nacimiento DATE,
+          numero_cedula VARCHAR(50),
+          especialidad VARCHAR(100),
+          consultorio VARCHAR(50),
+          sede VARCHAR(100),
+          avatar_url VARCHAR(255)
+        );`
+      },
+      {
+        nombre: "appointments",
+        query: `CREATE TABLE IF NOT EXISTS appointments (
+          id SERIAL PRIMARY KEY,
+          doctor_id INT,
+          patient_id INT,
+          appointment_time TIMESTAMP NOT NULL,
+          sede VARCHAR(100),
+          status VARCHAR(50) DEFAULT 'disponible',
+          appointment_type VARCHAR(50) DEFAULT 'general',
+          description TEXT
+        );`
+      },
+      {
+        nombre: "diagnoses",
+        query: `CREATE TABLE IF NOT EXISTS diagnoses (
+          id SERIAL PRIMARY KEY,
+          patient_id INT,
+          doctor_id INT,
+          diagnosis_title VARCHAR(255) NOT NULL,
+          diagnosis_type VARCHAR(100),
+          description TEXT,
+          prescription TEXT,
+          recommendations TEXT,
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );`
+      },
+      {
+        nombre: "lab_results",
+        query: `CREATE TABLE IF NOT EXISTS lab_results (
+          id SERIAL PRIMARY KEY,
+          patient_id INT,
+          admin_id INT,
+          test_name VARCHAR(255) NOT NULL,
+          description TEXT,
+          file_url VARCHAR(255) NOT NULL,
+          file_name VARCHAR(255),
+          file_type VARCHAR(50),
+          doctor_id INT,
+          appointment_id INT,
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );`
+      },
+      {
+        nombre: "invoices",
+        query: `CREATE TABLE IF NOT EXISTS invoices (
+          id SERIAL PRIMARY KEY,
+          user_id INT,
+          amount INT NOT NULL,
+          description TEXT,
+          status VARCHAR(50) DEFAULT 'pending',
+          appointment_id INT,
+          stripe_payment_intent_id VARCHAR(255)
+        );`
+      },
+      {
+        nombre: "medical_records",
+        query: `CREATE TABLE IF NOT EXISTS medical_records (
+          id SERIAL PRIMARY KEY,
+          patient_id INT,
+          doctor_id INT,
+          appointment_id INT,
+          motivo_consulta TEXT,
+          registro TEXT,
+          sexo VARCHAR(20),
+          edad INT,
+          habitacion VARCHAR(50),
+          ocupacion VARCHAR(100),
+          antecedentes_patologicos_cardiovasculares TEXT,
+          antecedentes_patologicos_pulmonares TEXT,
+          antecedentes_patologicos_digestivos TEXT,
+          antecedentes_patologicos_diabetes TEXT,
+          antecedentes_patologicos_renales TEXT,
+          antecedentes_patologicos_quirurgicos TEXT,
+          antecedentes_patologicos_alergicos TEXT,
+          antecedentes_patologicos_transfusiones TEXT,
+          antecedentes_patologicos_medicamentos TEXT,
+          antecedentes_patologicos_especifique TEXT,
+          antecedentes_no_patologicos_alcohol TEXT,
+          antecedentes_no_patologicos_tabaquismo TEXT,
+          antecedentes_no_patologicos_drogas TEXT,
+          antecedentes_no_patologicos_inmunizaciones TEXT,
+          antecedentes_no_patologicos_otros TEXT,
+          observaciones_generales TEXT,
+          fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );`
+      }
+    ];
 
-    // 2. Tabla de Perfiles de Paciente
-    await pool.query(`
-      CREATE TABLE IF NOT EXISTS patient_profiles (
-        id SERIAL PRIMARY KEY,
-        user_id INT REFERENCES users(id) ON DELETE CASCADE,
-        nombres VARCHAR(100),
-        primer_apellido VARCHAR(100),
-        segundo_apellido VARCHAR(100),
-        edad INT,
-        fecha_nacimiento DATE,
-        numero_cedula VARCHAR(50),
-        tipo_de_sangre VARCHAR(10),
-        direccion_residencia VARCHAR(255),
-        avatar_url VARCHAR(255)
-      );
-    `);
-
-    // 3. Tabla de Perfiles de Médico
-    await pool.query(`
-      CREATE TABLE IF NOT EXISTS doctor_profiles (
-        id SERIAL PRIMARY KEY,
-        user_id INT REFERENCES users(id) ON DELETE CASCADE,
-        nombres VARCHAR(100),
-        primer_apellido VARCHAR(100),
-        segundo_apellido VARCHAR(100),
-        edad INT,
-        fecha_nacimiento DATE,
-        numero_cedula VARCHAR(50),
-        especialidad VARCHAR(100),
-        consultorio VARCHAR(50),
-        sede VARCHAR(100),
-        avatar_url VARCHAR(255)
-      );
-    `);
-
-    // 4. Tabla de Citas (Appointments)
-    await pool.query(`
-      CREATE TABLE IF NOT EXISTS appointments (
-        id SERIAL PRIMARY KEY,
-        doctor_id INT REFERENCES users(id) ON DELETE CASCADE,
-        patient_id INT REFERENCES users(id) ON DELETE SET NULL,
-        appointment_time TIMESTAMP NOT NULL,
-        sede VARCHAR(100),
-        status VARCHAR(50) DEFAULT 'disponible',
-        appointment_type VARCHAR(50) DEFAULT 'general',
-        description TEXT
-      );
-    `);
-
-    // 5. Tabla de Diagnósticos
-    await pool.query(`
-      CREATE TABLE IF NOT EXISTS diagnoses (
-        id SERIAL PRIMARY KEY,
-        patient_id INT REFERENCES users(id) ON DELETE CASCADE,
-        doctor_id INT REFERENCES users(id) ON DELETE CASCADE,
-        diagnosis_title VARCHAR(255) NOT NULL,
-        diagnosis_type VARCHAR(100),
-        description TEXT,
-        prescription TEXT,
-        recommendations TEXT,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-      );
-    `);
-
-    // 6. Tabla de Resultados de Laboratorio
-    await pool.query(`
-      CREATE TABLE IF NOT EXISTS lab_results (
-        id SERIAL PRIMARY KEY,
-        patient_id INT REFERENCES users(id) ON DELETE CASCADE,
-        admin_id INT,
-        test_name VARCHAR(255) NOT NULL,
-        description TEXT,
-        file_url VARCHAR(255) NOT NULL,
-        file_name VARCHAR(255),
-        file_type VARCHAR(50),
-        doctor_id INT,
-        appointment_id INT,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-      );
-    `);
-
-    // 7. Tabla de Facturas (Invoices)
-    await pool.query(`
-      CREATE TABLE IF NOT EXISTS invoices (
-        id SERIAL PRIMARY KEY,
-        user_id INT REFERENCES users(id) ON DELETE CASCADE,
-        amount INT NOT NULL,
-        description TEXT,
-        status VARCHAR(50) DEFAULT 'pending',
-        appointment_id INT,
-        stripe_payment_intent_id VARCHAR(255)
-      );
-    `);
-
-    // 8. Tabla de Historias Clínicas Completas
-    await pool.query(`
-      CREATE TABLE IF NOT EXISTS medical_records (
-        id SERIAL PRIMARY KEY,
-        patient_id INT REFERENCES users(id) ON DELETE CASCADE,
-        doctor_id INT REFERENCES users(id) ON DELETE CASCADE,
-        appointment_id INT,
-        motivo_consulta TEXT,
-        registro TEXT,
-        sexo VARCHAR(20),
-        edad INT,
-        habitacion VARCHAR(50),
-        ocupacion VARCHAR(100),
-        antecedentes_patologicos_cardiovasculares TEXT,
-        antecedentes_patologicos_pulmonares TEXT,
-        antecedentes_patologicos_digestivos TEXT,
-        antecedentes_patologicos_diabetes TEXT,
-        antecedentes_patologicos_renales TEXT,
-        antecedentes_patologicos_quirurgicos TEXT,
-        antecedentes_patologicos_alergicos TEXT,
-        antecedentes_patologicos_transfusiones TEXT,
-        antecedentes_patologicos_medicamentos TEXT,
-        antecedentes_patologicos_especifique TEXT,
-        antecedentes_no_patologicos_alcohol TEXT,
-        antecedentes_no_patologicos_tabaquismo TEXT,
-        antecedentes_no_patologicos_drogas TEXT,
-        antecedentes_no_patologicos_inmunizaciones TEXT,
-        antecedentes_no_patologicos_otros TEXT,
-        observaciones_generales TEXT,
-        fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-      );
-    `);
-
-    // 🚀 CREACIÓN DE UN ADMINISTRADOR INICIAL DE PRUEBA (Si no existen usuarios admin)
-    const checkAdmin = await pool.query("SELECT COUNT(*) FROM users WHERE role = 'admin'");
-    if (parseInt(checkAdmin.rows[0].count) === 0) {
-      const encryptedPassword = await bcrypt.hash('admin1234', 10);
-      await pool.query(
-        "INSERT INTO users (username, password, role) VALUES ($1, $2, $3)",
-        ['admin@healthtrack.com', encryptedPassword, 'admin']
-      );
-      console.log("⭐ Usuario administrador por defecto creado: admin@healthtrack.com / admin1234");
+    // Recorremos y creamos cada tabla de manera aislada para evitar bloqueos globales
+    for (const tabla of tablas) {
+      try {
+        await pool.query(tabla.query);
+        console.log(`✅ Tabla verificada/creada: ${tabla.nombre}`);
+      } catch (err) {
+        console.error(`⚠️ Nota en tabla '${tabla.nombre}':`, err.message);
+      }
     }
 
-    console.log("✅ ¡Estructura de Base de Datos lista y sincronizada!");
+    // 🚀 CREACIÓN DEL ADMINISTRADOR INICIAL POR DEFECTO
+    try {
+      const checkAdmin = await pool.query("SELECT COUNT(*) FROM users WHERE role = 'admin'");
+      if (parseInt(checkAdmin.rows[0].count) === 0) {
+        const encryptedPassword = await bcrypt.hash('admin1234', 10);
+        await pool.query(
+          "INSERT INTO users (username, password, role) VALUES ($1, $2, $3)",
+          ['admin@healthtrack.com', encryptedPassword, 'admin']
+        );
+        console.log("⭐ Usuario administrador base creado: admin@healthtrack.com / admin1234");
+      } else {
+        console.log("⭐ Admin base ya se encuentra registrado.");
+      }
+    } catch (adminErr) {
+      console.error("❌ Error al verificar/crear el usuario admin:", adminErr.message);
+    }
+
+    console.log("🏁 Proceso de sincronización de base de datos finalizado.");
   } catch (error) {
-    console.error("❌ Error al inicializar las tablas en Postgres:", error.message);
+    console.error("❌ Error crítico en inicializarBaseDeDatos:", error.message);
   }
 };
 
@@ -825,7 +836,6 @@ app.post('/api/doctor/patients/:patientId/medical-records', async (req, res) => 
   } catch (err) { res.status(500).json({ error: 'Error creando historial' }); }
 });
 
-// COMPLETADO DE ENDPOINT: Cierre correcto de la ruta que estaba cortada
 app.put('/api/doctor/patients/:patientId/medical-records/:recordId', async (req, res) => {
     const { recordId } = req.params;
     const { motivo_consulta, observaciones_generales, registro } = req.body; 
@@ -847,6 +857,6 @@ app.put('/api/doctor/patients/:patientId/medical-records/:recordId', async (req,
 // --- INICIALIZACIÓN DEL SERVIDOR ---
 app.listen(PORT, async () => {
   console.log(`🚀 Servidor backend corriendo exitosamente en el puerto ${PORT}`);
-  // Ejecuta la inicialización automática apenas levante el servicio en Render
+  // Ejecuta la inicialización automática de tablas apenas levante el servicio en Render
   await inicializarBaseDeDatos();
 });
