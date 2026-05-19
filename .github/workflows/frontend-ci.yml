@@ -1,7 +1,7 @@
 name: CI/CD Programado (Viernes 3PM)
 
 on:
-  # Mantenemos el 'push' para que puedas probar cambios manualmente si quieres
+  # Mantenemos el 'push' para que puedas probar cambios manualmente si se quiere
   push:
     branches: [ "main" ]
   

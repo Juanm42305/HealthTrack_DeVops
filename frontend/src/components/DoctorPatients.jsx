@@ -1,7 +1,8 @@
 // Contenido COMPLETO y CORREGIDO para frontend/src/components/DoctorPatients.jsx
+// (Con el botón de Resultados AÑADIDO)
 
 import React, { useState } from 'react';
-import { FaArrowLeft, FaSearch, FaUserMd, FaNotesMedical } from 'react-icons/fa';
+import { FaArrowLeft, FaSearch, FaUserMd, FaNotesMedical, FaFlask } from 'react-icons/fa'; // <-- Añadido FaFlask
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import Swal from 'sweetalert2';
@@ -157,12 +158,19 @@ function DoctorPatients() {
                     <p><strong>Tipo de Sangre:</strong> {selectedPatient.tipo_de_sangre || 'No registrado'}</p>
                     <p><strong>Dirección:</strong> {selectedPatient.direccion_residencia || 'No registrada'}</p>
                   </div>
+                  
+                  {/* --- ¡SECCIÓN MODIFICADA! --- */}
                   <div className="modal-actions profile-actions">
                      <Link to={`/doctor/pacientes/${selectedPatient.user_id}/historiales`} className="btn-historial">
                         <FaNotesMedical /> Ver Historial Clínico
                      </Link>
+                     {/* --- ¡BOTÓN NUEVO AÑADIDO! --- */}
+                     <Link to={`/doctor/pacientes/${selectedPatient.user_id}/resultados`} className="btn-resultados">
+                        <FaFlask /> Ver Resultados
+                     </Link>
                     <button type="button" className="btn-cancel" onClick={() => setSelectedPatient(null)}>Cerrar</button>
                   </div>
+
                 </>
               )}
             </div>
